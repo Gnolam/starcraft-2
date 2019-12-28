@@ -14,10 +14,10 @@ fh = logging.FileHandler('logs/#10.log')
 logger = logging.getLogger()
 logger.setLevel("INFO")
 
-fh_actions = open('logs/#10_actions_v14a.log', "a+")
+fh_actions = open('logs/#10_actions_v14_overnight.log', "a+")
 
 
-DATA_FILE = 'DQNs/SC2_DQN_G10.gz'
+DATA_FILE = 'DQNs/SC2_DQN_G10_overnight.gz'
 
 class QLearningTable:
     def __init__(self, actions, learning_rate=0.01, reward_decay=0.9):
@@ -331,7 +331,11 @@ class SmartAgent(Agent):
         self.previous_state = state
         self.previous_action = action
 
-        return getattr(self, action)(obs)
+        action_res = getattr(self, action)(obs)
+        if obs.last():
+            self.log_actions("\r\nlast.obs,NA,NA,NA,NA")
+            #self.log_actions("stage,agent,action,input,status")
+        return action_res
 
 
 def main(unused_argv):
@@ -340,8 +344,8 @@ def main(unused_argv):
     try:
         with sc2_env.SC2Env(
                 map_name="Simple64",
-                players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Agent(sc2_env.Race.terran)],
-                #players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.very_easy)],
+                #players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Agent(sc2_env.Race.terran)],
+                players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.very_easy)],
                 agent_interface_format=features.AgentInterfaceFormat(
                     action_space=actions.ActionSpace.RAW,
                     use_raw_units=True,
@@ -350,8 +354,8 @@ def main(unused_argv):
                 step_mul=48,
                 disable_fog=True,
         ) as env:
-            #run_loop.run_loop([agent1], env, max_episodes=10000)
-            run_loop.run_loop([agent1, agent2], env, max_episodes=1000)
+            run_loop.run_loop([agent1], env, max_episodes=10000)
+            #run_loop.run_loop([agent1, agent2], env, max_episodes=1000)
     except KeyboardInterrupt:
         pass
 
