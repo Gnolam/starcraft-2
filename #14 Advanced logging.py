@@ -14,7 +14,7 @@ fh = logging.FileHandler('logs/#10.log')
 logger = logging.getLogger()
 logger.setLevel("INFO")
 
-fh_actions = open('logs/#10_actions_v12.log', "a+")
+fh_actions = open('logs/#10_actions_v14.log', "a+")
 
 
 DATA_FILE = 'DQNs/SC2_DQN_G10.gz'
@@ -63,6 +63,10 @@ class Agent(base_agent.BaseAgent):
     agent_name = "dummy"
     should_log_actions = False
 
+    def log_actions(self, s_message):
+        if self.should_log_actions:
+            fh_actions.write(s_message)
+
     def init_logging(self, agent_name, should_log_actions):
         self.agent_name = agent_name
         self.should_log_actions = should_log_actions
@@ -100,16 +104,16 @@ class Agent(base_agent.BaseAgent):
             command_center = self.get_my_units_by_type(
                 obs, units.Terran.CommandCenter)[0]
             self.base_top_left = (command_center.x < 32)
-        if self.should_log_actions: fh_actions.write("\r\nstep,agent=%s" % self.agent_name)
+        self.log_actions("\r\nstep,agent=%s" % self.agent_name)
 
     def do_nothing(self, obs):
-        if self.should_log_actions : fh_actions.write("[do_nothing],noop,OK")
+        self.log_actions("[do_nothing],noop,OK")
         return actions.RAW_FUNCTIONS.no_op()
 
     def harvest_minerals(self, obs):
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
         idle_scvs = [scv for scv in scvs if scv.order_length == 0]
-        if self.should_log_actions : fh_actions.write("[harvest_minerals],idle_scvs=%i" % len(idle_scvs))
+        self.log_actions("[harvest_minerals],idle_scvs=%i" % len(idle_scvs))
         if len(idle_scvs) > 0:
             mineral_patches = [unit for unit in obs.observation.raw_units
                                if unit.unit_type in [
@@ -129,17 +133,17 @@ class Agent(base_agent.BaseAgent):
             scv = random.choice(idle_scvs)
             distances = self.get_distances(obs, mineral_patches, (scv.x, scv.y))
             mineral_patch = mineral_patches[np.argmin(distances)]
-            if self.should_log_actions : fh_actions.write(",OK")
+            self.log_actions(",OK")
             return actions.RAW_FUNCTIONS.Harvest_Gather_unit(
                 "now", scv.tag, mineral_patch.tag)
-        if self.should_log_actions : fh_actions.write(",FAIL")
+        self.log_actions(",FAIL")
         return actions.RAW_FUNCTIONS.no_op()
 
     def build_supply_depot(self, obs):
         supply_depots = self.get_my_units_by_type(obs, units.Terran.SupplyDepot)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
 
-        if self.should_log_actions : fh_actions.write(
+        self.log_actions(
             "[build_supply_depot],supply_depots=%i minerals=%i scvs=%i" %
             (
                 len(supply_depots),
@@ -153,12 +157,11 @@ class Agent(base_agent.BaseAgent):
             supply_depot_xy = (22, 26) if self.base_top_left else (35, 42)
             distances = self.get_distances(obs, scvs, supply_depot_xy)
             scv = scvs[np.argmin(distances)]
-
-            if self.should_log_actions : fh_actions.write(",OK")
+            self.log_actions(",OK")
             return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
                 "now", scv.tag, supply_depot_xy)
 
-        if self.should_log_actions : fh_actions.write(",FAIL")
+        self.log_actions(",FAIL")
         return actions.RAW_FUNCTIONS.no_op()
 
 
@@ -168,27 +171,22 @@ class Agent(base_agent.BaseAgent):
         barrackses = self.get_my_units_by_type(obs, units.Terran.Barracks)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
 
-        if self.should_log_actions : fh_actions.write(
-            "[build_barracks],completed_supply_depots=%i barracks=%i minerals=%i scvs=%i" %
-            (
+        self.log_actions("[build_barracks],completed_supply_depots=%i barracks=%i minerals=%i scvs=%i" % (
                 len(completed_supply_depots),
                 len(barrackses),
                 obs.observation.player.minerals,
-                len(scvs)
-            )
-        )
+                len(scvs)))
 
         if (len(completed_supply_depots) > 0 and len(barrackses) == 0 and
                 obs.observation.player.minerals >= 150 and len(scvs) > 0):
             barracks_xy = (22, 21) if self.base_top_left else (35, 45)
             distances = self.get_distances(obs, scvs, barracks_xy)
             scv = scvs[np.argmin(distances)]
-
-            if self.should_log_actions : fh_actions.write(",OK")
+            self.log_actions(",OK")
             return actions.RAW_FUNCTIONS.Build_Barracks_pt(
                 "now", scv.tag, barracks_xy)
 
-        if self.should_log_actions : fh_actions.write(",FAIL")
+        self.log_actions(",FAIL")
         return actions.RAW_FUNCTIONS.no_op()
 
 
@@ -198,30 +196,25 @@ class Agent(base_agent.BaseAgent):
         free_supply = (obs.observation.player.food_cap -
                        obs.observation.player.food_used)
 
-        if self.should_log_actions : fh_actions.write(
-            "[train_marine],completed_barrackses=%i free_supply=%i minerals=%i" %
-            (
-                len(completed_barrackses),
-                free_supply,
-                obs.observation.player.minerals
-            )
-        )
+        self.log_actions("[train_marine],completed_barrackses=%i free_supply=%i minerals=%i" % (
+            len(completed_barrackses),
+            free_supply,
+            obs.observation.player.minerals))
 
         if (len(completed_barrackses) > 0 and obs.observation.player.minerals >= 100
                 and free_supply > 0):
             barracks = self.get_my_units_by_type(obs, units.Terran.Barracks)[0]
-
-            if self.should_log_actions : fh_actions.write(" barracks.order_length=%i" % barracks.order_length)
+            self.log_actions(" barracks.order_length=%i" % barracks.order_length)
             if barracks.order_length < 5:
-                if self.should_log_actions : fh_actions.write(",OK")
+                self.log_actions(",OK")
                 return actions.RAW_FUNCTIONS.Train_Marine_quick("now", barracks.tag)
 
-        if self.should_log_actions : fh_actions.write(",FAIL")
+        self.log_actions(",FAIL")
         return actions.RAW_FUNCTIONS.no_op()
 
     def attack(self, obs):
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
-        if self.should_log_actions : fh_actions.write("[attack],marines=%i" % len(marines))
+        self.log_actions("[attack],marines=%i" % len(marines))
         if len(marines) > 0:
             attack_xy = (38, 44) if self.base_top_left else (19, 23)
             distances = self.get_distances(obs, marines, attack_xy)
@@ -229,11 +222,11 @@ class Agent(base_agent.BaseAgent):
             x_offset = random.randint(-4, 4)
             y_offset = random.randint(-4, 4)
 
-            if self.should_log_actions : fh_actions.write(",OK")
+            self.log_actions(",OK")
             return actions.RAW_FUNCTIONS.Attack_pt(
                 "now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
 
-        if self.should_log_actions : fh_actions.write(",FAIL")
+        self.log_actions(",FAIL")
         return actions.RAW_FUNCTIONS.no_op()
 
 
@@ -261,7 +254,7 @@ class SmartAgent(Agent):
         self.qtable = QLearningTable(self.actions)
         self.new_game()
 
-        if self.should_log_actions : fh_actions.write("ID,agent,action,function,activity,status\r\n")
+        self.log_actions("ID,agent,action,function,activity,status\r\n")
 
         if os.path.isfile(DATA_FILE):
             logger.info('Load previous learnings')
@@ -338,7 +331,7 @@ class SmartAgent(Agent):
         super(SmartAgent, self).step(obs)
         state = str(self.get_state(obs))
         action = self.qtable.choose_action(state)
-        if self.should_log_actions : fh_actions.write(",action=%s," % action)
+        self.log_actions(",action=%s," % action)
         #if self.should_log_actions: fh_actions.write("\r\nstep,agent=%s,action=%s," % (self.agent_name, action))
         if self.previous_action is not None:
             self.qtable.learn(self.previous_state,
