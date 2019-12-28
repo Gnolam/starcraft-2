@@ -14,7 +14,7 @@ fh = logging.FileHandler('logs/#10.log')
 logger = logging.getLogger()
 logger.setLevel("INFO")
 
-fh_actions = open('logs/#10_actions_v14.log', "a+")
+fh_actions = open('logs/#10_actions_v14a.log', "a+")
 
 
 DATA_FILE = 'DQNs/SC2_DQN_G10.gz'
@@ -70,6 +70,7 @@ class Agent(base_agent.BaseAgent):
     def init_logging(self, agent_name, should_log_actions):
         self.agent_name = agent_name
         self.should_log_actions = should_log_actions
+        self.log_actions("stage,agent,action,input,status")
 
 
     def get_my_units_by_type(self, obs, unit_type):
@@ -107,13 +108,13 @@ class Agent(base_agent.BaseAgent):
         self.log_actions("\r\nstep,agent=%s" % self.agent_name)
 
     def do_nothing(self, obs):
-        self.log_actions("[do_nothing],noop,OK")
+        self.log_actions("noop,OK")
         return actions.RAW_FUNCTIONS.no_op()
 
     def harvest_minerals(self, obs):
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
         idle_scvs = [scv for scv in scvs if scv.order_length == 0]
-        self.log_actions("[harvest_minerals],idle_scvs=%i" % len(idle_scvs))
+        self.log_actions("idle_scvs=%i" % len(idle_scvs))
         if len(idle_scvs) > 0:
             mineral_patches = [unit for unit in obs.observation.raw_units
                                if unit.unit_type in [
@@ -142,16 +143,10 @@ class Agent(base_agent.BaseAgent):
     def build_supply_depot(self, obs):
         supply_depots = self.get_my_units_by_type(obs, units.Terran.SupplyDepot)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
-
-        self.log_actions(
-            "[build_supply_depot],supply_depots=%i minerals=%i scvs=%i" %
-            (
+        self.log_actions("supply_depots=%i minerals=%i scvs=%i" % (
                 len(supply_depots),
                 obs.observation.player.minerals,
-                len(scvs)
-            )
-        )
-
+                len(scvs)))
         if (len(supply_depots) == 0 and obs.observation.player.minerals >= 100 and
                 len(scvs) > 0):
             supply_depot_xy = (22, 26) if self.base_top_left else (35, 42)
@@ -160,7 +155,6 @@ class Agent(base_agent.BaseAgent):
             self.log_actions(",OK")
             return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
                 "now", scv.tag, supply_depot_xy)
-
         self.log_actions(",FAIL")
         return actions.RAW_FUNCTIONS.no_op()
 
@@ -170,13 +164,11 @@ class Agent(base_agent.BaseAgent):
             obs, units.Terran.SupplyDepot)
         barrackses = self.get_my_units_by_type(obs, units.Terran.Barracks)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
-
-        self.log_actions("[build_barracks],completed_supply_depots=%i barracks=%i minerals=%i scvs=%i" % (
+        self.log_actions("completed_supply_depots=%i barracks=%i minerals=%i scvs=%i" % (
                 len(completed_supply_depots),
                 len(barrackses),
                 obs.observation.player.minerals,
                 len(scvs)))
-
         if (len(completed_supply_depots) > 0 and len(barrackses) == 0 and
                 obs.observation.player.minerals >= 150 and len(scvs) > 0):
             barracks_xy = (22, 21) if self.base_top_left else (35, 45)
@@ -185,7 +177,6 @@ class Agent(base_agent.BaseAgent):
             self.log_actions(",OK")
             return actions.RAW_FUNCTIONS.Build_Barracks_pt(
                 "now", scv.tag, barracks_xy)
-
         self.log_actions(",FAIL")
         return actions.RAW_FUNCTIONS.no_op()
 
@@ -195,12 +186,10 @@ class Agent(base_agent.BaseAgent):
             obs, units.Terran.Barracks)
         free_supply = (obs.observation.player.food_cap -
                        obs.observation.player.food_used)
-
-        self.log_actions("[train_marine],completed_barrackses=%i free_supply=%i minerals=%i" % (
+        self.log_actions("completed_barrackses=%i free_supply=%i minerals=%i" % (
             len(completed_barrackses),
             free_supply,
             obs.observation.player.minerals))
-
         if (len(completed_barrackses) > 0 and obs.observation.player.minerals >= 100
                 and free_supply > 0):
             barracks = self.get_my_units_by_type(obs, units.Terran.Barracks)[0]
@@ -214,18 +203,16 @@ class Agent(base_agent.BaseAgent):
 
     def attack(self, obs):
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
-        self.log_actions("[attack],marines=%i" % len(marines))
+        self.log_actions("marines=%i" % len(marines))
         if len(marines) > 0:
             attack_xy = (38, 44) if self.base_top_left else (19, 23)
             distances = self.get_distances(obs, marines, attack_xy)
             marine = marines[np.argmax(distances)]
             x_offset = random.randint(-4, 4)
             y_offset = random.randint(-4, 4)
-
             self.log_actions(",OK")
             return actions.RAW_FUNCTIONS.Attack_pt(
                 "now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
-
         self.log_actions(",FAIL")
         return actions.RAW_FUNCTIONS.no_op()
 
@@ -253,9 +240,6 @@ class SmartAgent(Agent):
         super(SmartAgent, self).init_logging(self.agent_name, self.should_log_actions)
         self.qtable = QLearningTable(self.actions)
         self.new_game()
-
-        self.log_actions("ID,agent,action,function,activity,status\r\n")
-
         if os.path.isfile(DATA_FILE):
             logger.info('Load previous learnings')
             self.qtable.q_table = pd.read_pickle(DATA_FILE, compression='gzip')
