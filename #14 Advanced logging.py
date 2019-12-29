@@ -14,10 +14,10 @@ fh = logging.FileHandler('logs/#10.log')
 logger = logging.getLogger()
 logger.setLevel("INFO")
 
-fh_actions = open('logs/#10_actions_v14_overnight.log', "a+")
+fh_actions = open('logs/#15_actions_feasible_only_v02.log', "a+")
 
 
-DATA_FILE = 'DQNs/SC2_DQN_G10_overnight.gz'
+DATA_FILE = 'DQNs/SC2_DQN_G15_feasible_only_v2_vs_very_easy.gz'
 
 class QLearningTable:
     def __init__(self, actions, learning_rate=0.01, reward_decay=0.9):
@@ -237,16 +237,39 @@ class Agent(base_agent.BaseAgent):
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
         self.log_actions("marines=%i" % len(marines), log_info)
         if len(marines) > 0:
-            attack_xy = (38, 44) if self.base_top_left else (19, 23)
-            distances = self.get_distances(obs, marines, attack_xy)
-            marine = marines[np.argmax(distances)]
-            x_offset = random.randint(-4, 4)
-            y_offset = random.randint(-4, 4)
-            self.log_actions(",OK", log_info)
-            if check_action_availability_only:
-                return True
-            return actions.RAW_FUNCTIONS.Attack_pt(
-                "now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
+            # attack_xy = (38, 44) if self.base_top_left else (19, 23)
+            # ToDo: record my Base (x,y) at the start of the game
+            my_base_xy = (19, 23) if self.base_top_left else (38, 44)
+
+            enemy_marines = self.get_enemy_units_by_type(obs, units.Terran.Marine)
+            enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
+            enemy_base = self.get_enemy_completed_units_by_type(obs,units.Terran.CommandCenter)
+
+            attack_target = None
+            selected_target = "N/A"
+
+            if len(enemy_base) > 0:
+                attack_target = enemy_base[np.argmin(self.get_distances(obs, enemy_base, my_base_xy))]
+                selected_target = "Base"
+            elif len(enemy_scvs) > 0:
+                attack_target = enemy_scvs[np.argmin(self.get_distances(obs, enemy_scvs, my_base_xy))]
+                selected_target = "SCV"
+            elif len(enemy_marines) > 0:
+                attack_target = enemy_marines[np.argmin (self.get_distances(obs, enemy_marines, my_base_xy))]
+                selected_target = "Mariner"
+
+            if attack_target is not None:
+                attack_xy = (attack_target.x, attack_target.y)
+                distances = self.get_distances(obs, marines, attack_xy)
+                marine = marines[np.argmax(distances)]
+                x_offset = random.randint(-4, 4)
+                y_offset = random.randint(-4, 4)
+                self.log_actions(" target='%s',OK" % selected_target, log_info)
+                if check_action_availability_only:
+                    return True
+                return actions.RAW_FUNCTIONS.Attack_pt(
+                    "now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
+
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
@@ -352,8 +375,14 @@ class SmartAgent(Agent):
     def step(self, obs):
         super(SmartAgent, self).step(obs)
         state = str(self.get_state(obs))
-        #
+
+        # Original 'best known' action based on Q-Table
         action = self.qtable.choose_action(state)
+
+        while not(getattr(self, action)(obs, check_action_availability_only=True)):
+            # previous action was not feasible, choose the alternative action randomly
+            action = np.random.choice(self.actions)
+
         self.log_actions(",action=%s," % action)
         #if self.should_log_actions: fh_actions.write("\r\nstep,agent=%s,action=%s," % (self.agent_name, action))
         if self.previous_action is not None:
