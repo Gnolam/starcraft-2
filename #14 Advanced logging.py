@@ -63,8 +63,9 @@ class Agent(base_agent.BaseAgent):
     agent_name = "dummy"
     should_log_actions = False
 
-    def log_actions(self, s_message):
-        if self.should_log_actions:
+
+    def log_actions(self, s_message, should_print=True):
+        if self.should_log_actions and should_print:
             fh_actions.write(s_message)
 
     def init_logging(self, agent_name, should_log_actions):
@@ -78,6 +79,7 @@ class Agent(base_agent.BaseAgent):
                 if unit.unit_type == unit_type
                 and unit.alliance == features.PlayerRelative.SELF]
 
+
     def get_enemy_units_by_type(self, obs, unit_type):
         return [unit for unit in obs.observation.raw_units
                 if unit.unit_type == unit_type
@@ -89,15 +91,18 @@ class Agent(base_agent.BaseAgent):
                 and unit.build_progress == 100
                 and unit.alliance == features.PlayerRelative.SELF]
 
+
     def get_enemy_completed_units_by_type(self, obs, unit_type):
         return [unit for unit in obs.observation.raw_units
                 if unit.unit_type == unit_type
                 and unit.build_progress == 100
                 and unit.alliance == features.PlayerRelative.ENEMY]
 
+
     def get_distances(self, obs, units, xy):
         units_xy = [(unit.x, unit.y) for unit in units]
         return np.linalg.norm(np.array(units_xy) - np.array(xy), axis=1)
+
 
     def step(self, obs):
         super(Agent, self).step(obs)
@@ -107,14 +112,20 @@ class Agent(base_agent.BaseAgent):
             self.base_top_left = (command_center.x < 32)
         self.log_actions("\r\nstep,agent=%s" % self.agent_name)
 
-    def do_nothing(self, obs):
-        self.log_actions("noop,OK")
+
+    def do_nothing(self, obs, check_action_availability_only):
+        log_info = not (check_action_availability_only)
+        if check_action_availability_only:
+            return True
+        self.log_actions("noop,OK", log_info)
         return actions.RAW_FUNCTIONS.no_op()
 
-    def harvest_minerals(self, obs):
+
+    def harvest_minerals(self, obs, check_action_availability_only):
+        log_info = not (check_action_availability_only)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
         idle_scvs = [scv for scv in scvs if scv.order_length == 0]
-        self.log_actions("idle_scvs=%i" % len(idle_scvs))
+        self.log_actions("idle_scvs=%i" % len(idle_scvs), log_info)
         if len(idle_scvs) > 0:
             mineral_patches = [unit for unit in obs.observation.raw_units
                                if unit.unit_type in [
@@ -134,32 +145,43 @@ class Agent(base_agent.BaseAgent):
             scv = random.choice(idle_scvs)
             distances = self.get_distances(obs, mineral_patches, (scv.x, scv.y))
             mineral_patch = mineral_patches[np.argmin(distances)]
-            self.log_actions(",OK")
+            self.log_actions(",OK", log_info)
+            if check_action_availability_only:
+                return True
             return actions.RAW_FUNCTIONS.Harvest_Gather_unit(
                 "now", scv.tag, mineral_patch.tag)
-        self.log_actions(",FAIL")
+        self.log_actions(",FAIL", log_info)
+        if check_action_availability_only:
+            return False
         return actions.RAW_FUNCTIONS.no_op()
 
-    def build_supply_depot(self, obs):
+
+    def build_supply_depot(self, obs, check_action_availability_only):
+        log_info = not (check_action_availability_only)
         supply_depots = self.get_my_units_by_type(obs, units.Terran.SupplyDepot)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
         self.log_actions("supply_depots=%i minerals=%i scvs=%i" % (
                 len(supply_depots),
                 obs.observation.player.minerals,
-                len(scvs)))
+                len(scvs)), log_info)
         if (len(supply_depots) == 0 and obs.observation.player.minerals >= 100 and
                 len(scvs) > 0):
             supply_depot_xy = (22, 26) if self.base_top_left else (35, 42)
             distances = self.get_distances(obs, scvs, supply_depot_xy)
             scv = scvs[np.argmin(distances)]
-            self.log_actions(",OK")
+            self.log_actions(",OK", log_info)
+            if check_action_availability_only:
+                return True
             return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
                 "now", scv.tag, supply_depot_xy)
-        self.log_actions(",FAIL")
+        self.log_actions(",FAIL", log_info)
+        if check_action_availability_only:
+            return False
         return actions.RAW_FUNCTIONS.no_op()
 
 
-    def build_barracks(self, obs):
+    def build_barracks(self, obs, check_action_availability_only):
+        log_info = not (check_action_availability_only)
         completed_supply_depots = self.get_my_completed_units_by_type(
             obs, units.Terran.SupplyDepot)
         barrackses = self.get_my_units_by_type(obs, units.Terran.Barracks)
@@ -168,20 +190,25 @@ class Agent(base_agent.BaseAgent):
                 len(completed_supply_depots),
                 len(barrackses),
                 obs.observation.player.minerals,
-                len(scvs)))
+                len(scvs)), log_info)
         if (len(completed_supply_depots) > 0 and len(barrackses) == 0 and
                 obs.observation.player.minerals >= 150 and len(scvs) > 0):
             barracks_xy = (22, 21) if self.base_top_left else (35, 45)
             distances = self.get_distances(obs, scvs, barracks_xy)
             scv = scvs[np.argmin(distances)]
-            self.log_actions(",OK")
+            self.log_actions(",OK", log_info)
+            if check_action_availability_only:
+                return True
             return actions.RAW_FUNCTIONS.Build_Barracks_pt(
                 "now", scv.tag, barracks_xy)
-        self.log_actions(",FAIL")
+        self.log_actions(",FAIL", log_info)
+        if check_action_availability_only:
+            return False
         return actions.RAW_FUNCTIONS.no_op()
 
 
-    def train_marine(self, obs):
+    def train_marine(self, obs, check_action_availability_only):
+        log_info = not (check_action_availability_only)
         completed_barrackses = self.get_my_completed_units_by_type(
             obs, units.Terran.Barracks)
         free_supply = (obs.observation.player.food_cap -
@@ -189,32 +216,42 @@ class Agent(base_agent.BaseAgent):
         self.log_actions("completed_barrackses=%i free_supply=%i minerals=%i" % (
             len(completed_barrackses),
             free_supply,
-            obs.observation.player.minerals))
+            obs.observation.player.minerals), log_info)
         if (len(completed_barrackses) > 0 and obs.observation.player.minerals >= 100
                 and free_supply > 0):
             barracks = self.get_my_units_by_type(obs, units.Terran.Barracks)[0]
-            self.log_actions(" barracks.order_length=%i" % barracks.order_length)
+            self.log_actions(" barracks.order_length=%i" % barracks.order_length, log_info)
             if barracks.order_length < 5:
-                self.log_actions(",OK")
+                self.log_actions(",OK", log_info)
+                if check_action_availability_only:
+                    return True
                 return actions.RAW_FUNCTIONS.Train_Marine_quick("now", barracks.tag)
-
-        self.log_actions(",FAIL")
+        self.log_actions(",FAIL", log_info)
+        if check_action_availability_only:
+            return False
         return actions.RAW_FUNCTIONS.no_op()
 
-    def attack(self, obs):
+
+    def attack(self, obs, check_action_availability_only):
+        log_info = not (check_action_availability_only)
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
-        self.log_actions("marines=%i" % len(marines))
+        self.log_actions("marines=%i" % len(marines), log_info)
         if len(marines) > 0:
             attack_xy = (38, 44) if self.base_top_left else (19, 23)
             distances = self.get_distances(obs, marines, attack_xy)
             marine = marines[np.argmax(distances)]
             x_offset = random.randint(-4, 4)
             y_offset = random.randint(-4, 4)
-            self.log_actions(",OK")
+            self.log_actions(",OK", log_info)
+            if check_action_availability_only:
+                return True
             return actions.RAW_FUNCTIONS.Attack_pt(
                 "now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
-        self.log_actions(",FAIL")
+        self.log_actions(",FAIL", log_info)
+        if check_action_availability_only:
+            return False
         return actions.RAW_FUNCTIONS.no_op()
+
 
 
 class RandomAgent(Agent):
@@ -311,9 +348,11 @@ class SmartAgent(Agent):
                 len(enemy_completed_barrackses),
                 len(enemy_marines))
 
+
     def step(self, obs):
         super(SmartAgent, self).step(obs)
         state = str(self.get_state(obs))
+        #
         action = self.qtable.choose_action(state)
         self.log_actions(",action=%s," % action)
         #if self.should_log_actions: fh_actions.write("\r\nstep,agent=%s,action=%s," % (self.agent_name, action))
@@ -331,7 +370,7 @@ class SmartAgent(Agent):
         self.previous_state = state
         self.previous_action = action
 
-        action_res = getattr(self, action)(obs)
+        action_res = getattr(self, action)(obs, check_action_availability_only=False)
         if obs.last():
             self.log_actions("\r\nlast.obs,NA,NA,NA,NA")
             #self.log_actions("stage,agent,action,input,status")
