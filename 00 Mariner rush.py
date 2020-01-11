@@ -9,20 +9,20 @@ from pysc2.env import sc2_env, run_loop
 
 import logging
 
-DATA_FILE = 'DQNs/v18_single_train_order.gz'
+DATA_FILE = 'DQNs/v19.gz'
 
 
 logging.basicConfig(format='%(asctime)-15s %(message)s')
-fh = logging.FileHandler('logs/#18.log')
+fh = logging.FileHandler('logs/#19.log')
 logger = logging.getLogger()
 logger.setLevel("INFO")
 
-fh_actions = open('logs/#18_easyT.log', "a+")
-fh_obs = open('logs/#18_easyT.obs', "a+")
-fh_action_logic = open('logs/#18_action_insights.attack', "a+")
+fh_actions = open('logs/#19_decisions.log', "a+")
+fh_obs = open('logs/#19_obs.log', "a+")
+fh_action_logic = open('logs/#19_action_insights.log', "a+")
 
 setup_greedy = .9
-global_log_action = True
+global_log_action = False
 
 class QLearningTable:
     def __init__(self, actions, learning_rate=0.01, reward_decay=0.9):
@@ -416,49 +416,66 @@ class SmartAgent(Agent):
                        obs.observation.player.food_used)
         can_afford_supply_depot = obs.observation.player.minerals >= 100
         can_afford_barracks = obs.observation.player.minerals >= 150
-        can_afford_marine1 = obs.observation.player.minerals >= 50
-        can_afford_marine2 = obs.observation.player.minerals >= 100
+        can_afford_marine = obs.observation.player.minerals >= 50
 
         enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
-        enemy_idle_scvs = [scv for scv in enemy_scvs if scv.order_length == 0]
-        enemy_command_centers = self.get_enemy_units_by_type(
-            obs, units.Terran.CommandCenter)
-        enemy_supply_depots = self.get_enemy_units_by_type(
-            obs, units.Terran.SupplyDepot)
-        enemy_completed_supply_depots = self.get_enemy_completed_units_by_type(
-            obs, units.Terran.SupplyDepot)
+        enemy_command_centers = self.get_enemy_units_by_type(obs, units.Terran.CommandCenter)
+        enemy_supply_depots = self.get_enemy_units_by_type(obs, units.Terran.SupplyDepot)
         enemy_barrackses = self.get_enemy_units_by_type(obs, units.Terran.Barracks)
-        enemy_completed_barrackses = self.get_enemy_completed_units_by_type(
-            obs, units.Terran.Barracks)
+        enemy_factories = self.get_enemy_units_by_type(obs, units.Terran.Factory)
+        enemy_starport = self.get_enemy_units_by_type(obs, units.Terran.Starport)
         enemy_marines = self.get_enemy_units_by_type(obs, units.Terran.Marine)
+        enemy_marauders = self.get_enemy_units_by_type(obs, units.Terran.Marauder)
+        enemy_Tanks1 = self.get_enemy_units_by_type(obs, units.Terran.SiegeTank)
+        enemy_Tanks2 = self.get_enemy_units_by_type(obs, units.Terran.SiegeTankSieged)
+        enemy_Hells = self.get_enemy_units_by_type(obs, units.Terran.Hellion)
+
+        enemy_army = \
+            len(enemy_marines) * 1 + \
+            len(enemy_marauders) * 2 + \
+            len(enemy_Tanks1) * 4 + \
+            len(enemy_Tanks2) * 4 + \
+            len(enemy_Hells) * 3
+
+        enemy_army_band = None
+        if enemy_army < 10:
+            enemy_army_band = enemy_army
+        elif enemy_army < 30:
+            enemy_army_band = int((enemy_army - 10) / 3) * 3 + 10
+        else:
+            enemy_army_band = int((enemy_army - 30) / 5) * 5 + 30
 
         # self.log_actions(
         #     ",$=%s can_afford_supply_depot=%s can_afford_barracks=%s can_afford_marine=%s" %
         #     (obs.observation.player.minerals, can_afford_supply_depot, can_afford_barracks, can_afford_marine))
 
         state_dict = {
-            "command_centers":len(command_centers),
-            "scvs":len(scvs),
-            "idle_scvs":len(idle_scvs),
-            "supply_depots":len(supply_depots),
-            "completed_supply_depots":len(completed_supply_depots),
-            "barrackses":len(barrackses),
-            "completed_barrackses":len(completed_barrackses),
-            "marines":len(marines),
-            "queued_marines":queued_marines,
-            "free_supply":free_supply,
-            "can_afford_supply_depot":can_afford_supply_depot,
-            "can_afford_barracks":can_afford_barracks,
-            "can_afford_marine1": can_afford_marine1,
-            "can_afford_marine2": can_afford_marine2,
-            "enemy_command_centers":len(enemy_command_centers),
-            "enemy_scvs":len(enemy_scvs),
-            "enemy_idle_scvs":len(enemy_idle_scvs),
-            "enemy_supply_depots":len(enemy_supply_depots),
-            "enemy_completed_supply_depots":len(enemy_completed_supply_depots),
-            "enemy_barrackses":len(enemy_barrackses),
-            "enemy_completed_barrackses":len(enemy_completed_barrackses),
-            "enemy_marines":len(enemy_marines),
+            "command_centers": len(command_centers),
+            "scvs": len(scvs),
+            "idle_scvs": len(idle_scvs),
+            "supply_depots": len(supply_depots),
+            "completed_supply_depots": len(completed_supply_depots),
+            "barrackses": len(barrackses),
+            "completed_barrackses": len(completed_barrackses),
+            "marines": len(marines),
+            "queued_marines": queued_marines,
+            "free_supply": free_supply,
+            "can_afford_supply_depot": can_afford_supply_depot,
+            "can_afford_barracks": can_afford_barracks,
+            "can_afford_marine": can_afford_marine,
+            "enemy_command_centers": len(enemy_command_centers),
+            "enemy_scvs": len(enemy_scvs),
+            "enemy_supply_depots": len(enemy_supply_depots),
+            "enemy_barrackses": len(enemy_barrackses),
+            "enemy_factories ": len(enemy_factories),
+            "enemy_starport ": len(enemy_starport),
+            "enemy_marines": len(enemy_marines),
+            "enemy_marauders": len(enemy_marauders),
+            "enemy_Tanks1": len(enemy_Tanks1),
+            "enemy_Tanks2": len(enemy_Tanks2),
+            "enemy_Hells": len(enemy_Hells),
+            "enemy_army": enemy_army,
+            "enemy_army_band": enemy_army_band,
             "res":obs.observation.player.minerals
         }
 
@@ -478,25 +495,23 @@ class SmartAgent(Agent):
                 free_supply,
                 can_afford_supply_depot,
                 can_afford_barracks,
-                can_afford_marine1,
-                can_afford_marine2,
+                can_afford_marine,
                 len(enemy_command_centers),
                 len(enemy_scvs),
-                len(enemy_idle_scvs),
                 len(enemy_supply_depots),
-                len(enemy_completed_supply_depots),
                 len(enemy_barrackses),
-                len(enemy_completed_barrackses),
-                len(enemy_marines))
+                len(enemy_marines),
+                len(enemy_factories),
+                len(enemy_starport),
+                enemy_army_band)
 
 
     def step(self, obs):
         super(SmartAgent, self).step(obs)
         state = str(self.get_state(obs))
 
-        fh_obs.write(str(obs))
-        fh_obs.write("\r\n")
-
+        #fh_obs.write(str(obs))
+        #fh_obs.write("\r\n")
 
         # Original 'best known' action based on Q-Table
         action = self.qtable.choose_action(state)
@@ -537,7 +552,7 @@ def main(unused_argv):
         with sc2_env.SC2Env(
                 map_name="Simple64",
                 #players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Agent(sc2_env.Race.terran)],
-                players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.easy)],
+                players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.medium_hard )],
                 agent_interface_format=features.AgentInterfaceFormat(
                     action_space=actions.ActionSpace.RAW,
                     use_raw_units=True,
