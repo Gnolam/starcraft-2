@@ -20,7 +20,7 @@ logger.setLevel("INFO")
 fh_actions = open('logs/#17_easyT.log', "a+")
 fh_obs = open('logs/#17_easyT.obs', "a+")
 #fh_Q = open('logs/#16_easyT.QT', "a+")
-fh_attacks = open('logs/#17_easyT.attack', "a+")
+fh_action_logic = open('logs/#17_action_insights.attack', "a+")
 
 setup_greedy = .9
 global_log_action = True
@@ -73,7 +73,7 @@ class Agent(base_agent.BaseAgent):
                "build_barracks",
                "build_barracks2",
                "train_marine",
-               "train_marine2",
+               #"train_marine2",
                "attack"
                )
 
@@ -292,13 +292,25 @@ class Agent(base_agent.BaseAgent):
         # BugFix: price for Mariner is 50, not 100
         if (len(completed_barrackses) > 0 and obs.observation.player.minerals >= 50
                 and free_supply > 0):
-            barracks = self.get_my_units_by_type(obs, units.Terran.Barracks)[0]
-            self.log_actions(" barracks.order_length=%i" % barracks.order_length, log_info)
-            if barracks.order_length < 5:
+            # ToDo:
+            # choose the barrack with the shortest que
+            all_order_length = []
+            for barrack in completed_barrackses:
+                all_order_length.append(barrack.order_length)
+            best_barrack = completed_barrackses[np.argmin(all_order_length)]
+
+            fh_action_logic.write("\r\n------- train_marine --------\r\n")
+            fh_action_logic.write("Number of ready barracks: %i\r\n" % len(completed_barrackses))
+            fh_action_logic.write("Load length: %s\r\n" % str(all_order_length))
+            fh_action_logic.write("Chosen barrack with length: %i\r\n" % best_barrack.order_length)
+
+
+            self.log_actions("(best) barracks.order_length=%i" % best_barrack.order_length, log_info)
+            if best_barrack.order_length < 5:
                 self.log_actions(",OK", log_info)
                 if check_action_availability_only:
                     return True
-                return actions.RAW_FUNCTIONS.Train_Marine_quick("now", barracks.tag)
+                return actions.RAW_FUNCTIONS.Train_Marine_quick("now", best_barrack.tag)
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
@@ -366,15 +378,15 @@ class Agent(base_agent.BaseAgent):
             distances = self.get_distances(obs, marines, attack_xy)
 
             marine = marines[np.argmax(distances)]
-            fh_attacks.write("\r\n------- Attack ------------------\r\nNumber of marines: %i\r\n" % len(marines))
-            fh_attacks.write("Closest mariner: %i" % marine.tag)
+            fh_action_logic.write("\r\n------- Attack ------------------\r\nNumber of marines: %i\r\n" % len(marines))
+            fh_action_logic.write("Closest mariner: %i\r\n" % marine.tag)
 
             # Create an ampty list for army
             marine_army = []
             for marine in marines:
                 marine_army.append(marine.tag)
 
-            fh_attacks.write("Army composition: %s\r\n" % str(marine_army))
+            fh_action_logic.write("Army composition: %s\r\n" % str(marine_army))
 
             x_offset = random.randint(-4, 4)
             y_offset = random.randint(-4, 4)
