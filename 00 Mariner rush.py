@@ -22,7 +22,8 @@ fh_obs = open('logs/#19_obs.log', "a+")
 fh_action_logic = open('logs/#19_action_insights.log', "a+")
 
 setup_greedy = .9
-global_log_action = False
+global_log_action = True
+global_log_action_logic = False
 
 class QLearningTable:
     def __init__(self, actions, learning_rate=0.01, reward_decay=0.9):
@@ -280,10 +281,11 @@ class Agent(base_agent.BaseAgent):
                 all_order_length.append(barrack.order_length)
             best_barrack = completed_barrackses[np.argmin(all_order_length)]
 
-            fh_action_logic.write("\r\n------- train_marine --------\r\n")
-            fh_action_logic.write("Number of ready barracks: %i\r\n" % len(completed_barrackses))
-            fh_action_logic.write("Load length: %s\r\n" % str(all_order_length))
-            fh_action_logic.write("Chosen barrack with length: %i\r\n" % best_barrack.order_length)
+            if global_log_action_logic:
+                fh_action_logic.write("\r\n------- train_marine --------\r\n")
+                fh_action_logic.write("Number of ready barracks: %i\r\n" % len(completed_barrackses))
+                fh_action_logic.write("Load length: %s\r\n" % str(all_order_length))
+                fh_action_logic.write("Chosen barrack with length: %i\r\n" % best_barrack.order_length)
 
 
             self.log_actions("(best) barracks.order_length=%i" % best_barrack.order_length, log_info)
@@ -333,15 +335,17 @@ class Agent(base_agent.BaseAgent):
             distances = self.get_distances(obs, marines, attack_xy)
 
             marine = marines[np.argmax(distances)]
-            fh_action_logic.write("\r\n------- Attack ------------------\r\nNumber of marines: %i\r\n" % len(marines))
-            fh_action_logic.write("Closest mariner: %i\r\n" % marine.tag)
+            if global_log_action_logic:
+                fh_action_logic.write("\r\n------- Attack ------------------\r\nNumber of marines: %i\r\n" % len(marines))
+                fh_action_logic.write("Closest mariner: %i\r\n" % marine.tag)
 
             # Create an ampty list for army
             marine_army = []
             for marine in marines:
                 marine_army.append(marine.tag)
 
-            fh_action_logic.write("Army composition: %s\r\n" % str(marine_army))
+            if global_log_action_logic:
+                fh_action_logic.write("Army composition: %s\r\n" % str(marine_army))
 
             x_offset = random.randint(-4, 4)
             y_offset = random.randint(-4, 4)
