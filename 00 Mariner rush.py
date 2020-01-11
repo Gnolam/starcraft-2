@@ -9,15 +9,18 @@ from pysc2.env import sc2_env, run_loop
 
 import logging
 
-DATA_FILE = 'DQNs/SC2_DQN_G16_v4_barracks2_attack2_depo2.gz'
+DATA_FILE = 'DQNs/v17_single_train_order.gz'
 
 
 logging.basicConfig(format='%(asctime)-15s %(message)s')
-fh = logging.FileHandler('logs/#16_2.log')
+fh = logging.FileHandler('logs/#17.log')
 logger = logging.getLogger()
 logger.setLevel("INFO")
 
-fh_actions = open('logs/#16.log', "a+")
+fh_actions = open('logs/#17_easyT.log', "a+")
+fh_obs = open('logs/#17_easyT.obs', "a+")
+#fh_Q = open('logs/#16_easyT.QT', "a+")
+fh_attacks = open('logs/#17_easyT.attack', "a+")
 
 setup_greedy = .9
 global_log_action = True
@@ -46,6 +49,9 @@ class QLearningTable:
     def learn(self, s, a, r, s_):
         self.check_state_exist(s_)
         q_predict = self.q_table.loc[s, a]
+
+        #fh_Q.write(str(self.q_table)); fh_Q.write("\r\n")
+
         if s_ != 'terminal':
             q_target = r + self.reward_decay * self.q_table.loc[s_, :].max()
         else:
@@ -117,6 +123,7 @@ class Agent(base_agent.BaseAgent):
 
     def step(self, obs):
         super(Agent, self).step(obs)
+        inp = obs
         if obs.first():
             command_center = self.get_my_units_by_type(
                 obs, units.Terran.CommandCenter)[0]
@@ -357,14 +364,26 @@ class Agent(base_agent.BaseAgent):
             else:
                 selected_target = "Default"
             distances = self.get_distances(obs, marines, attack_xy)
+
             marine = marines[np.argmax(distances)]
+            fh_attacks.write("\r\n------- Attack ------------------\r\nNumber of marines: %i\r\n" % len(marines))
+            fh_attacks.write("Closest mariner: %i" % marine.tag)
+
+            # Create an ampty list for army
+            marine_army = []
+            for marine in marines:
+                marine_army.append(marine.tag)
+
+            fh_attacks.write("Army composition: %s\r\n" % str(marine_army))
+
             x_offset = random.randint(-4, 4)
             y_offset = random.randint(-4, 4)
             self.log_actions(" target='%s',OK" % selected_target, log_info)
             if check_action_availability_only:
                 return True
             return actions.RAW_FUNCTIONS.Attack_pt(
-                "now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
+                "now", marine_army, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
+                #"now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
 
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
@@ -508,6 +527,10 @@ class SmartAgent(Agent):
         super(SmartAgent, self).step(obs)
         state = str(self.get_state(obs))
 
+        fh_obs.write(str(obs))
+        fh_obs.write("\r\n")
+
+
         # Original 'best known' action based on Q-Table
         action = self.qtable.choose_action(state)
         self.log_actions(",Q-Action=%s" % action)
@@ -541,13 +564,13 @@ class SmartAgent(Agent):
 
 def main(unused_argv):
     agentSmart1 = SmartAgent()
-    #agentSmart2 = SmartAgent()
+    agentSmart2 = SmartAgent()
     #agentRandom = RandomAgent()
     try:
         with sc2_env.SC2Env(
                 map_name="Simple64",
                 #players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Agent(sc2_env.Race.terran)],
-                players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.very_easy)],
+                players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.easy)],
                 agent_interface_format=features.AgentInterfaceFormat(
                     action_space=actions.ActionSpace.RAW,
                     use_raw_units=True,
@@ -558,7 +581,6 @@ def main(unused_argv):
         ) as env:
             run_loop.run_loop([agentSmart1], env, max_episodes=10000)
             #run_loop.run_loop([agentSmart1, agentSmart2], env, max_episodes=1000)
-            #run_loop.run_loop([agent1, agent2], env, max_episodes=1000)
     except KeyboardInterrupt:
         pass
 
