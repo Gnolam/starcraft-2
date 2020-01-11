@@ -9,18 +9,17 @@ from pysc2.env import sc2_env, run_loop
 
 import logging
 
-DATA_FILE = 'DQNs/v17_single_train_order.gz'
+DATA_FILE = 'DQNs/v18_single_train_order.gz'
 
 
 logging.basicConfig(format='%(asctime)-15s %(message)s')
-fh = logging.FileHandler('logs/#17.log')
+fh = logging.FileHandler('logs/#18.log')
 logger = logging.getLogger()
 logger.setLevel("INFO")
 
-fh_actions = open('logs/#17_easyT.log', "a+")
-fh_obs = open('logs/#17_easyT.obs', "a+")
-#fh_Q = open('logs/#16_easyT.QT', "a+")
-fh_action_logic = open('logs/#17_action_insights.attack', "a+")
+fh_actions = open('logs/#18_easyT.log', "a+")
+fh_obs = open('logs/#18_easyT.obs', "a+")
+fh_action_logic = open('logs/#18_action_insights.attack', "a+")
 
 setup_greedy = .9
 global_log_action = True
@@ -71,9 +70,7 @@ class Agent(base_agent.BaseAgent):
                "build_supply_depot1",
                "build_supply_depot2",
                "build_barracks",
-               "build_barracks2",
                "train_marine",
-               #"train_marine2",
                "attack"
                )
 
@@ -233,9 +230,21 @@ class Agent(base_agent.BaseAgent):
                 len(barrackses),
                 obs.observation.player.minerals,
                 len(scvs)), log_info)
-        if (len(completed_supply_depots) > 0 and len(barrackses) == 0 and
+        if (len(completed_supply_depots) > 0 and len(barrackses) < 4 and
                 obs.observation.player.minerals >= 150 and len(scvs) > 0):
-            barracks_xy = (22, 21) if self.base_top_left else (35, 45)
+
+            if len(barrackses) == 0:
+                # Place for the 1st barrack
+                barracks_xy = (22, 21) if self.base_top_left else (35, 45)
+            elif len(barrackses)==1:
+                # Place for the 2nd barrack
+                barracks_xy = (22 + 2, 21 + 2) if self.base_top_left else (35 - 2, 45 - 2)
+            elif len(barrackses) == 2:
+                # Place for the 3rd barrack
+                barracks_xy = (22 + 4, 21 + 4) if self.base_top_left else (35 - 4, 45 - 4)
+            else:
+                # Place for the last barrack
+                barracks_xy = (22 + 6, 21 + 6) if self.base_top_left else (35 - 6, 45 - 2)
             distances = self.get_distances(obs, scvs, barracks_xy)
             #scv = scvs[np.argmin(distances)]
             scv = scvs[np.argmax(distances)]
@@ -248,35 +257,6 @@ class Agent(base_agent.BaseAgent):
         if check_action_availability_only:
             return False
         return actions.RAW_FUNCTIONS.no_op()
-
-
-    def build_barracks2(self, obs, check_action_availability_only):
-        log_info = not (check_action_availability_only)
-        completed_supply_depots = self.get_my_completed_units_by_type(
-            obs, units.Terran.SupplyDepot)
-        barrackses = self.get_my_units_by_type(obs, units.Terran.Barracks)
-        scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
-        self.log_actions("completed_supply_depots=%i barracks=%i minerals=%i scvs=%i" % (
-                len(completed_supply_depots),
-                len(barrackses),
-                obs.observation.player.minerals,
-                len(scvs)), log_info)
-        if (len(completed_supply_depots) > 0 and len(barrackses) == 1 and
-                obs.observation.player.minerals >= 150 and len(scvs) > 0):
-            barracks_xy = (22 + 3, 21 + 3) if self.base_top_left else (35 - 3, 45 - 3)
-            distances = self.get_distances(obs, scvs, barracks_xy)
-            #scv = scvs[np.argmin(distances)]
-            scv = scvs[np.argmax(distances)] # Fix by Alex S.
-            self.log_actions(",OK", log_info)
-            if check_action_availability_only:
-                return True
-            return actions.RAW_FUNCTIONS.Build_Barracks_pt(
-                "now", scv.tag, barracks_xy)
-        self.log_actions(",FAIL", log_info)
-        if check_action_availability_only:
-            return False
-        return actions.RAW_FUNCTIONS.no_op()
-
 
 
     def train_marine(self, obs, check_action_availability_only):
