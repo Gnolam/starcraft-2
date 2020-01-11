@@ -221,6 +221,7 @@ class Agent(base_agent.BaseAgent):
             return False
         return actions.RAW_FUNCTIONS.no_op()
 
+
     def build_barracks(self, obs, check_action_availability_only):
         log_info = not (check_action_availability_only)
         completed_supply_depots = self.get_my_completed_units_by_type(
@@ -292,7 +293,7 @@ class Agent(base_agent.BaseAgent):
         # BugFix: price for Mariner is 50, not 100
         if (len(completed_barrackses) > 0 and obs.observation.player.minerals >= 50
                 and free_supply > 0):
-            # ToDo:
+
             # choose the barrack with the shortest que
             all_order_length = []
             for barrack in completed_barrackses:
@@ -311,32 +312,6 @@ class Agent(base_agent.BaseAgent):
                 if check_action_availability_only:
                     return True
                 return actions.RAW_FUNCTIONS.Train_Marine_quick("now", best_barrack.tag)
-        self.log_actions(",FAIL", log_info)
-        if check_action_availability_only:
-            return False
-        return actions.RAW_FUNCTIONS.no_op()
-
-
-    def train_marine2(self, obs, check_action_availability_only):
-        log_info = not (check_action_availability_only)
-        completed_barrackses = self.get_my_completed_units_by_type(
-            obs, units.Terran.Barracks)
-        free_supply = (obs.observation.player.food_cap -
-                       obs.observation.player.food_used)
-        self.log_actions("completed_barrackses=%i free_supply=%i minerals=%i" % (
-            len(completed_barrackses),
-            free_supply,
-            obs.observation.player.minerals), log_info)
-
-        if (len(completed_barrackses) > 1 and obs.observation.player.minerals >= 100
-                and free_supply > 0):
-            barracks = self.get_my_units_by_type(obs, units.Terran.Barracks)[1]
-            self.log_actions(" barracks.order_length=%i" % barracks.order_length, log_info)
-            if barracks.order_length < 5:
-                self.log_actions(",OK", log_info)
-                if check_action_availability_only:
-                    return True
-                return actions.RAW_FUNCTIONS.Train_Marine_quick("now", barracks.tag)
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
