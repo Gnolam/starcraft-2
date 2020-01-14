@@ -22,7 +22,7 @@ fh_obs = open('logs/#19_obs.log', "a+")
 fh_action_logic = open('logs/#19_action_insights.log', "a+")
 
 setup_greedy = .9
-global_log_action = True
+global_log_action = False
 global_log_action_logic = False
 
 class QLearningTable:
@@ -121,11 +121,17 @@ class Agent(base_agent.BaseAgent):
 
     def step(self, obs):
         super(Agent, self).step(obs)
-        inp = obs
+        command_centres = self.get_my_units_by_type(obs, units.Terran.CommandCenter)
+        enemy_bases = self.get_enemy_completed_units_by_type(obs,units.Terran.CommandCenter)
+
+        if len(enemy_bases) > 0 and False:
+            fh_action_logic.write("MyBase (x,y) = %i,%i \n\r" % (command_center.x, command_center.y))
+            fh_action_logic.write("Enemy base = %i,%i\n\r" % (enemy_bases[0].x, enemy_bases[0].y))
+
         if obs.first():
-            command_center = self.get_my_units_by_type(
-                obs, units.Terran.CommandCenter)[0]
-            self.base_top_left = (command_center.x < 32)
+            self.base_top_left = (command_centres[0].x < 32)
+
+
         self.log_actions("\r\nstep,agent=%s" % self.agent_name)
 
 
@@ -159,6 +165,8 @@ class Agent(base_agent.BaseAgent):
                                    units.Neutral.RichMineralField750
                                ]]
             scv = random.choice(idle_scvs)
+
+            # ToDo: check if the distance from SCV or from StarBase
             distances = self.get_distances(obs, mineral_patches, (scv.x, scv.y))
             mineral_patch = mineral_patches[np.argmin(distances)]
             self.log_actions(",OK", log_info)
@@ -182,9 +190,10 @@ class Agent(base_agent.BaseAgent):
                 len(scvs)), log_info)
         if (len(supply_depots) == 0 and obs.observation.player.minerals >= 100 and
                 len(scvs) > 0):
-            supply_depot_xy = (22, 26) if self.base_top_left else (35, 42)
+            #supply_depot_xy = (22, 26) if self.base_top_left else (35, 42)
+            supply_depot_xy = (20+3, 27+3) if self.base_top_left else (69-3, 77-3) # 96 res
             distances = self.get_distances(obs, scvs, supply_depot_xy)
-            scv = scvs[np.argmin(distances)]
+            scv = scvs[np.argmax(distances)]
             self.log_actions(",OK", log_info)
             if check_action_availability_only:
                 return True
@@ -206,7 +215,8 @@ class Agent(base_agent.BaseAgent):
                 len(scvs)), log_info)
         if (len(supply_depots) == 1 and obs.observation.player.minerals >= 100 and
                 len(scvs) > 0):
-            supply_depot_xy = (22-3, 26+3) if self.base_top_left else (35+3, 42-3)
+            #supply_depot_xy = (22-3, 26+3) if self.base_top_left else (35+3, 42-3)
+            supply_depot_xy = (20+5, 27+4) if self.base_top_left else (69-5, 77-4) # 96 res
             distances = self.get_distances(obs, scvs, supply_depot_xy)
             scv = scvs[np.argmax(distances)]
             self.log_actions(",OK", log_info)
@@ -236,16 +246,20 @@ class Agent(base_agent.BaseAgent):
 
             if len(barrackses) == 0:
                 # Place for the 1st barrack
-                barracks_xy = (22, 21) if self.base_top_left else (35, 45)
+                #barracks_xy = (22, 21) if self.base_top_left else (35, 45)
+                barracks_xy = (20 + 7, 27 + 0) if self.base_top_left else (69 - 7, 77 - 0)  # 96 res
             elif len(barrackses)==1:
                 # Place for the 2nd barrack
-                barracks_xy = (22 + 2, 21 + 2) if self.base_top_left else (35 - 2, 45 - 2)
+                #barracks_xy = (22 + 2, 21 + 2) if self.base_top_left else (35 - 2, 45 - 2)
+                barracks_xy = (20 + 9, 27 + 2) if self.base_top_left else (69 - 9, 77 - 2)  # 96 res
             elif len(barrackses) == 2:
                 # Place for the 3rd barrack
-                barracks_xy = (22 + 4, 21 + 4) if self.base_top_left else (35 - 4, 45 - 4)
+                #barracks_xy = (22 + 4, 21 + 4) if self.base_top_left else (35 - 4, 45 - 4)
+                barracks_xy = (20 + 11, 27 + 4) if self.base_top_left else (69 - 11, 77 - 4)  # 96 res
             else:
                 # Place for the last barrack
-                barracks_xy = (22 + 6, 21 + 6) if self.base_top_left else (35 - 6, 45 - 2)
+                #barracks_xy = (22 + 6, 21 + 6) if self.base_top_left else (35 - 6, 45 - 2)
+                barracks_xy = (20 + 13, 27 + 8) if self.base_top_left else (69 - 13, 77 - 8)  # 96 res
             distances = self.get_distances(obs, scvs, barracks_xy)
             #scv = scvs[np.argmin(distances)]
             scv = scvs[np.argmax(distances)]
@@ -374,7 +388,7 @@ class RandomAgent(Agent):
     def step(self, obs):
         super(RandomAgent, self).step(obs)
         action = random.choice(self.actions)
-        return getattr(self, action)(obs)
+        return getattr(self, action)(obs, check_action_availability_only = False)
 
 
 class SmartAgent(Agent):
@@ -550,23 +564,29 @@ class SmartAgent(Agent):
 
 def main(unused_argv):
     agentSmart1 = SmartAgent()
-    agentSmart2 = SmartAgent()
+    #agentSmart2 = SmartAgent()
     #agentRandom = RandomAgent()
+    with sc2_env.SC2Env(
+            #map_name="Simple64",
+            map_name="Simple96",
+            #map_name="AbyssalReef",
+            #players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Agent(sc2_env.Race.terran)],
+            players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.medium )],
+            #players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.medium_hard )],
+            agent_interface_format=features.AgentInterfaceFormat(
+                action_space=actions.ActionSpace.RAW,
+                use_raw_units=True,
+                #raw_resolution=64,
+                raw_resolution=96
+            ),
+            step_mul=48,
+            disable_fog=True,
+    ) as env:
+        run_loop.run_loop([agentSmart1], env, max_episodes=10000)
+        #run_loop.run_loop([agentSmart1, agentRandom], env, max_episodes=1000)
+        #run_loop.run_loop([agentSmart1, agentSmart2], env, max_episodes=1000)
     try:
-        with sc2_env.SC2Env(
-                map_name="Simple64",
-                #players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Agent(sc2_env.Race.terran)],
-                players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.medium_hard )],
-                agent_interface_format=features.AgentInterfaceFormat(
-                    action_space=actions.ActionSpace.RAW,
-                    use_raw_units=True,
-                    raw_resolution=64,
-                ),
-                step_mul=48,
-                disable_fog=True,
-        ) as env:
-            run_loop.run_loop([agentSmart1], env, max_episodes=10000)
-            #run_loop.run_loop([agentSmart1, agentSmart2], env, max_episodes=1000)
+        pass
     except KeyboardInterrupt:
         pass
 
