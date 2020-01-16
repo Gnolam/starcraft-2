@@ -450,9 +450,9 @@ class SmartAgent(Agent):
         #     "res":obs.observation.player.minerals
         # }
 
-        self.log_actions(",get_state:")
-        for k, v in state_dict.items():
-            self.log_actions(" %s=%s" % (k, v))
+        # self.log_actions(",get_state:")
+        # for k, v in state_dict.items():
+        #     self.log_actions(" %s=%s" % (k, v))
 
         return (len(command_centers),
                 len(scvs),
@@ -515,9 +515,9 @@ class SmartAgent(Agent):
         #     "enemy_army_band": enemy_army_band
         # }
 
-        self.log_actions(",get_state:")
-        for k, v in state_dict.items():
-            self.log_actions(" %s=%s" % (k, v))
+        # self.log_actions(",get_state:")
+        # for k, v in state_dict.items():
+        #     self.log_actions(" %s=%s" % (k, v))
 
         return (
                 len(marines),
