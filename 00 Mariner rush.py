@@ -9,7 +9,8 @@ from pysc2.env import sc2_env, run_loop
 
 import logging
 
-DATA_FILE = 'DQNs/v19.gz'
+DQN_econ = 'DQNs/v21_econ.gz'
+DQN_war = 'DQNs/v21_war.gz'
 
 
 logging.basicConfig(format='%(asctime)-15s %(message)s')
@@ -66,14 +67,21 @@ class QLearningTable:
 
 
 class Agent(base_agent.BaseAgent):
-    actions = ("do_nothing",
-               "harvest_minerals",
-               "build_supply_depot1",
-               "build_supply_depot2",
-               "build_barracks",
-               "train_marine",
-               "attack"
-               )
+    actions_econ = (
+        "econ_do_nothing",
+        "econ_harvest_minerals",
+        "econ_build_supply_depot",
+#        "econ_build_supply_depot2",
+        "econ_build_barracks",
+        "econ_train_marine"
+        )
+
+    actions_war = (
+        "war_do_nothing",
+#        "war_regroup",
+#        "war_defend",
+        "war_attack"
+        )
 
     agent_name = "dummy"
     should_log_actions = False
@@ -129,15 +137,25 @@ class Agent(base_agent.BaseAgent):
         self.log_actions("\r\nstep,agent=%s" % self.agent_name)
 
 
-    def do_nothing(self, obs, check_action_availability_only):
+    def econ_do_nothing(self, obs, check_action_availability_only):
         log_info = not (check_action_availability_only)
         if check_action_availability_only:
             return True
         self.log_actions("noop,OK", log_info)
-        return actions.RAW_FUNCTIONS.no_op()
+        return None
+        #return actions_econ.RAW_FUNCTIONS.no_op()
+
+    def war_do_nothing(self, obs, check_action_availability_only):
+        log_info = not (check_action_availability_only)
+        if check_action_availability_only:
+            return True
+        self.log_actions("noop,OK", log_info)
+        #return None
+        return actions_econ.RAW_FUNCTIONS.no_op()
 
 
-    def harvest_minerals(self, obs, check_action_availability_only):
+
+    def econ_harvest_minerals(self, obs, check_action_availability_only):
         log_info = not (check_action_availability_only)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
         idle_scvs = [scv for scv in scvs if scv.order_length == 0]
@@ -164,15 +182,15 @@ class Agent(base_agent.BaseAgent):
             self.log_actions(",OK", log_info)
             if check_action_availability_only:
                 return True
-            return actions.RAW_FUNCTIONS.Harvest_Gather_unit(
+            return actions_econ.RAW_FUNCTIONS.Harvest_Gather_unit(
                 "now", scv.tag, mineral_patch.tag)
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
-        return actions.RAW_FUNCTIONS.no_op()
+        return actions_econ.RAW_FUNCTIONS.no_op()
 
 
-    def build_supply_depot1(self, obs, check_action_availability_only):
+    def econ_build_supply_depot(self, obs, check_action_availability_only):
         log_info = not (check_action_availability_only)
         supply_depots = self.get_my_units_by_type(obs, units.Terran.SupplyDepot)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
@@ -183,44 +201,21 @@ class Agent(base_agent.BaseAgent):
         if (len(supply_depots) == 0 and obs.observation.player.minerals >= 100 and
                 len(scvs) > 0):
             supply_depot_xy = (22, 26) if self.base_top_left else (35, 42)
+            supply_depot_xy = (22-3, 26+3) if self.base_top_left else (35+3, 42-3)
             distances = self.get_distances(obs, scvs, supply_depot_xy)
             scv = scvs[np.argmin(distances)]
             self.log_actions(",OK", log_info)
             if check_action_availability_only:
                 return True
-            return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
+            return actions_econ.RAW_FUNCTIONS.Build_SupplyDepot_pt(
                 "now", scv.tag, supply_depot_xy)
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
-        return actions.RAW_FUNCTIONS.no_op()
+        return actions_econ.RAW_FUNCTIONS.no_op()
 
 
-    def build_supply_depot2(self, obs, check_action_availability_only):
-        log_info = not (check_action_availability_only)
-        supply_depots = self.get_my_units_by_type(obs, units.Terran.SupplyDepot)
-        scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
-        self.log_actions("supply_depots=%i minerals=%i scvs=%i" % (
-                len(supply_depots),
-                obs.observation.player.minerals,
-                len(scvs)), log_info)
-        if (len(supply_depots) == 1 and obs.observation.player.minerals >= 100 and
-                len(scvs) > 0):
-            supply_depot_xy = (22-3, 26+3) if self.base_top_left else (35+3, 42-3)
-            distances = self.get_distances(obs, scvs, supply_depot_xy)
-            scv = scvs[np.argmax(distances)]
-            self.log_actions(",OK", log_info)
-            if check_action_availability_only:
-                return True
-            return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
-                "now", scv.tag, supply_depot_xy)
-        self.log_actions(",FAIL", log_info)
-        if check_action_availability_only:
-            return False
-        return actions.RAW_FUNCTIONS.no_op()
-
-
-    def build_barracks(self, obs, check_action_availability_only):
+    def econ_build_barracks(self, obs, check_action_availability_only):
         log_info = not (check_action_availability_only)
         completed_supply_depots = self.get_my_completed_units_by_type(
             obs, units.Terran.SupplyDepot)
@@ -252,15 +247,15 @@ class Agent(base_agent.BaseAgent):
             self.log_actions(",OK", log_info)
             if check_action_availability_only:
                 return True
-            return actions.RAW_FUNCTIONS.Build_Barracks_pt(
+            return actions_econ.RAW_FUNCTIONS.Build_Barracks_pt(
                 "now", scv.tag, barracks_xy)
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
-        return actions.RAW_FUNCTIONS.no_op()
+        return actions_econ.RAW_FUNCTIONS.no_op()
 
 
-    def train_marine(self, obs, check_action_availability_only):
+    def econ_train_marine(self, obs, check_action_availability_only):
         log_info = not (check_action_availability_only)
         completed_barrackses = self.get_my_completed_units_by_type(
             obs, units.Terran.Barracks)
@@ -293,14 +288,14 @@ class Agent(base_agent.BaseAgent):
                 self.log_actions(",OK", log_info)
                 if check_action_availability_only:
                     return True
-                return actions.RAW_FUNCTIONS.Train_Marine_quick("now", best_barrack.tag)
+                return actions_econ.RAW_FUNCTIONS.Train_Marine_quick("now", best_barrack.tag)
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
-        return actions.RAW_FUNCTIONS.no_op()
+        return actions_econ.RAW_FUNCTIONS.no_op()
 
 
-    def attack(self, obs, check_action_availability_only):
+    def war_attack(self, obs, check_action_availability_only):
         log_info = not (check_action_availability_only)
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
         self.log_actions("marines=%i" % len(marines), log_info)
@@ -352,14 +347,14 @@ class Agent(base_agent.BaseAgent):
             self.log_actions(" target='%s',OK" % selected_target, log_info)
             if check_action_availability_only:
                 return True
-            return actions.RAW_FUNCTIONS.Attack_pt(
+            return actions_econ.RAW_FUNCTIONS.Attack_pt(
                 "now", marine_army, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
                 #"now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
 
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
-        return actions.RAW_FUNCTIONS.no_op()
+        return actions_econ.RAW_FUNCTIONS.no_op()
 
 
 
@@ -373,7 +368,7 @@ class RandomAgent(Agent):
 
     def step(self, obs):
         super(RandomAgent, self).step(obs)
-        action = random.choice(self.actions)
+        action = random.choice(self.actions_econ)
         return getattr(self, action)(obs)
 
 
@@ -384,11 +379,12 @@ class SmartAgent(Agent):
     def __init__(self):
         super(SmartAgent, self).__init__()
         super(SmartAgent, self).init_logging(self.agent_name, self.should_log_actions)
-        self.qtable = QLearningTable(self.actions)
+        self.qtable_war = QLearningTable(self.actions_econ)
+        self.qtable_war = QLearningTable(self.actions_war)
         self.new_game()
-        if os.path.isfile(DATA_FILE):
+        if os.path.isfile(DQN_econ):
             logger.info('Load previous learnings')
-            self.qtable.q_table = pd.read_pickle(DATA_FILE, compression='gzip')
+            self.qtable_war.q_table = pd.read_pickle(DQN_econ, compression='gzip')
         else:
             logger.info('NO previous learnings located')
 
@@ -398,10 +394,11 @@ class SmartAgent(Agent):
 
     def new_game(self):
         self.base_top_left = None
-        self.previous_state = None
-        self.previous_action = None
+        self.previous_state_war = None
+        self.previous_action_war = None
 
-    def get_state(self, obs):
+    def get_state_econ(self, obs):
+        # info for counters
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
         idle_scvs = [scv for scv in scvs if scv.order_length == 0]
         command_centers = self.get_my_units_by_type(obs, units.Terran.CommandCenter)
@@ -428,60 +425,30 @@ class SmartAgent(Agent):
         enemy_barrackses = self.get_enemy_units_by_type(obs, units.Terran.Barracks)
         enemy_factories = self.get_enemy_units_by_type(obs, units.Terran.Factory)
         enemy_starport = self.get_enemy_units_by_type(obs, units.Terran.Starport)
-        enemy_marines = self.get_enemy_units_by_type(obs, units.Terran.Marine)
-        enemy_marauders = self.get_enemy_units_by_type(obs, units.Terran.Marauder)
-        enemy_Tanks1 = self.get_enemy_units_by_type(obs, units.Terran.SiegeTank)
-        enemy_Tanks2 = self.get_enemy_units_by_type(obs, units.Terran.SiegeTankSieged)
-        enemy_Hells = self.get_enemy_units_by_type(obs, units.Terran.Hellion)
 
-        enemy_army = \
-            len(enemy_marines) * 1 + \
-            len(enemy_marauders) * 2 + \
-            len(enemy_Tanks1) * 4 + \
-            len(enemy_Tanks2) * 4 + \
-            len(enemy_Hells) * 3
-
-        enemy_army_band = None
-        if enemy_army < 10:
-            enemy_army_band = enemy_army
-        elif enemy_army < 30:
-            enemy_army_band = int((enemy_army - 10) / 3) * 3 + 10
-        else:
-            enemy_army_band = int((enemy_army - 30) / 5) * 5 + 30
-
-        # self.log_actions(
-        #     ",$=%s can_afford_supply_depot=%s can_afford_barracks=%s can_afford_marine=%s" %
-        #     (obs.observation.player.minerals, can_afford_supply_depot, can_afford_barracks, can_afford_marine))
-
-        state_dict = {
-            "command_centers": len(command_centers),
-            "scvs": len(scvs),
-            "idle_scvs": len(idle_scvs),
-            "supply_depots": len(supply_depots),
-            "completed_supply_depots": len(completed_supply_depots),
-            "barrackses": len(barrackses),
-            "completed_barrackses": len(completed_barrackses),
-            "marines": len(marines),
-            "queued_marines": queued_marines,
-            "free_supply": free_supply,
-            "can_afford_supply_depot": can_afford_supply_depot,
-            "can_afford_barracks": can_afford_barracks,
-            "can_afford_marine": can_afford_marine,
-            "enemy_command_centers": len(enemy_command_centers),
-            "enemy_scvs": len(enemy_scvs),
-            "enemy_supply_depots": len(enemy_supply_depots),
-            "enemy_barrackses": len(enemy_barrackses),
-            "enemy_factories ": len(enemy_factories),
-            "enemy_starport ": len(enemy_starport),
-            "enemy_marines": len(enemy_marines),
-            "enemy_marauders": len(enemy_marauders),
-            "enemy_Tanks1": len(enemy_Tanks1),
-            "enemy_Tanks2": len(enemy_Tanks2),
-            "enemy_Hells": len(enemy_Hells),
-            "enemy_army": enemy_army,
-            "enemy_army_band": enemy_army_band,
-            "res":obs.observation.player.minerals
-        }
+        # state_dict = {
+        #     "command_centers": len(command_centers),
+        #     "scvs": len(scvs),
+        #     "idle_scvs": len(idle_scvs),
+        #     "supply_depots": len(supply_depots),
+        #     "completed_supply_depots": len(completed_supply_depots),
+        #     "barrackses": len(barrackses),
+        #     "completed_barrackses": len(completed_barrackses),
+        #     "marines": len(marines),
+        #     "queued_marines": queued_marines,
+        #     "free_supply": free_supply,
+        #     "can_afford_supply_depot": can_afford_supply_depot,
+        #     "can_afford_barracks": can_afford_barracks,
+        #     "can_afford_marine": can_afford_marine,
+        #     "enemy_command_centers": len(enemy_command_centers),
+        #     "enemy_scvs": len(enemy_scvs),
+        #     "enemy_supply_depots": len(enemy_supply_depots),
+        #     "enemy_barrackses": len(enemy_barrackses),
+        #     "enemy_factories ": len(enemy_factories),
+        #     "enemy_starport ": len(enemy_starport),
+        #     "enemy_army_band": enemy_army_band,
+        #     "res":obs.observation.player.minerals
+        # }
 
         self.log_actions(",get_state:")
         for k, v in state_dict.items():
@@ -499,53 +466,136 @@ class SmartAgent(Agent):
                 free_supply,
                 can_afford_supply_depot,
                 can_afford_barracks,
-                can_afford_marine,
-                len(enemy_command_centers),
-                len(enemy_scvs),
-                len(enemy_supply_depots),
-                len(enemy_barrackses),
-                len(enemy_marines),
-                len(enemy_factories),
-                len(enemy_starport),
-                enemy_army_band)
+                can_afford_marine
+                )
 
 
-    def step(self, obs):
-        super(SmartAgent, self).step(obs)
-        state = str(self.get_state(obs))
+    def get_state_war(self, obs):
 
-        #fh_obs.write(str(obs))
-        #fh_obs.write("\r\n")
+        marines = self.get_my_units_by_type(obs, units.Terran.Marine)
+
+        # enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
+        # enemy_command_centers = self.get_enemy_units_by_type(obs, units.Terran.CommandCenter)
+        # enemy_supply_depots = self.get_enemy_units_by_type(obs, units.Terran.SupplyDepot)
+        enemy_barrackses = self.get_enemy_units_by_type(obs, units.Terran.Barracks)
+        enemy_factories = self.get_enemy_units_by_type(obs, units.Terran.Factory)
+        enemy_starport = self.get_enemy_units_by_type(obs, units.Terran.Starport)
+        enemy_marines = self.get_enemy_units_by_type(obs, units.Terran.Marine)
+        enemy_marauders = self.get_enemy_units_by_type(obs, units.Terran.Marauder)
+        enemy_Tanks1 = self.get_enemy_units_by_type(obs, units.Terran.SiegeTank)
+        enemy_Tanks2 = self.get_enemy_units_by_type(obs, units.Terran.SiegeTankSieged)
+        enemy_Hells = self.get_enemy_units_by_type(obs, units.Terran.Hellion)
+
+        enemy_army = \
+            len(enemy_marines) * 1 + \
+            len(enemy_marauders) * 2 + \
+            len(enemy_Tanks1) * 4 + \
+            len(enemy_Tanks2) * 4 + \
+            len(enemy_Hells) * 3
+
+        if enemy_army < 10:
+            enemy_army_band = enemy_army
+        elif enemy_army < 30:
+            enemy_army_band = int((enemy_army - 10) / 3) * 3 + 10
+        else:
+            enemy_army_band = int((enemy_army - 30) / 5) * 5 + 30
+
+
+        # state_dict = {
+        #     "marines": len(marines),
+        #     "enemy_barrackses": len(enemy_barrackses),
+        #     "enemy_factories ": len(enemy_factories),
+        #     "enemy_starport ": len(enemy_starport),
+        #     "enemy_marines": len(enemy_marines),
+        #     "enemy_marauders": len(enemy_marauders),
+        #     "enemy_Tanks1": len(enemy_Tanks1),
+        #     "enemy_Tanks2": len(enemy_Tanks2),
+        #     "enemy_Hells": len(enemy_Hells),
+        #     "enemy_army": enemy_army,
+        #     "enemy_army_band": enemy_army_band
+        # }
+
+        self.log_actions(",get_state:")
+        for k, v in state_dict.items():
+            self.log_actions(" %s=%s" % (k, v))
+
+        return (
+                len(marines),
+                enemy_army_band
+        )
+
+
+    def step_war(self, obs):
+        state_war = str(self.get_state_war(obs))
 
         # Original 'best known' action based on Q-Table
-        action = self.qtable.choose_action(state)
-        self.log_actions(",Q-Action=%s" % action)
+        war_action = self.qtable_war.choose_action(state_war)
+        self.log_actions(",Q-Action=%s" % war_action)
 
-        while not(getattr(self, action)(obs, check_action_availability_only=True)):
+        while not(getattr(self, war_action)(obs, check_action_availability_only=True)):
             # previous action was not feasible, choose the alternative action randomly
-            action = np.random.choice(self.actions)
+            war_action = np.random.choice(self.actions_war)
 
-        self.log_actions(" Resulting action=%s," % action)
-        #if self.should_log_actions: fh_actions.write("\r\nstep,agent=%s,action=%s," % (self.agent_name, action))
-        if self.previous_action is not None:
-            self.qtable.learn(self.previous_state,
-                              self.previous_action,
-                              obs.reward,
-                              'terminal' if obs.last() else state)
+        self.log_actions(" Resulting action=%s," % war_action)
+        if self.previous_action_war is not None:
+            self.qtable_war.learn(self.previous_state_war,
+                                  self.previous_action_war,
+                                  obs.reward,
+                              'terminal' if obs.last() else state_war)
 
         # Record current learnings
         if obs.last():
             logger.info('Record current learnings')
-            self.qtable.q_table.to_pickle(DATA_FILE, 'gzip')
+            self.qtable_war.q_table.to_pickle(DQN_war, 'gzip')
 
-        self.previous_state = state
-        self.previous_action = action
+        self.previous_state_war = state_war
+        self.previous_action_war = war_action
 
-        action_res = getattr(self, action)(obs, check_action_availability_only=False)
+        action_res = getattr(self, war_action)(obs, check_action_availability_only=False)
         if obs.last():
             self.log_actions("\r\nlast.obs,NA,NA,NA,NA")
-            #self.log_actions("stage,agent,action,input,status")
         return action_res
+
+
+    def step_econ(self, obs):
+        state_econ = str(self.get_state_econ(obs))
+
+        # Original 'best known' action based on Q-Table
+        action_econ = self.qtable_econ.choose_action(state_econ)
+        self.log_actions(",Q-Action=%s" % action)
+
+        while not(getattr(self, action)(obs, check_action_availability_only=True)):
+            # previous action was not feasible, choose the alternative action randomly
+            action = np.random.choice(self.actions_econ)
+
+        self.log_actions(" Resulting action=%s," % action)
+        if self.previous_action_econ is not None:
+            self.qtable_econ.learn(self.previous_state_econ,
+                                  self.previous_action_econ,
+                                  obs.reward,
+                              'terminal' if obs.last() else state_econ)
+
+        # Record current learnings
+        if obs.last():
+            logger.info('Record current learnings')
+            self.qtable_econ.q_table.to_pickle(DQN_econ, 'gzip')
+
+        self.previous_state_econ = state_econ
+        self.previous_action_econ = action_econ
+
+        action_res = getattr(self, action_econ)(obs, check_action_availability_only=False)
+        if obs.last():
+            self.log_actions("\r\nlast.obs,NA,NA,NA,NA")
+        return action_res
+
+
+    def step(self, obs):
+        super(SmartAgent, self).step(obs)
+        # Econ (AKA 'Bob, the builder') has the precedence over War (AKA Sargent Pepper)
+        res = self.step_econ(obs)
+        if res is None:
+            res = self.step_war(obs)
+        return res
 
 
 def main(unused_argv):
