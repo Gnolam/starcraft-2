@@ -9,8 +9,8 @@ from pysc2.env import sc2_env, run_loop
 
 import logging
 
-DQN_econ = 'DQNs/v21_econ.gz'
-DQN_war = 'DQNs/v21_war.gz'
+DQN_econ = 'DQNs/v21a_econ.gz'
+DQN_war = 'DQNs/v21a_war.gz'
 
 
 logging.basicConfig(format='%(asctime)-15s %(message)s')
@@ -395,10 +395,16 @@ class SmartAgent(Agent):
         self.qtable_war = QLearningTable(self.actions_war)
         self.new_game()
         if os.path.isfile(DQN_econ):
-            logger.info('Load previous learnings')
-            self.qtable_war.q_table = pd.read_pickle(DQN_econ, compression='gzip')
+            logger.info('Load previous learnings (ECON)')
+            self.qtable_econ.q_table = pd.read_pickle(DQN_econ, compression='gzip')
         else:
-            logger.info('NO previous learnings located')
+            logger.info('NO previous learnings located (ECON)')
+
+        if os.path.isfile(DQN_war):
+            logger.info('Load previous learnings (WAR)')
+            self.qtable_war.q_table = pd.read_pickle(DQN_war, compression='gzip')
+        else:
+            logger.info('NO previous learnings located (WAR)')
 
     def reset(self):
         super(SmartAgent, self).reset()
@@ -557,19 +563,21 @@ class SmartAgent(Agent):
                                   obs.reward,
                               'terminal' if obs.last() else state_war)
 
-        # Record current learnings
-        if obs.last():
-            logger.info('Record current learnings')
-            self.qtable_war.q_table.to_pickle(DQN_war, 'gzip')
-
         self.previous_state_war = state_war
         self.previous_action_war = action_war
 
         action_res = getattr(self, action_war)(obs, check_action_availability_only=False)
-        if obs.last():
-            self.log_actions("\r\nlast.obs,NA,NA,NA,NA")
         return action_res
 
+    def save_econ(self):
+        # Record current learnings
+        logger.info('Record current learnings (ECON)')
+        self.qtable_econ.q_table.to_pickle(DQN_econ, 'gzip')
+
+    def save_war(self):
+        # Record current learnings
+        logger.info('Record current learnings (WAR)')
+        self.qtable_war.q_table.to_pickle(DQN_war, 'gzip')
 
     def step_econ(self, obs):
         state_econ = str(self.get_state_econ(obs))
@@ -589,11 +597,6 @@ class SmartAgent(Agent):
                                   obs.reward,
                               'terminal' if obs.last() else state_econ)
 
-        # Record current learnings
-        if obs.last():
-            logger.info('Record current learnings')
-            self.qtable_econ.q_table.to_pickle(DQN_econ, 'gzip')
-
         self.previous_state_econ = state_econ
         self.previous_action_econ = action_econ
 
@@ -609,6 +612,10 @@ class SmartAgent(Agent):
         res = self.step_econ(obs)
         if res is None:
             res = self.step_war(obs)
+
+        if obs.last():
+            self.save_econ()
+            self.save_war()
         return res
 
 
