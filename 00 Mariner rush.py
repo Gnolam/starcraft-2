@@ -67,34 +67,43 @@ class QLearningTable:
 
 
 class Agent(base_agent.BaseAgent):
-    actions_econ = (
-        "econ_do_nothing",
-        "econ_harvest_minerals",
-        "econ_build_supply_depot",
-#        "econ_build_supply_depot2",
-        "econ_build_barracks",
-        "econ_train_marine"
-        )
+    action_list = ("do_nothing")
 
-    actions_war = (
-        "war_do_nothing",
-#        "war_regroup",
-#        "war_defend",
-        "war_attack"
-        )
-
-    agent_name = "dummy"
+    agent_name = "L1"
     should_log_actions = False
+    fh_actions = None
+
+    def __init__(self):
+        super(Agent, self).__init__()
+        self.qtable = QLearningTable(self.action_list)
+        self.new_game()
+
+    def reset(self):
+        super(Agent, self).reset()
+        self.new_game()
+
+    def new_game(self):
+        self.base_top_left = None
+        self.previous_state = None
+        self.previous_action = None
+
+
+    # ToDo: fname to be passed through init_logging() + rename it
+    def save_DQN(self):
+        # Record current learnings
+        logger.info('Record current learnings (ECON)')
+        self.qtable_econ.q_table.to_pickle(DQN_econ, 'gzip')
 
 
     def log_actions(self, s_message, should_print=True):
-        if self.should_log_actions and should_print and global_log_action:
-            fh_actions.write(s_message)
+        if self.should_log_actions and should_print and global_log_action and self.fh_actions is not None:
+            self.fh_actions.write(s_message)
 
-    def init_logging(self, agent_name, should_log_actions):
+    def init_logging(self, agent_name, should_log_actions, fh_for_logging_actions = None):
         self.agent_name = agent_name
         self.should_log_actions = should_log_actions
         self.log_actions("stage,agent,action,input,status")
+        self.fh_actions = fh_for_logging_actions
 
 
     def get_my_units_by_type(self, obs, unit_type):
@@ -128,6 +137,12 @@ class Agent(base_agent.BaseAgent):
 
 
     def step(self, obs):
+        super(L2AgentBob, self).step(obs)
+        action = random.choice(self.actions_econ)
+        return getattr(self, action)(obs)
+
+
+    def step(self, obs):
         super(Agent, self).step(obs)
         command_centres = self.get_my_units_by_type(obs, units.Terran.CommandCenter)
         enemy_bases = self.get_enemy_completed_units_by_type(obs,units.Terran.CommandCenter)
@@ -139,8 +154,33 @@ class Agent(base_agent.BaseAgent):
         if obs.first():
             self.base_top_left = (command_centres[0].x < 32)
 
-
         self.log_actions("\r\nstep,agent=%s" % self.agent_name)
+
+
+        state = str(self.get_state(obs))
+
+        # Original 'best known' action based on Q-Table
+        action = self.qtable.choose_action(state)
+        self.log_actions(",Q-Action=%s" % action)
+
+        while not(getattr(self, action)(obs, check_action_availability_only=True)):
+            # previous action was not feasible, choose the alternative action randomly
+            action = np.random.choice(self.action_list)
+
+        self.log_actions(" Resulting action=%s," % action)
+        if self.previous_action is not None:
+            self.qtable.learn(self.previous_state,
+                                  self.previous_action,
+                                  obs.reward,
+                              'terminal' if obs.last() else state)
+
+        self.previous_state = state
+        self.previous_action = action
+
+        action_res = getattr(self, action)(obs, check_action_availability_only=False)
+        return action_res
+
+
 
 
     def econ_do_nothing(self, obs, check_action_availability_only):
@@ -156,8 +196,8 @@ class Agent(base_agent.BaseAgent):
         if check_action_availability_only:
             return True
         self.log_actions("noop,OK", log_info)
-        #return None
-        return actions.RAW_FUNCTIONS.no_op()
+        return None
+        #return actions.RAW_FUNCTIONS.no_op()
 
 
 
@@ -368,56 +408,27 @@ class Agent(base_agent.BaseAgent):
             return False
         return actions.RAW_FUNCTIONS.no_op()
 
+#######################################################################
 
-
-class RandomAgent(Agent):
-    agent_name = "RandomAgent"
+class L2AgentBob(Agent):
+    agent_name = "Builder"
     should_log_actions = False
+    actions_list = (
+        "econ_do_nothing",
+        "econ_harvest_minerals",
+        "econ_build_supply_depot",
+        "econ_build_barracks",
+        "econ_train_marine"
+    )
 
     def __init__(self):
-        super(RandomAgent, self).__init__()
-        super(RandomAgent, self).init_logging(self.agent_name, self.should_log_actions)
+        super(L2AgentBob, self).__init__()
+        super(L2AgentBob, self).init_logging(self.agent_name, self.should_log_actions)
 
     def step(self, obs):
-        super(RandomAgent, self).step(obs)
-        action = random.choice(self.actions_econ)
-        return getattr(self, action)(obs)
+        super(L2AgentBob, self).step(obs)
 
-
-class SmartAgent(Agent):
-    agent_name = "SmartAgent"
-    should_log_actions = True
-
-    def __init__(self):
-        super(SmartAgent, self).__init__()
-        super(SmartAgent, self).init_logging(self.agent_name, self.should_log_actions)
-        self.qtable_econ = QLearningTable(self.actions_econ)
-        self.qtable_war = QLearningTable(self.actions_war)
-        self.new_game()
-        if os.path.isfile(DQN_econ):
-            logger.info('Load previous learnings (ECON)')
-            self.qtable_econ.q_table = pd.read_pickle(DQN_econ, compression='gzip')
-        else:
-            logger.info('NO previous learnings located (ECON)')
-
-        if os.path.isfile(DQN_war):
-            logger.info('Load previous learnings (WAR)')
-            self.qtable_war.q_table = pd.read_pickle(DQN_war, compression='gzip')
-        else:
-            logger.info('NO previous learnings located (WAR)')
-
-    def reset(self):
-        super(SmartAgent, self).reset()
-        self.new_game()
-
-    def new_game(self):
-        self.base_top_left = None
-        self.previous_state_econ = None
-        self.previous_action_econ = None
-        self.previous_state_war = None
-        self.previous_action_war = None
-
-    def get_state_econ(self, obs):
+    def get_state(self, obs):
         # info for counters
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
         idle_scvs = [scv for scv in scvs if scv.order_length == 0]
@@ -489,9 +500,26 @@ class SmartAgent(Agent):
                 can_afford_marine
                 )
 
+###############################################################################
 
-    def get_state_war(self, obs):
+class L2AgentPeps(Agent):
+    agent_name = "Warrior"
+    should_log_actions = False
+    actions_list = (
+    "war_do_nothing",
+    #        "war_regroup",
+    #        "war_defend",
+    "war_attack"
+    )
 
+    def __init__(self):
+        super(L2AgentPeps, self).__init__()
+        super(L2AgentPeps, self).init_logging(self.agent_name, self.should_log_actions)
+
+    def step(self, obs):
+        super(L2AgentPeps, self).step(obs)
+
+    def get_state(self, obs):
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
 
         # enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
@@ -545,84 +573,51 @@ class SmartAgent(Agent):
         )
 
 
-    def step_war(self, obs):
-        state_war = str(self.get_state_war(obs))
+class SmartAgentG2(Agent):
+    agent_name = "SmartAgent Gen2"
+    should_log_actions = True
 
-        # Original 'best known' action based on Q-Table
-        action_war = self.qtable_war.choose_action(state_war)
-        self.log_actions(",Q-Action=%s" % action_war)
+    # ToDo: check how the instance is initialized
+    AI_Peps = L2AgentPeps()
+    AI_Bob = L2AgentBob()
 
-        while not(getattr(self, action_war)(obs, check_action_availability_only=True)):
-            # previous action was not feasible, choose the alternative action randomly
-            action_war = np.random.choice(self.actions_war)
+    def __init__(self):
+        super(SmartAgentG2, self).__init__()
+        super(SmartAgentG2, self).init_logging(self.agent_name, self.should_log_actions)
+        self.new_game()
 
-        self.log_actions(" Resulting action=%s," % action_war)
-        if self.previous_action_war is not None:
-            self.qtable_war.learn(self.previous_state_war,
-                                  self.previous_action_war,
-                                  obs.reward,
-                              'terminal' if obs.last() else state_war)
+        # ToDo:initL1 with this info
+        if os.path.isfile(DQN_econ):
+            logger.info('Load previous learnings (ECON)')
+            self.qtable_econ.q_table = pd.read_pickle(DQN_econ, compression='gzip')
+        else:
+            logger.info('NO previous learnings located (ECON)')
 
-        self.previous_state_war = state_war
-        self.previous_action_war = action_war
+        if os.path.isfile(DQN_war):
+            logger.info('Load previous learnings (WAR)')
+            self.qtable_war.q_table = pd.read_pickle(DQN_war, compression='gzip')
+        else:
+            logger.info('NO previous learnings located (WAR)')
 
-        action_res = getattr(self, action_war)(obs, check_action_availability_only=False)
-        return action_res
+    def reset(self):
+        super(SmartAgentG2, self).reset()
 
-    def save_econ(self):
-        # Record current learnings
-        logger.info('Record current learnings (ECON)')
-        self.qtable_econ.q_table.to_pickle(DQN_econ, 'gzip')
-
-    def save_war(self):
-        # Record current learnings
-        logger.info('Record current learnings (WAR)')
-        self.qtable_war.q_table.to_pickle(DQN_war, 'gzip')
-
-    def step_econ(self, obs):
-        state_econ = str(self.get_state_econ(obs))
-
-        # Original 'best known' action based on Q-Table
-        action_econ = self.qtable_econ.choose_action(state_econ)
-        self.log_actions(",Q-Action=%s" % action_econ)
-
-        while not(getattr(self, action_econ)(obs, check_action_availability_only=True)):
-            # previous action was not feasible, choose the alternative action randomly
-            action_econ = np.random.choice(self.actions_econ)
-
-        self.log_actions(" Resulting action=%s," % action_econ)
-        if self.previous_action_econ is not None:
-            self.qtable_econ.learn(self.previous_state_econ,
-                                  self.previous_action_econ,
-                                  obs.reward,
-                              'terminal' if obs.last() else state_econ)
-
-        self.previous_state_econ = state_econ
-        self.previous_action_econ = action_econ
-
-        action_res = getattr(self, action_econ)(obs, check_action_availability_only=False)
-        if obs.last():
-            self.log_actions("\r\nlast.obs,NA,NA,NA,NA")
-        return action_res
-
-
+    # ToDo: should be calling
     def step(self, obs):
-        super(SmartAgent, self).step(obs)
+        super(SmartAgentG2, self).step(obs)
         # Econ (AKA 'Bob, the builder') has the precedence over War (AKA Sargent Pepper)
-        res = self.step_econ(obs)
+        res = self.AI_Bob.step(obs)
         if res is None:
-            res = self.step_war(obs)
+            res = self.AI_Peps.step(obs)
 
         if obs.last():
-            self.save_econ()
-            self.save_war()
+            self.AI_Bob.save_DQN()
+            self.AI_Peps.save_DQN()
         return res
 
 
 def main(unused_argv):
-    agentSmart1 = SmartAgent()
-    #agentSmart2 = SmartAgent()
-    #agentRandom = RandomAgent()
+    agentSmart1 = SmartAgentG2()
     with sc2_env.SC2Env(
             #map_name="Simple64",
             map_name="Simple96",
