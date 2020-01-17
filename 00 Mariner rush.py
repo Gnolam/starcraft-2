@@ -103,7 +103,7 @@ class L1Agent:
         self.previous_action = None
 
     def save_DQN(self):
-        logger.info('Record current learnings (%s)' % self.agent_name)
+        logger.info('Record current learnings (%s): %s' % (self.agent_name, self.DQN_filename))
         self.qtable.q_table.to_pickle(self.DQN_filename, 'gzip')
 
     def load_DQN(self):
@@ -154,7 +154,7 @@ class L1Agent:
 
     def step(self, obs):
 
-        print("step at L1 (%s)" % self.agent_name)
+        ## print("step at L1 (%s)" % self.agent_name)
 
         command_centres = self.get_my_units_by_type(obs, units.Terran.CommandCenter)
         enemy_bases = self.get_enemy_completed_units_by_type(obs, units.Terran.CommandCenter)
@@ -190,21 +190,21 @@ class L1Agent:
         self.previous_state = state
         self.previous_action = action
 
-        print("step(%s) ~> %s()" % (self.agent_name, action))
+        ## print("step(%s) ~> %s()" % (self.agent_name, action))
         action_res = getattr(self, action)(obs, check_action_availability_only=False)
-        print("CP7")
+        ## print("CP7")
         return action_res
 
 
     def do_nothing(self, obs, check_action_availability_only):
-        print(" do_nothing(%i)" % check_action_availability_only)
+        ## print(" do_nothing(%i)" % check_action_availability_only)
         if check_action_availability_only:
             return True
         actions.RAW_FUNCTIONS.no_op()
 
 
     def econ_do_nothing(self, obs, check_action_availability_only):
-        print("  econ_nothing(%i)" % check_action_availability_only)
+        ## print("  econ_nothing(%i)" % check_action_availability_only)
         log_info = not check_action_availability_only
         if check_action_availability_only:
             return True
@@ -213,7 +213,7 @@ class L1Agent:
         #return actions.RAW_FUNCTIONS.no_op()
 
     def war_do_nothing(self, obs, check_action_availability_only):
-        print(" war_nothing(%i)" % check_action_availability_only)
+        ## print(" war_nothing(%i)" % check_action_availability_only)
         log_info = not (check_action_availability_only)
         if check_action_availability_only:
             return True
@@ -222,7 +222,7 @@ class L1Agent:
         #return actions.RAW_FUNCTIONS.no_op()
 
     def econ_harvest_minerals(self, obs, check_action_availability_only):
-        print(" econ_harvest_minerals(%i)" % check_action_availability_only)
+        ## print(" econ_harvest_minerals(%i)" % check_action_availability_only)
         log_info = not (check_action_availability_only)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
         idle_scvs = [scv for scv in scvs if scv.order_length == 0]
@@ -260,7 +260,7 @@ class L1Agent:
 
 
     def econ_build_supply_depot(self, obs, check_action_availability_only):
-        print(" econ_build_supply_depot(%i)" % check_action_availability_only)
+        ## print(" econ_build_supply_depot(%i)" % check_action_availability_only)
         log_info = not (check_action_availability_only)
         supply_depots = self.get_my_units_by_type(obs, units.Terran.SupplyDepot)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
@@ -268,15 +268,17 @@ class L1Agent:
                 len(supply_depots),
                 obs.observation.player.minerals,
                 len(scvs)), log_info)
-        if (len(supply_depots) < 3 and obs.observation.player.minerals >= 100 and
+        if (len(supply_depots) < 4 and obs.observation.player.minerals >= 100 and
                 len(scvs) > 0):
             #supply_depot_xy = (22, 26) if self.base_top_left else (35, 42)
             if len(supply_depots) == 0:
-                supply_depot_xy = (20 + 3, 27 + 3) if self.base_top_left else (69 - 3, 77 - 3) # 96 res
+                supply_depot_xy = (20 + 1, 27 + 3) if self.base_top_left else (69 - 3, 77 - 3) # 96 res
             elif len(supply_depots) == 1:
-                supply_depot_xy = (20 + 5, 27 + 3) if self.base_top_left else (69 - 5, 77 - 3)  # 96 res
+                supply_depot_xy = (20 + 3, 27 + 3) if self.base_top_left else (69 - 5, 77 - 3)  # 96 res
+            elif len(supply_depots) == 2:
+                supply_depot_xy = (20 - 3, 27 + 5) if self.base_top_left else (69 - 5, 77 - 5)  # 96 res
             else:
-                supply_depot_xy = (20 + 3, 27 + 5) if self.base_top_left else (69 - 3, 77 - 5)  # 96 res
+                supply_depot_xy = (20 - 3, 27 + 7) if self.base_top_left else (69 - 5, 77 - 7)  # 96 res
             distances = self.get_distances(obs, scvs, supply_depot_xy)
             scv = scvs[np.argmax(distances)]
             self.log_decisions(",OK", log_info)
@@ -291,7 +293,7 @@ class L1Agent:
 
 
     def econ_build_barracks(self, obs, check_action_availability_only):
-        print(" econ_build_barracks(%i)" % check_action_availability_only)
+        ## print(" econ_build_barracks(%i)" % check_action_availability_only)
         log_info = not (check_action_availability_only)
         completed_supply_depots = self.get_my_completed_units_by_type(
             obs, units.Terran.SupplyDepot)
@@ -309,21 +311,21 @@ class L1Agent:
                 # Place for the 1st barrack
                 #barracks_xy = (22, 21) if self.base_top_left else (35, 45)
                 barracks_xy = (20 + 7, 27 + 0) if self.base_top_left else (69 - 7, 77 - 0)  # 96 res
-            elif len(barrackses)==1:
+            elif len(barrackses) == 1:
                 # Place for the 2nd barrack
                 #barracks_xy = (22 + 2, 21 + 2) if self.base_top_left else (35 - 2, 45 - 2)
-                barracks_xy = (20 + 9, 27 + 2) if self.base_top_left else (69 - 9, 77 - 2)  # 96 res
+                barracks_xy = (20 + 9, 27 + 4) if self.base_top_left else (69 - 9, 77 - 2)  # 96 res
             elif len(barrackses) == 2:
                 # Place for the 3rd barrack
                 #barracks_xy = (22 + 4, 21 + 4) if self.base_top_left else (35 - 4, 45 - 4)
-                barracks_xy = (20 + 11, 27 + 4) if self.base_top_left else (69 - 11, 77 - 4)  # 96 res
+                barracks_xy = (20 + 7, 27 + 4) if self.base_top_left else (69 - 11, 77 - 4)  # 96 res
             elif len(barrackses) == 3:
                 # Place for the 4th barrack
-                barracks_xy = (20 + 13, 27 + 6) if self.base_top_left else (69 - 13, 77 - 2)  # 96 res
+                barracks_xy = (20 + 9, 27 + 0) if self.base_top_left else (69 - 13, 77 - 2)  # 96 res
             else:
                 # Place for the last barrack
                 #barracks_xy = (22 + 6, 21 + 6) if self.base_top_left else (35 - 6, 45 - 2)
-                barracks_xy = (20 + 13, 27 + 9) if self.base_top_left else (69 - 7, 77 - 6)  # 96 res
+                barracks_xy = (20 + 1, 27 + 6) if self.base_top_left else (69 - 7, 77 - 6)  # 96 res
             distances = self.get_distances(obs, scvs, barracks_xy)
             #scv = scvs[np.argmin(distances)]
             scv = scvs[np.argmax(distances)]
@@ -463,7 +465,7 @@ class L2AgentBob(L1Agent):
         super(L2AgentBob, self).__init__()
 
     def step(self, obs):
-        print("step at L2AgentBob (%s)" % self.agent_name)
+        ## print("step at L2AgentBob (%s)" % self.agent_name)
         return super(L2AgentBob, self).step(obs)
 
     def get_state(self, obs):
