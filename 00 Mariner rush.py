@@ -143,7 +143,7 @@ class Agent(base_agent.BaseAgent):
             return True
         self.log_actions("noop,OK", log_info)
         return None
-        #return actions_econ.RAW_FUNCTIONS.no_op()
+        #return actions.RAW_FUNCTIONS.no_op()
 
     def war_do_nothing(self, obs, check_action_availability_only):
         log_info = not (check_action_availability_only)
@@ -151,7 +151,7 @@ class Agent(base_agent.BaseAgent):
             return True
         self.log_actions("noop,OK", log_info)
         #return None
-        return actions_econ.RAW_FUNCTIONS.no_op()
+        return actions.RAW_FUNCTIONS.no_op()
 
 
 
@@ -182,12 +182,12 @@ class Agent(base_agent.BaseAgent):
             self.log_actions(",OK", log_info)
             if check_action_availability_only:
                 return True
-            return actions_econ.RAW_FUNCTIONS.Harvest_Gather_unit(
+            return actions.RAW_FUNCTIONS.Harvest_Gather_unit(
                 "now", scv.tag, mineral_patch.tag)
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
-        return actions_econ.RAW_FUNCTIONS.no_op()
+        return actions.RAW_FUNCTIONS.no_op()
 
 
     def econ_build_supply_depot(self, obs, check_action_availability_only):
@@ -207,12 +207,12 @@ class Agent(base_agent.BaseAgent):
             self.log_actions(",OK", log_info)
             if check_action_availability_only:
                 return True
-            return actions_econ.RAW_FUNCTIONS.Build_SupplyDepot_pt(
+            return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
                 "now", scv.tag, supply_depot_xy)
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
-        return actions_econ.RAW_FUNCTIONS.no_op()
+        return actions.RAW_FUNCTIONS.no_op()
 
 
     def econ_build_barracks(self, obs, check_action_availability_only):
@@ -247,12 +247,12 @@ class Agent(base_agent.BaseAgent):
             self.log_actions(",OK", log_info)
             if check_action_availability_only:
                 return True
-            return actions_econ.RAW_FUNCTIONS.Build_Barracks_pt(
+            return actions.RAW_FUNCTIONS.Build_Barracks_pt(
                 "now", scv.tag, barracks_xy)
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
-        return actions_econ.RAW_FUNCTIONS.no_op()
+        return actions.RAW_FUNCTIONS.no_op()
 
 
     def econ_train_marine(self, obs, check_action_availability_only):
@@ -288,11 +288,11 @@ class Agent(base_agent.BaseAgent):
                 self.log_actions(",OK", log_info)
                 if check_action_availability_only:
                     return True
-                return actions_econ.RAW_FUNCTIONS.Train_Marine_quick("now", best_barrack.tag)
+                return actions.RAW_FUNCTIONS.Train_Marine_quick("now", best_barrack.tag)
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
-        return actions_econ.RAW_FUNCTIONS.no_op()
+        return actions.RAW_FUNCTIONS.no_op()
 
 
     def war_attack(self, obs, check_action_availability_only):
@@ -347,14 +347,14 @@ class Agent(base_agent.BaseAgent):
             self.log_actions(" target='%s',OK" % selected_target, log_info)
             if check_action_availability_only:
                 return True
-            return actions_econ.RAW_FUNCTIONS.Attack_pt(
+            return actions.RAW_FUNCTIONS.Attack_pt(
                 "now", marine_army, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
                 #"now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
 
         self.log_actions(",FAIL", log_info)
         if check_action_availability_only:
             return False
-        return actions_econ.RAW_FUNCTIONS.no_op()
+        return actions.RAW_FUNCTIONS.no_op()
 
 
 
@@ -379,7 +379,7 @@ class SmartAgent(Agent):
     def __init__(self):
         super(SmartAgent, self).__init__()
         super(SmartAgent, self).init_logging(self.agent_name, self.should_log_actions)
-        self.qtable_war = QLearningTable(self.actions_econ)
+        self.qtable_econ = QLearningTable(self.actions_econ)
         self.qtable_war = QLearningTable(self.actions_war)
         self.new_game()
         if os.path.isfile(DQN_econ):
@@ -394,6 +394,8 @@ class SmartAgent(Agent):
 
     def new_game(self):
         self.base_top_left = None
+        self.previous_state_econ = None
+        self.previous_action_econ = None
         self.previous_state_war = None
         self.previous_action_war = None
 
@@ -529,14 +531,14 @@ class SmartAgent(Agent):
         state_war = str(self.get_state_war(obs))
 
         # Original 'best known' action based on Q-Table
-        war_action = self.qtable_war.choose_action(state_war)
-        self.log_actions(",Q-Action=%s" % war_action)
+        action_war = self.qtable_war.choose_action(state_war)
+        self.log_actions(",Q-Action=%s" % action_war)
 
-        while not(getattr(self, war_action)(obs, check_action_availability_only=True)):
+        while not(getattr(self, action_war)(obs, check_action_availability_only=True)):
             # previous action was not feasible, choose the alternative action randomly
-            war_action = np.random.choice(self.actions_war)
+            action_war = np.random.choice(self.actions_war)
 
-        self.log_actions(" Resulting action=%s," % war_action)
+        self.log_actions(" Resulting action=%s," % action_war)
         if self.previous_action_war is not None:
             self.qtable_war.learn(self.previous_state_war,
                                   self.previous_action_war,
@@ -549,9 +551,9 @@ class SmartAgent(Agent):
             self.qtable_war.q_table.to_pickle(DQN_war, 'gzip')
 
         self.previous_state_war = state_war
-        self.previous_action_war = war_action
+        self.previous_action_war = action_war
 
-        action_res = getattr(self, war_action)(obs, check_action_availability_only=False)
+        action_res = getattr(self, action_war)(obs, check_action_availability_only=False)
         if obs.last():
             self.log_actions("\r\nlast.obs,NA,NA,NA,NA")
         return action_res
@@ -562,13 +564,13 @@ class SmartAgent(Agent):
 
         # Original 'best known' action based on Q-Table
         action_econ = self.qtable_econ.choose_action(state_econ)
-        self.log_actions(",Q-Action=%s" % action)
+        self.log_actions(",Q-Action=%s" % action_econ)
 
-        while not(getattr(self, action)(obs, check_action_availability_only=True)):
+        while not(getattr(self, action_econ)(obs, check_action_availability_only=True)):
             # previous action was not feasible, choose the alternative action randomly
-            action = np.random.choice(self.actions_econ)
+            action_econ = np.random.choice(self.actions_econ)
 
-        self.log_actions(" Resulting action=%s," % action)
+        self.log_actions(" Resulting action=%s," % action_econ)
         if self.previous_action_econ is not None:
             self.qtable_econ.learn(self.previous_state_econ,
                                   self.previous_action_econ,
