@@ -129,6 +129,11 @@ class L1Agent:
                 and unit.alliance == features.PlayerRelative.SELF]
 
 
+    def get_all_enemy_units(self, obs):
+        return [unit for unit in obs.observation.raw_units
+                if unit.alliance == features.PlayerRelative.ENEMY]
+
+
     def get_enemy_units_by_type(self, obs, unit_type):
         return [unit for unit in obs.observation.raw_units
                 if unit.unit_type == unit_type
@@ -386,11 +391,16 @@ class L1Agent:
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
         self.log_decisions("marines=%i" % len(marines), log_info)
         if len(marines) > 0:
-            attack_xy = (38, 44) if self.base_top_left else (19, 23)
+            #attack_xy = (38, 44) if self.base_top_left else (19, 23) # 64
+            attack_xy = (
+                69 if self.base_top_left else 19 + random.randint(-6, 6),
+                77 if self.base_top_left else 27 + random.randint(-6, 6)
+            )
 
             if True:
                 # ToDo: record my Base (x,y) at the start of the game
-                my_base_xy = (19, 23) if self.base_top_left else (38, 44)
+                #my_base_xy = (19, 23) if self.base_top_left else (38, 44) # 64
+                my_base_xy = (19, 27) if self.base_top_left else (69, 77)  # 96
 
                 enemy_marines = self.get_enemy_units_by_type(obs, units.Terran.Marine)
                 enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
@@ -408,6 +418,10 @@ class L1Agent:
                 elif len(enemy_marines) > 0:
                     attack_target = enemy_marines[np.argmin (self.get_distances(obs, enemy_marines, my_base_xy))]
                     selected_target = "Mariner"
+                else:
+                    all_enemy_units = self.get_all_enemy_units()
+                    if len(all_enemy_units) > 0:
+                        attack_target = all_enemy_units[0]
 
                 if attack_target is not None:
                     attack_xy = (attack_target.x, attack_target.y)
@@ -651,6 +665,7 @@ class SmartAgentG2(base_agent.BaseAgent):
         if res is None:
             res = self.AI_Peps.step(obs)
         if res is None:
+            # Potentially analyze the situation, while the system is 'idle'
             res = actions.RAW_FUNCTIONS.no_op()
 
         if obs.last():
