@@ -9,10 +9,10 @@ from pysc2.env import sc2_env, run_loop
 
 import logging
 
-build_prefix = 'v22'
+build_prefix = 'v22b'
 
-DQN_econ = 'DQNs/v22a_econ.gz'
-DQN_war = 'DQNs/v22a_war.gz'
+DQN_econ = 'DQNs/v22b_econ.gz'
+DQN_war = 'DQNs/v22b_war.gz'
 
 
 logging.basicConfig(format='%(asctime)-15s %(message)s')
@@ -65,6 +65,7 @@ class QLearningTable:
         q_predict = self.q_table.loc[s, a]
 
         #fh_Q.write(str(self.q_table)); fh_Q.write("\r\n")
+        #print("R = %i" % r)
 
         if s_ != 'terminal':
             q_target = r + self.reward_decay * self.q_table.loc[s_, :].max()
@@ -180,11 +181,11 @@ class L1Agent:
             action = np.random.choice(self.action_list)
 
 
-        self.log_decisions(" Resulting action=%s," % action)
+        #self.log_decisions(" Resulting action=%s," % action)
         if self.previous_action is not None:
             self.qtable.learn(self.previous_state,
-                                  self.previous_action,
-                                  obs.reward,
+                              self.previous_action,
+                              1 if obs.last() and obs.reward == 0 else obs.reward,
                               'terminal' if obs.last() else state)
 
         self.previous_state = state
