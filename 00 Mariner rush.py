@@ -89,7 +89,7 @@ class L1Agent:
     DQN_filename = None
     fh_decisions = None
     fh_state_csv = None
-
+    consistent_decision_agent = None
 
     def __init__(self):
         self.qtable = QLearningTable(self.action_list)
@@ -175,6 +175,13 @@ class L1Agent:
         self.log_decisions("\r\nstep,agent=%s" % self.agent_name)
 
         state = str(self.get_state(obs))
+
+        # No action should take place in case state did not change
+        #   no learning either
+        if self.consistent_decision_agent and state == self.previous_state:
+            print("Skipping dur to consistency (%s)" % self.agent_name)
+            return None  # It is a simulation of NOOP
+
 
         # Original 'best known' action based on Q-Table
         action = self.qtable.choose_action(state)
@@ -473,8 +480,7 @@ class L2AgentBob(L1Agent):
     DQN_filename = DQN_econ
     fh_decisions = fh_econ_decisions
     fh_state_csv = fh_econ_state_csv
-
-
+    consistent_decision_agent = False
 
     def __init__(self):
         super(L2AgentBob, self).__init__()
@@ -569,6 +575,7 @@ class L2AgentPeps(L1Agent):
     DQN_filename = DQN_war
     fh_decisions = fh_econ_decisions
     fh_state_csv = fh_war_decisions
+    consistent_decision_agent = False
 
     def __init__(self):
         super(L2AgentPeps, self).__init__()
