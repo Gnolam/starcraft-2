@@ -183,7 +183,7 @@ class L1Agent:
         # No action should take place in case state did not change
         #   no learning either
         if self.consistent_decision_agent and state == self.previous_state:
-            print("Skipping dur to consistency (%s)" % self.agent_name)
+            #print("Skipping dur to consistency (%s)" % self.agent_name)
             return None  # It is a simulation of NOOP
 
 
@@ -430,7 +430,7 @@ class L1Agent:
                     attack_target = enemy_marines[np.argmin (self.get_distances(obs, enemy_marines, my_base_xy))]
                     selected_target = "Mariner"
                 else:
-                    all_enemy_units = self.get_all_enemy_units()
+                    all_enemy_units = self.get_all_enemy_units(obs)
                     if len(all_enemy_units) > 0:
                         attack_target = all_enemy_units[0]
 
