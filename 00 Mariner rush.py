@@ -9,10 +9,10 @@ from pysc2.env import sc2_env, run_loop
 
 import logging
 
-build_prefix = 'v22b'
+build_prefix = 'v23a_consistent'
 
-DQN_econ = 'DQNs/v22b_econ.gz'
-DQN_war = 'DQNs/v22b_war.gz'
+DQN_econ = 'DQNs/%s_econ.gz' % build_prefix
+DQN_war = 'DQNs/%s_war.gz' % build_prefix
 
 
 logging.basicConfig(format='%(asctime)-15s %(message)s')
@@ -36,6 +36,10 @@ fh_global_debug = open('logs/%s_global.log' % build_prefix, "a+")
 setup_greedy = .9
 # global_log_action = True
 # global_log_action_logic = False
+
+consistent_econ = True
+consistent_war = True
+
 
 ########################################################################################################################
 
@@ -480,7 +484,7 @@ class L2AgentBob(L1Agent):
     DQN_filename = DQN_econ
     fh_decisions = fh_econ_decisions
     fh_state_csv = fh_econ_state_csv
-    consistent_decision_agent = False
+    consistent_decision_agent = consistent_econ
 
     def __init__(self):
         super(L2AgentBob, self).__init__()
@@ -575,7 +579,7 @@ class L2AgentPeps(L1Agent):
     DQN_filename = DQN_war
     fh_decisions = fh_econ_decisions
     fh_state_csv = fh_war_decisions
-    consistent_decision_agent = False
+    consistent_decision_agent = consistent_war
 
     def __init__(self):
         super(L2AgentPeps, self).__init__()
