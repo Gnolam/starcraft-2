@@ -2,3 +2,6 @@ venv/
 logs/
 DQNs/
 .idea/
+debug/
+zTemp/
+agents/__pycache__/
