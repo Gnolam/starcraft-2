@@ -1,102 +1,74 @@
 import random
 import numpy as np
 import pandas as pd
-import os
 from absl import app
 from pysc2.agents import base_agent
 from pysc2.lib import actions, features, units
 from pysc2.env import sc2_env, run_loop
 
+#from agents.l1_class import L1Agent
+
 import logging
 
-build_prefix = 'v23a_consistent'
+run_id = 'v23a_consistent'
 
-DQN_econ = 'DQNs/%s_econ.gz' % build_prefix
-DQN_war = 'DQNs/%s_war.gz' % build_prefix
+########################################################################################################################
 
+
+DQN_econ = 'DQNs/%s_econ.gz' % run_id
+DQN_war = 'DQNs/%s_war.gz' % run_id
 
 logging.basicConfig(format='%(asctime)-15s %(message)s')
-fh = logging.FileHandler('logs/%s.log' % build_prefix)
+fh = logging.FileHandler('logs/%s.log' % run_id)
 logger = logging.getLogger()
 logger.setLevel("INFO")
 
-fh_decisions = open('logs/%s_decisions.log' % build_prefix, "a+")
-fh_obs = open('logs/%s_obs.log' % build_prefix, "a+")
+fh_decisions = open('logs/%s_decisions.log' % run_id, "a+")
+fh_obs = open('logs/%s_obs.log' % run_id, "a+")
 
 fh_econ_state_csv = None
 fh_econ_decisions = None
 
 fh_war_state_csv = None
-fh_war_decisions = open('logs/%s_war_decisions.log' % build_prefix, "a+")
+fh_war_decisions = open('logs/%s_war_decisions.log' % run_id, "a+")
 
 global_debug = False
 
-fh_global_debug = open('logs/%s_global.log' % build_prefix, "a+")
+fh_global_debug = open('logs/%s_global.log' % run_id, "a+")
 
-setup_greedy = .9
 # global_log_action = True
 # global_log_action_logic = False
 
-consistent_econ = True
-consistent_war = True
+consistent_econ = False
+consistent_war = False
 
 
 ########################################################################################################################
 
-class QLearningTable:
-    def __init__(self, actions, learning_rate=0.01, reward_decay=0.9):
-        self.actions = actions
-        self.learning_rate = learning_rate
-        self.reward_decay = reward_decay
-        self.q_table = pd.DataFrame(columns=self.actions, dtype=np.float64)
 
-    def choose_action(self, observation, e_greedy=setup_greedy):
-        self.check_state_exist(observation)
-        if np.random.uniform() < e_greedy:
-            # if global_log_action:
-            #     fh_decisions.write("<=>")
-            state_action = self.q_table.loc[observation, :]
-            action = np.random.choice(
-                state_action[state_action == np.max(state_action)].index)
-        else:
-            action = np.random.choice(self.actions)
-            # if global_log_action:
-            #     fh_decisions.write("<~>")
-        return action
-
-    def learn(self, s, a, r, s_):
-        self.check_state_exist(s_)
-        q_predict = self.q_table.loc[s, a]
-
-        #fh_Q.write(str(self.q_table)); fh_Q.write("\r\n")
-        #print("R = %i" % r)
-
-        if s_ != 'terminal':
-            q_target = r + self.reward_decay * self.q_table.loc[s_, :].max()
-        else:
-            q_target = r
-        self.q_table.loc[s, a] += self.learning_rate * (q_target - q_predict)
-
-    def check_state_exist(self, state):
-        if state not in self.q_table.index:
-            self.q_table = self.q_table.append(pd.Series([0] * len(self.actions),
-                                                         index=self.q_table.columns,
-                                                         name=state))
 
 ########################################################################################################################
+
+from agents.q_table import QLearningTable
+from pysc2.lib import actions, features, units
+
+import os
+import numpy as np
+import pandas as pd
+
 
 class L1Agent:
-
-    # ToDo: these params should be passed from sub-class
-    #hjaction_list = ("do_nothing","do_nothing")
+    # hjaction_list = ("do_nothing","do_nothing")
     agent_name = "L1"
     DQN_filename = None
     fh_decisions = None
     fh_state_csv = None
     consistent_decision_agent = None
+    logger = None
 
-    def __init__(self):
+    def __init__(self, logger):
         self.qtable = QLearningTable(self.action_list)
+        self.logger = logger
         self.new_game()
 
     def reset(self):
@@ -108,15 +80,15 @@ class L1Agent:
         self.previous_action = None
 
     def save_DQN(self):
-        logger.info('Record current learnings (%s): %s' % (self.agent_name, self.DQN_filename))
+        self.logger.info('Record current learnings (%s): %s' % (self.agent_name, self.DQN_filename))
         self.qtable.q_table.to_pickle(self.DQN_filename, 'gzip')
 
     def load_DQN(self):
-        if os.path.isfile(DQN_econ):
-            logger.info('Load previous learnings (%s)' % self.agent_name)
+        if os.path.isfile(self.DQN_filename):
+            self.logger.info('Load previous learnings (%s)' % self.agent_name)
             self.qtable.q_table = pd.read_pickle(self.DQN_filename, compression='gzip')
         else:
-            logger.info('NO previous learnings located (%s)' % self.agent_name)
+            self.logger.info('NO previous learnings located (%s)' % self.agent_name)
 
     def log_decisions(self, s_message, should_print=True):
         if should_print and self.fh_decisions is not None:
@@ -126,17 +98,14 @@ class L1Agent:
         if should_print and self.fh_state_csv is not None:
             self.fh_state_csv.write(s_message)
 
-
     def get_my_units_by_type(self, obs, unit_type):
         return [unit for unit in obs.observation.raw_units
                 if unit.unit_type == unit_type
                 and unit.alliance == features.PlayerRelative.SELF]
 
-
     def get_all_enemy_units(self, obs):
         return [unit for unit in obs.observation.raw_units
                 if unit.alliance == features.PlayerRelative.ENEMY]
-
 
     def get_enemy_units_by_type(self, obs, unit_type):
         return [unit for unit in obs.observation.raw_units
@@ -149,22 +118,19 @@ class L1Agent:
                 and unit.build_progress == 100
                 and unit.alliance == features.PlayerRelative.SELF]
 
-
     def get_enemy_completed_units_by_type(self, obs, unit_type):
         return [unit for unit in obs.observation.raw_units
                 if unit.unit_type == unit_type
                 and unit.build_progress == 100
                 and unit.alliance == features.PlayerRelative.ENEMY]
 
-
     def get_distances(self, obs, units, xy):
         units_xy = [(unit.x, unit.y) for unit in units]
         return np.linalg.norm(np.array(units_xy) - np.array(xy), axis=1)
 
-
     def step(self, obs):
 
-        ## print("step at L1 (%s)" % self.agent_name)
+        # print("step at L1 (%s)" % self.agent_name)
 
         command_centres = self.get_my_units_by_type(obs, units.Terran.CommandCenter)
         enemy_bases = self.get_enemy_completed_units_by_type(obs, units.Terran.CommandCenter)
@@ -183,21 +149,18 @@ class L1Agent:
         # No action should take place in case state did not change
         #   no learning either
         if self.consistent_decision_agent and state == self.previous_state:
-            print("Skipping dur to consistency (%s)" % self.agent_name)
+            #print("Skipping dur to consistency (%s)" % self.agent_name)
             return None  # It is a simulation of NOOP
-
 
         # Original 'best known' action based on Q-Table
         action = self.qtable.choose_action(state)
         self.log_decisions(",Q-Action=%s" % action)
 
-
-        while not(getattr(self, action)(obs, check_action_availability_only=True)):
+        while not (getattr(self, action)(obs, check_action_availability_only=True)):
             # previous action was not feasible, choose the alternative action randomly
             action = np.random.choice(self.action_list)
 
-
-        #self.log_decisions(" Resulting action=%s," % action)
+        # self.log_decisions(" Resulting action=%s," % action)
         if self.previous_action is not None:
             self.qtable.learn(self.previous_state,
                               self.previous_action,
@@ -212,13 +175,11 @@ class L1Agent:
         ## print("CP7")
         return action_res
 
-
     def do_nothing(self, obs, check_action_availability_only):
         ## print(" do_nothing(%i)" % check_action_availability_only)
         if check_action_availability_only:
             return True
         actions.RAW_FUNCTIONS.no_op()
-
 
     def econ_do_nothing(self, obs, check_action_availability_only):
         ## print("  econ_nothing(%i)" % check_action_availability_only)
@@ -227,7 +188,7 @@ class L1Agent:
             return True
         self.log_decisions("noop,OK", log_info)
         return None
-        #return actions.RAW_FUNCTIONS.no_op()
+        # return actions.RAW_FUNCTIONS.no_op()
 
     def war_do_nothing(self, obs, check_action_availability_only):
         ## print(" war_nothing(%i)" % check_action_availability_only)
@@ -236,7 +197,7 @@ class L1Agent:
             return True
         self.log_decisions("noop,OK", log_info)
         return None
-        #return actions.RAW_FUNCTIONS.no_op()
+        # return actions.RAW_FUNCTIONS.no_op()
 
     def econ_harvest_minerals(self, obs, check_action_availability_only):
         ## print(" econ_harvest_minerals(%i)" % check_action_availability_only)
@@ -275,21 +236,20 @@ class L1Agent:
             return False
         return actions.RAW_FUNCTIONS.no_op()
 
-
     def econ_build_supply_depot(self, obs, check_action_availability_only):
         ## print(" econ_build_supply_depot(%i)" % check_action_availability_only)
         log_info = not (check_action_availability_only)
         supply_depots = self.get_my_units_by_type(obs, units.Terran.SupplyDepot)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
         self.log_decisions("supply_depots=%i minerals=%i scvs=%i" % (
-                len(supply_depots),
-                obs.observation.player.minerals,
-                len(scvs)), log_info)
+            len(supply_depots),
+            obs.observation.player.minerals,
+            len(scvs)), log_info)
         if (len(supply_depots) < 4 and obs.observation.player.minerals >= 100 and
                 len(scvs) > 0):
-            #supply_depot_xy = (22, 26) if self.base_top_left else (35, 42)
+            # supply_depot_xy = (22, 26) if self.base_top_left else (35, 42)
             if len(supply_depots) == 0:
-                supply_depot_xy = (20 + 1, 27 + 3) if self.base_top_left else (69 - 3, 77 - 3) # 96 res
+                supply_depot_xy = (20 + 1, 27 + 3) if self.base_top_left else (69 - 3, 77 - 3)  # 96 res
             elif len(supply_depots) == 1:
                 supply_depot_xy = (20 + 3, 27 + 3) if self.base_top_left else (69 - 5, 77 - 3)  # 96 res
             elif len(supply_depots) == 2:
@@ -308,7 +268,6 @@ class L1Agent:
             return False
         return actions.RAW_FUNCTIONS.no_op()
 
-
     def econ_build_barracks(self, obs, check_action_availability_only):
         ## print(" econ_build_barracks(%i)" % check_action_availability_only)
         log_info = not (check_action_availability_only)
@@ -317,34 +276,34 @@ class L1Agent:
         barrackses = self.get_my_units_by_type(obs, units.Terran.Barracks)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
         self.log_decisions("completed_supply_depots=%i barracks=%i minerals=%i scvs=%i" % (
-                len(completed_supply_depots),
-                len(barrackses),
-                obs.observation.player.minerals,
-                len(scvs)), log_info)
+            len(completed_supply_depots),
+            len(barrackses),
+            obs.observation.player.minerals,
+            len(scvs)), log_info)
         if (len(completed_supply_depots) > 0 and len(barrackses) < 5 and
                 obs.observation.player.minerals >= 150 and len(scvs) > 0):
 
             if len(barrackses) == 0:
                 # Place for the 1st barrack
-                #barracks_xy = (22, 21) if self.base_top_left else (35, 45)
+                # barracks_xy = (22, 21) if self.base_top_left else (35, 45)
                 barracks_xy = (20 + 7, 27 + 0) if self.base_top_left else (69 - 7, 77 - 0)  # 96 res
             elif len(barrackses) == 1:
                 # Place for the 2nd barrack
-                #barracks_xy = (22 + 2, 21 + 2) if self.base_top_left else (35 - 2, 45 - 2)
+                # barracks_xy = (22 + 2, 21 + 2) if self.base_top_left else (35 - 2, 45 - 2)
                 barracks_xy = (20 + 9, 27 + 4) if self.base_top_left else (69 - 9, 77 - 2)  # 96 res
             elif len(barrackses) == 2:
                 # Place for the 3rd barrack
-                #barracks_xy = (22 + 4, 21 + 4) if self.base_top_left else (35 - 4, 45 - 4)
+                # barracks_xy = (22 + 4, 21 + 4) if self.base_top_left else (35 - 4, 45 - 4)
                 barracks_xy = (20 + 7, 27 + 4) if self.base_top_left else (69 - 11, 77 - 4)  # 96 res
             elif len(barrackses) == 3:
                 # Place for the 4th barrack
                 barracks_xy = (20 + 9, 27 + 0) if self.base_top_left else (69 - 13, 77 - 2)  # 96 res
             else:
                 # Place for the last barrack
-                #barracks_xy = (22 + 6, 21 + 6) if self.base_top_left else (35 - 6, 45 - 2)
+                # barracks_xy = (22 + 6, 21 + 6) if self.base_top_left else (35 - 6, 45 - 2)
                 barracks_xy = (20 + 1, 27 + 6) if self.base_top_left else (69 - 7, 77 - 6)  # 96 res
             distances = self.get_distances(obs, scvs, barracks_xy)
-            #scv = scvs[np.argmin(distances)]
+            # scv = scvs[np.argmin(distances)]
             scv = scvs[np.argmax(distances)]
             self.log_decisions(",OK", log_info)
             if check_action_availability_only:
@@ -355,7 +314,6 @@ class L1Agent:
         if check_action_availability_only:
             return False
         return actions.RAW_FUNCTIONS.no_op()
-
 
     def econ_train_marine(self, obs, check_action_availability_only):
         log_info = not (check_action_availability_only)
@@ -384,7 +342,6 @@ class L1Agent:
             #     fh_action_logic.write("Load length: %s\r\n" % str(all_order_length))
             #     fh_action_logic.write("Chosen barrack with length: %i\r\n" % best_barrack.order_length)
 
-
             self.log_decisions("(best) barracks.order_length=%i" % best_barrack.order_length, log_info)
             if best_barrack.order_length < 5:
                 self.log_decisions(",OK", log_info)
@@ -396,13 +353,12 @@ class L1Agent:
             return False
         return actions.RAW_FUNCTIONS.no_op()
 
-
     def war_attack(self, obs, check_action_availability_only):
         log_info = not (check_action_availability_only)
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
         self.log_decisions("marines=%i" % len(marines), log_info)
         if len(marines) > 0:
-            #attack_xy = (38, 44) if self.base_top_left else (19, 23) # 64
+            # attack_xy = (38, 44) if self.base_top_left else (19, 23) # 64
             attack_xy = (
                 69 if self.base_top_left else 19 + random.randint(-6, 6),
                 77 if self.base_top_left else 27 + random.randint(-6, 6)
@@ -410,12 +366,12 @@ class L1Agent:
 
             if True:
                 # ToDo: record my Base (x,y) at the start of the game
-                #my_base_xy = (19, 23) if self.base_top_left else (38, 44) # 64
+                # my_base_xy = (19, 23) if self.base_top_left else (38, 44) # 64
                 my_base_xy = (19, 27) if self.base_top_left else (69, 77)  # 96
 
                 enemy_marines = self.get_enemy_units_by_type(obs, units.Terran.Marine)
                 enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
-                enemy_base = self.get_enemy_completed_units_by_type(obs,units.Terran.CommandCenter)
+                enemy_base = self.get_enemy_completed_units_by_type(obs, units.Terran.CommandCenter)
 
                 attack_target = None
                 selected_target = "N/A"
@@ -427,7 +383,7 @@ class L1Agent:
                     attack_target = enemy_scvs[np.argmin(self.get_distances(obs, enemy_scvs, my_base_xy))]
                     selected_target = "SCV"
                 elif len(enemy_marines) > 0:
-                    attack_target = enemy_marines[np.argmin (self.get_distances(obs, enemy_marines, my_base_xy))]
+                    attack_target = enemy_marines[np.argmin(self.get_distances(obs, enemy_marines, my_base_xy))]
                     selected_target = "Mariner"
                 else:
                     all_enemy_units = self.get_all_enemy_units()
@@ -460,7 +416,7 @@ class L1Agent:
                 return True
             return actions.RAW_FUNCTIONS.Attack_pt(
                 "now", marine_army, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
-                #"now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
+            # "now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
 
         self.log_decisions(",FAIL", log_info)
         if check_action_availability_only:
@@ -486,8 +442,8 @@ class L2AgentBob(L1Agent):
     fh_state_csv = fh_econ_state_csv
     consistent_decision_agent = consistent_econ
 
-    def __init__(self):
-        super(L2AgentBob, self).__init__()
+    def __init__(self, logger):
+        super(L2AgentBob, self).__init__(logger)
 
     def step(self, obs):
         ## print("step at L2AgentBob (%s)" % self.agent_name)
@@ -566,12 +522,12 @@ class L2AgentBob(L1Agent):
                 )
 
 
+
 ########################################################################################################################
 
 
 class L2AgentPeps(L1Agent):
-
-    action_list = ("war_do_nothing","war_attack")
+    action_list = ("war_do_nothing", "war_attack")
     # "war_regroup",
     # "war_defend",
 
@@ -581,13 +537,11 @@ class L2AgentPeps(L1Agent):
     fh_state_csv = fh_war_decisions
     consistent_decision_agent = consistent_war
 
-    def __init__(self):
-        super(L2AgentPeps, self).__init__()
-
+    def __init__(self, logger):
+        super(L2AgentPeps, self).__init__(logger)
 
     def step(self, obs):
         return super(L2AgentPeps, self).step(obs)
-
 
     def get_state(self, obs):
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
@@ -637,8 +591,8 @@ class L2AgentPeps(L1Agent):
         #     self.log_actions(" %s=%s" % (k, v))
 
         return (
-                len(marines),
-                enemy_army_band
+            len(marines),
+            enemy_army_band
         )
 
 
@@ -649,8 +603,8 @@ class SmartAgentG2(base_agent.BaseAgent):
     agent_name = "SmartAgent Gen2"
     should_log_actions = True
 
-    AI_Peps = L2AgentPeps()
-    AI_Bob = L2AgentBob()
+    AI_Peps = L2AgentPeps(logger)
+    AI_Bob = L2AgentBob(logger)
 
     def __init__(self):
         super(SmartAgentG2, self).__init__()
@@ -661,12 +615,10 @@ class SmartAgentG2(base_agent.BaseAgent):
         self.AI_Bob.load_DQN()
         self.AI_Peps.load_DQN()
 
-
     def reset(self):
         super(SmartAgentG2, self).reset()
         self.AI_Bob.reset()
         self.AI_Peps.reset()
-
 
     def step(self, obs):
         super(SmartAgentG2, self).step(obs)
@@ -692,24 +644,24 @@ class SmartAgentG2(base_agent.BaseAgent):
 def main(unused_argv):
     agentSmart1 = SmartAgentG2()
     with sc2_env.SC2Env(
-            #map_name="Simple64",
+            # map_name="Simple64",
             map_name="Simple96",
-            #map_name="AbyssalReef",
-            #players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Agent(sc2_env.Race.terran)],
-            players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.medium )],
-            #players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.medium_hard )],
+            # map_name="AbyssalReef",
+            # players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Agent(sc2_env.Race.terran)],
+            players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.medium)],
+            # players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.medium_hard )],
             agent_interface_format=features.AgentInterfaceFormat(
                 action_space=actions.ActionSpace.RAW,
                 use_raw_units=True,
-                #raw_resolution=64,
+                # raw_resolution=64,
                 raw_resolution=96
             ),
             step_mul=48,
             disable_fog=True,
     ) as env:
         run_loop.run_loop([agentSmart1], env, max_episodes=10000)
-        #run_loop.run_loop([agentSmart1, agentRandom], env, max_episodes=1000)
-        #run_loop.run_loop([agentSmart1, agentSmart2], env, max_episodes=1000)
+        # run_loop.run_loop([agentSmart1, agentRandom], env, max_episodes=1000)
+        # run_loop.run_loop([agentSmart1, agentSmart2], env, max_episodes=1000)
     try:
         pass
     except KeyboardInterrupt:
