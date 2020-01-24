@@ -10,6 +10,8 @@ class L2AgentBob(L1Agent):
         "econ_train_marine"
     )
 
+    agent_name = "Bob"
+
     def __init__(self, logger, DQN_filename, fh_decisions, fh_state_csv, consistent_decision_agent):
         self.DQN_filename = DQN_filename
         self.fh_decisions = fh_decisions

@@ -6,6 +6,8 @@ class L2AgentPeps(L1Agent):
     # "war_regroup",
     # "war_defend",
 
+    agent_name = "Peps"
+
     def __init__(self, logger, DQN_filename, fh_decisions, fh_state_csv, consistent_decision_agent):
         self.DQN_filename = DQN_filename
         self.fh_decisions = fh_decisions
