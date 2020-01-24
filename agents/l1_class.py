@@ -2,10 +2,7 @@ from agents.q_table import QLearningTable
 import random, os
 import numpy as np
 import pandas as pd
-from absl import app
-from pysc2.agents import base_agent
 from pysc2.lib import actions, features, units
-from pysc2.env import sc2_env, run_loop
 
 
 
@@ -19,9 +16,8 @@ class L1Agent:
     consistent_decision_agent = None
     logger = None
 
-    def __init__(self, logger):
+    def __init__(self):
         self.qtable = QLearningTable(self.action_list)
-        self.logger = logger
         self.new_game()
 
     def reset(self):
@@ -45,7 +41,10 @@ class L1Agent:
 
     def log_decisions(self, s_message, should_print=True):
         if should_print and self.fh_decisions is not None:
-            self.fh_decisions.write(s_message)
+            fh = open(self.fh_decisions, "a+")
+            fh.write(s_message)
+            fh.close()
+
 
     def log_state(self, s_message, should_print=True):
         if should_print and self.fh_state_csv is not None:

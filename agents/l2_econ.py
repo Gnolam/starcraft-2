@@ -17,7 +17,8 @@ class L2AgentBob(L1Agent):
         self.fh_decisions = fh_decisions
         self.fh_state_csv = fh_state_csv
         self.consistent_decision_agent = consistent_decision_agent
-        super(L2AgentBob, self).__init__(logger)
+        self.logger = logger
+        super(L2AgentBob, self).__init__()
 
     def step(self, obs):
         ## print("step at L2AgentBob (%s)" % self.agent_name)

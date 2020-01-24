@@ -13,7 +13,8 @@ class L2AgentPeps(L1Agent):
         self.fh_decisions = fh_decisions
         self.fh_state_csv = fh_state_csv
         self.consistent_decision_agent = consistent_decision_agent
-        super(L2AgentPeps, self).__init__(logger)
+        self.logger = logger
+        super(L2AgentPeps, self).__init__()
 
     def step(self, obs):
         return super(L2AgentPeps, self).step(obs)

@@ -5,3 +5,4 @@ DQNs/
 debug/
 zTemp/
 agents/__pycache__/
+runs/

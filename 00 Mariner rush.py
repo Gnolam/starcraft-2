@@ -1,9 +1,6 @@
-import random
-import numpy as np
-import pandas as pd
 from absl import app
 from pysc2.agents import base_agent
-from pysc2.lib import actions, features, units
+from pysc2.lib import actions, features
 from pysc2.env import sc2_env, run_loop
 
 # from agents.l1_class import L1Agent
@@ -11,31 +8,39 @@ from agents.l2_econ import L2AgentBob
 from agents.l2_war import L2AgentPeps
 
 import logging
+import os
 
-run_id = 'v23a_consistent'
+run_id = 'v23c'
 
 ########################################################################################################################
+
+project_path = "runs/%s" % run_id
+if not os.path.exists(project_path):
+    os.makedirs(project_path)
+
 
 DQN_econ = 'DQNs/%s_econ.gz' % run_id
 DQN_war = 'DQNs/%s_war.gz' % run_id
 
 logging.basicConfig(format='%(asctime)-15s %(message)s')
-fh = logging.FileHandler('logs/%s.log' % run_id)
+fh = logging.FileHandler('%s/main.log' % project_path)
 logger = logging.getLogger()
 logger.setLevel("INFO")
-
-fh_decisions = open('logs/%s_decisions.log' % run_id, "a+")
-fh_obs = open('logs/%s_obs.log' % run_id, "a+")
 
 fh_econ_state_csv = None
 fh_econ_decisions = None
 
 fh_war_state_csv = None
-fh_war_decisions = open('logs/%s_war_decisions.log' % run_id, "a+")
+print("asdasd")
+fh_war_decisions = open('%s/war_decisions.log' % project_path, "w")
+fh_war_decisions.write("Hi there!")
+fh_war_decisions.close()
+fh_war_decisions = '%s/war_decisions.log' % project_path
+
 
 global_debug = False
 
-fh_global_debug = open('logs/%s_global.log' % run_id, "a+")
+fh_global_debug = open('%s/global.log' % project_path, "a+")
 
 # global_log_action = True
 # global_log_action_logic = False
@@ -45,24 +50,25 @@ consistent_war = False
 
 ########################################################################################################################
 
+
 class SmartAgentG2(base_agent.BaseAgent):
     agent_name = "SmartAgent Gen2"
     should_log_actions = True
 
     AI_Peps = L2AgentPeps(
         DQN_filename=DQN_war,
-        fh_decisions=fh_econ_decisions,
-        fh_state_csv=fh_war_decisions,
+        fh_decisions=fh_war_decisions,
+        fh_state_csv=fh_war_state_csv,
         consistent_decision_agent=consistent_war,
         logger=logger
     )
 
     AI_Bob = L2AgentBob(
-        consistent_decision_agent=consistent_econ,
         DQN_filename=DQN_econ,
-        logger=logger,
         fh_decisions=fh_econ_decisions,
-        fh_state_csv=fh_econ_state_csv
+        fh_state_csv=fh_econ_state_csv,
+        consistent_decision_agent=consistent_econ,
+        logger=logger
     )
 
     def __init__(self):
