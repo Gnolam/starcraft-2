@@ -5,8 +5,6 @@ import pandas as pd
 from pysc2.lib import actions, features, units
 
 
-
-
 class L1Agent:
     # hjaction_list = ("do_nothing","do_nothing")
     agent_name = "L1"
@@ -39,12 +37,13 @@ class L1Agent:
         else:
             self.logger.info('NO previous learnings located (%s)' % self.agent_name)
 
-    def log_decisions(self, s_message, should_print=True):
-        if should_print and self.fh_decisions is not None:
+    def log_decisions(self, s_message, should_print=False):
+        if self.fh_decisions is not None:
             fh = open(self.fh_decisions, "a+")
             fh.write(s_message)
             fh.close()
-
+        if should_print:
+            print("[%s]: %s" % (self.agent_name, s_message))
 
     def log_state(self, s_message, should_print=True):
         if should_print and self.fh_state_csv is not None:
@@ -81,9 +80,6 @@ class L1Agent:
         return np.linalg.norm(np.array(units_xy) - np.array(xy), axis=1)
 
     def step(self, obs):
-
-        # print("step at L1 (%s)" % self.agent_name)
-
         command_centres = self.get_my_units_by_type(obs, units.Terran.CommandCenter)
         enemy_bases = self.get_enemy_completed_units_by_type(obs, units.Terran.CommandCenter)
 
@@ -100,8 +96,8 @@ class L1Agent:
 
         # No action should take place in case state did not change
         #   no learning either
-        if self.consistent_decision_agent and state == self.previous_state:
-            #print("Skipping dur to consistency (%s)" % self.agent_name)
+        if self.consistent_decision_agent and state == self.previous_state and (not obs.last()):
+            self.log_decisions("Skipping due to consistency of states")
             return None  # It is a simulation of NOOP
 
         # Original 'best known' action based on Q-Table

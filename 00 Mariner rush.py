@@ -10,7 +10,7 @@ from agents.l2_war import L2AgentPeps
 import logging
 import os
 
-run_id = 'v23c'
+run_id = 'v24b_consistency_fix'
 
 ########################################################################################################################
 
@@ -28,7 +28,7 @@ logger = logging.getLogger()
 logger.setLevel("INFO")
 
 fh_econ_state_csv = None
-fh_econ_decisions = None
+fh_econ_decisions = '%s/econ_decisions.log' % project_path
 
 fh_war_state_csv = None
 print("asdasd")
@@ -45,8 +45,8 @@ fh_global_debug = open('%s/global.log' % project_path, "a+")
 # global_log_action = True
 # global_log_action_logic = False
 
-consistent_econ = False
-consistent_war = False
+consistent_econ = True
+consistent_war = True
 
 ########################################################################################################################
 
