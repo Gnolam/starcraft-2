@@ -37,13 +37,11 @@ class L1Agent:
         else:
             self.logger.info('NO previous learnings located (%s)' % self.agent_name)
 
-    def log_decisions(self, s_message, should_print=False):
-        if self.fh_decisions is not None:
+    def log_decisions(self, s_message, should_log=False):
+        if self.fh_decisions is not None and should_log:
             fh = open(self.fh_decisions, "a+")
             fh.write(s_message)
             fh.close()
-        if should_print:
-            print("[%s]: %s" % (self.agent_name, s_message))
 
     def log_state(self, s_message, should_print=True):
         if should_print and self.fh_state_csv is not None:
