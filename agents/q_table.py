@@ -25,18 +25,22 @@ class QLearningTable:
             #     fh_decisions.write("<~>")
         return action
 
-    def learn(self, s, a, r, s_):
+    def learn(self, s, a, r, s_, fn):
         self.check_state_exist(s_)
         q_predict = self.q_table.loc[s, a]
-
-        # fh_Q.write(str(self.q_table)); fh_Q.write("\r\n")
-        # print("R = %i" % r)
 
         if s_ != 'terminal':
             q_target = r + self.reward_decay * self.q_table.loc[s_, :].max()
         else:
             q_target = r
-        self.q_table.loc[s, a] += self.learning_rate * (q_target - q_predict)
+
+        error = q_target - q_predict
+        self.q_table.loc[s, a] += self.learning_rate * error
+
+        fh = open(fn, "a+")
+        fh.write('Learning:\n  q_table.loc[%s, %s] = %s\n  self.q_table.loc[%s, :].max() = %s\n   (new) self.q_table.loc[%s, %s] = %s\n\n' %
+                 (s, a, q_predict, s_, q_target, s, a, self.q_table.loc[s, a]))
+        fh.close()
 
     def check_state_exist(self, state):
         if state not in self.q_table.index:

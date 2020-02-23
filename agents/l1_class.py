@@ -1,18 +1,24 @@
-from agents.q_table import QLearningTable
-import random, os
+import os
+import random
+
 import numpy as np
 import pandas as pd
 from pysc2.lib import actions, features, units
 
+from agents.q_table import QLearningTable
+
 
 class L1Agent:
-    # hjaction_list = ("do_nothing","do_nothing")
     agent_name = "L1"
     DQN_filename = None
     fh_decisions = None
     fh_state_csv = None
+    fn_global_debug = None
     consistent_decision_agent = None
     logger = None
+    decisions_hist = {}
+    step_counter = 0
+    game_num = 0
 
     def __init__(self):
         self.qtable = QLearningTable(self.action_list)
@@ -25,6 +31,18 @@ class L1Agent:
         self.base_top_left = None
         self.previous_state = None
         self.previous_action = None
+
+        # History of decisions for future discounting
+        self.decisions_hist = {}
+        self.step_counter = 0
+        self.game_num += 1
+
+    def dump_decisions_hist(self):
+        # json = json.dumps(self.decisions_hist)
+        f = open("logs/decisions_G2.%s_%s.json" % (self.agent_name, self.game_num), "w")
+        # f.write(json)
+        f.write(str(self.decisions_hist))
+        f.close()
 
     def save_DQN(self):
         self.logger.info('Record current learnings (%s): %s' % (self.agent_name, self.DQN_filename))
@@ -106,23 +124,69 @@ class L1Agent:
             # previous action was not feasible, choose the alternative action randomly
             action = np.random.choice(self.action_list)
 
-        # self.log_decisions(" Resulting action=%s," % action)
+        # Temporarily accept Draw as Win
+        reward = .5 if obs.last() and obs.reward == 0 else obs.reward
+        next_state = 'terminal' if obs.last() else state
+
+        # 'LEARN' should be across the WHOLE history
+        # Q-Table should be updated to consume 'batch' history
+        # if self.previous_action is not None:
+        #     self.qtable.learn(
+        #         self.previous_state,
+        #         self.previous_action,
+        #         reward,
+        #         next_state
+        #     )
+
+        # Record decision for later 'batch' learning
         if self.previous_action is not None:
-            self.qtable.learn(self.previous_state,
-                              self.previous_action,
-                              1 if obs.last() and obs.reward == 0 else obs.reward,
-                              'terminal' if obs.last() else state)
+            self.decisions_hist[self.step_counter] = {
+                'previous_state': self.previous_state,
+                'previous_action': self.previous_action,
+                'reward': reward,
+                'next_state': next_state
+            }
+
+        self.step_counter += 1
 
         self.previous_state = state
         self.previous_action = action
 
-        ## print("step(%s) ~> %s()" % (self.agent_name, action))
         action_res = getattr(self, action)(obs, check_action_availability_only=False)
-        ## print("CP7")
         return action_res
 
+    def finalise_game(self):
+        print("[%s]: finalise_game()" % self.agent_name)
+        self.dump_decisions_hist()
+        self.learn_from_game()
+        self.save_DQN()
+        return
+
+    def learn_from_game(self):
+        print("Apply learnings from the game")
+
+        for i in sorted(self.decisions_hist.keys(), reverse=True):
+            previous_state = self.decisions_hist[i]['previous_state']
+            previous_action = self.decisions_hist[i]['previous_action']
+            reward = self.decisions_hist[i]['reward']
+            next_state = self.decisions_hist[i]['next_state']
+
+            fh = open(self.fn_global_debug, "a+")
+            fh.write('[%s]: Apply learning for step %s with reward %s\n  Action: %s\n  States (%s -> %s)\n' %
+                 (self.agent_name, i, reward, previous_action, previous_state, next_state))
+            fh.close()
+
+            self.qtable.learn(
+                previous_state,
+                previous_action,
+                reward,
+                next_state,
+                fn=self.fn_global_debug
+            )
+
+        return
+
     def do_nothing(self, obs, check_action_availability_only):
-        ## print(" do_nothing(%i)" % check_action_availability_only)
         if check_action_availability_only:
             return True
         actions.RAW_FUNCTIONS.no_op()

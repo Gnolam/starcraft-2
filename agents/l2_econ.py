@@ -12,10 +12,11 @@ class L2AgentBob(L1Agent):
 
     agent_name = "Bob"
 
-    def __init__(self, logger, DQN_filename, fh_decisions, fh_state_csv, consistent_decision_agent):
+    def __init__(self, logger, DQN_filename, fh_decisions, fh_state_csv, consistent_decision_agent, fn_global_debug):
         self.DQN_filename = DQN_filename
         self.fh_decisions = fh_decisions
         self.fh_state_csv = fh_state_csv
+        self.fn_global_debug = fn_global_debug
         self.consistent_decision_agent = consistent_decision_agent
         self.logger = logger
         super(L2AgentBob, self).__init__()
