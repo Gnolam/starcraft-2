@@ -156,14 +156,14 @@ class L1Agent:
         return action_res
 
     def finalise_game(self):
-        print("[%s]: finalise_game()" % self.agent_name)
+        #print("[%s]: finalise_game()" % self.agent_name)
         self.dump_decisions_hist()
         self.learn_from_game()
         self.save_DQN()
         return
 
     def learn_from_game(self):
-        print("Apply learnings from the game")
+        # print("Apply learnings from the game")
 
         for i in sorted(self.decisions_hist.keys(), reverse=True):
             previous_state = self.decisions_hist[i]['previous_state']
@@ -382,6 +382,7 @@ class L1Agent:
                 enemy_marines = self.get_enemy_units_by_type(obs, units.Terran.Marine)
                 enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
                 enemy_base = self.get_enemy_completed_units_by_type(obs, units.Terran.CommandCenter)
+                any_enemy_targets = self.get_all_enemy_units(obs)
 
                 attack_target = None
                 selected_target = "N/A"
@@ -395,13 +396,16 @@ class L1Agent:
                 elif len(enemy_marines) > 0:
                     attack_target = enemy_marines[np.argmin(self.get_distances(obs, enemy_marines, my_base_xy))]
                     selected_target = "Mariner"
-                else:
-                    all_enemy_units = self.get_all_enemy_units(obs)
-                    if len(all_enemy_units) > 0:
-                        attack_target = all_enemy_units[0]
+                elif len(any_enemy_targets) > 0:
+                    attack_target = enemy_marines[np.argmin(self.get_distances(obs, any_enemy_targets, my_base_xy))]
+                    selected_target = "ANY"
 
                 if attack_target is not None:
                     attack_xy = (attack_target.x, attack_target.y)
+                    self.log_decisions(
+                        "No target was selected.\n  'Any enemy' vector is: %s\n" % str(any_enemy_targets),
+                        should_log=True)
+
             else:
                 selected_target = "Default"
             distances = self.get_distances(obs, marines, attack_xy)

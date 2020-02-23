@@ -1,6 +1,6 @@
 import pandas as pd
 
-file_from = 'DQNs/v25h_check_positive_only_reward_war.gz'
+file_from = 'DQNs/v25i_check_positive_only_reward_war.gz'
 file_to = 'debug/dqn.csv'
 
 DQN = pd.read_pickle(file_from, compression='gzip')

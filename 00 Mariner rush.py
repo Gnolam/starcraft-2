@@ -10,7 +10,7 @@ from pysc2.lib import actions, features
 from agents.l2_econ import L2AgentBob
 from agents.l2_war import L2AgentPeps
 
-run_id = 'v25h_check_positive_only_reward'
+run_id = 'v25i_check_positive_only_reward'
 
 ########################################################################################################################
 
@@ -43,8 +43,8 @@ fn_global_debug = '%s/global.log' % project_path
 # global_log_action = True
 # global_log_action_logic = False
 
-consistent_econ = True
-consistent_war = True
+consistent_econ = False # True
+consistent_war = False # True
 
 
 ########################################################################################################################
