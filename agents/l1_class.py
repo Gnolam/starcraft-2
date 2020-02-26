@@ -139,6 +139,7 @@ class L1Agent:
         #     )
 
         # Record decision for later 'batch' learning
+        # ToDo: add Q-Table coef here instead of reward
         if self.previous_action is not None:
             self.decisions_hist[self.step_counter] = {
                 'previous_state': self.previous_state,
@@ -397,7 +398,7 @@ class L1Agent:
                     attack_target = enemy_marines[np.argmin(self.get_distances(obs, enemy_marines, my_base_xy))]
                     selected_target = "Mariner"
                 elif len(any_enemy_targets) > 0:
-                    attack_target = enemy_marines[np.argmin(self.get_distances(obs, any_enemy_targets, my_base_xy))]
+                    attack_target = any_enemy_targets[np.argmin(self.get_distances(obs, any_enemy_targets, my_base_xy))]
                     selected_target = "ANY"
 
                 if attack_target is not None:
