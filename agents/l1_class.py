@@ -39,10 +39,11 @@ class L1Agent:
 
     def dump_decisions_hist(self):
         # json = json.dumps(self.decisions_hist)
-        f = open("logs/decisions_G2.%s_%s.json" % (self.agent_name, self.game_num), "w")
-        # f.write(json)
-        f.write(str(self.decisions_hist))
-        f.close()
+        if True:
+            f = open("logs/decisions_G2.%s_%s.json" % (self.agent_name, self.game_num), "w")
+            # f.write(json)
+            f.write(str(self.decisions_hist))
+            f.close()
 
     def save_DQN(self):
         self.logger.info('Record current learnings (%s): %s' % (self.agent_name, self.DQN_filename))
@@ -164,12 +165,16 @@ class L1Agent:
         return
 
     def learn_from_game(self):
-        # print("Apply learnings from the game")
+        reward = None
+        reward_decay = .9
 
         for i in sorted(self.decisions_hist.keys(), reverse=True):
             previous_state = self.decisions_hist[i]['previous_state']
             previous_action = self.decisions_hist[i]['previous_action']
-            reward = self.decisions_hist[i]['reward']
+
+            # Only the final reward (-1 or +1) should be taken into account
+            if reward is None:
+                reward = self.decisions_hist[i]['reward']
             next_state = self.decisions_hist[i]['next_state']
 
             fh = open(self.fn_global_debug, "a+")
@@ -185,6 +190,7 @@ class L1Agent:
                 fn=self.fn_global_debug
             )
 
+            reward *= reward_decay
         return
 
     def do_nothing(self, obs, check_action_availability_only):
