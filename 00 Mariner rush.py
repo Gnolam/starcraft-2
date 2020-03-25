@@ -10,7 +10,7 @@ from pysc2.lib import actions, features
 from agents.l2_econ import L2AgentBob
 from agents.l2_war import L2AgentPeps
 
-run_id = 'v25i_check_positive_only_reward'
+run_id = 'v27a1_first_try_valid_only'
 
 ########################################################################################################################
 
@@ -30,7 +30,7 @@ fh_econ_state_csv = None
 fh_econ_decisions = '%s/econ_decisions.log' % project_path
 
 fh_war_state_csv = None
-print("asdasd")
+
 fh_war_decisions = open('%s/war_decisions.log' % project_path, "w")
 fh_war_decisions.write("Hi there!")
 fh_war_decisions.close()

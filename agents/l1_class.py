@@ -129,18 +129,7 @@ class L1Agent:
         reward = .5 if obs.last() and obs.reward == 0 else obs.reward
         next_state = 'terminal' if obs.last() else state
 
-        # 'LEARN' should be across the WHOLE history
-        # Q-Table should be updated to consume 'batch' history
-        # if self.previous_action is not None:
-        #     self.qtable.learn(
-        #         self.previous_state,
-        #         self.previous_action,
-        #         reward,
-        #         next_state
-        #     )
-
         # Record decision for later 'batch' learning
-        # ToDo: add Q-Table coef here instead of reward
         if self.previous_action is not None:
             self.decisions_hist[self.step_counter] = {
                 'previous_state': self.previous_state,
