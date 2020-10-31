@@ -10,7 +10,9 @@ from pysc2.lib import actions, features
 from agents.l2_econ import L2AgentBob
 from agents.l2_war import L2AgentPeps
 
-run_id = 'v25i_check_positive_only_reward'
+# New checkpoint
+
+run_id = 'test2'
 
 ########################################################################################################################
 
@@ -30,7 +32,6 @@ fh_econ_state_csv = None
 fh_econ_decisions = '%s/econ_decisions.log' % project_path
 
 fh_war_state_csv = None
-print("asdasd")
 fh_war_decisions = open('%s/war_decisions.log' % project_path, "w")
 fh_war_decisions.write("Hi there!")
 fh_war_decisions.close()
@@ -112,6 +113,7 @@ class SmartAgentG2(base_agent.BaseAgent):
 
 def main(unused_argv):
     agentSmart1 = SmartAgentG2()
+    
     with sc2_env.SC2Env(
             # map_name="Simple64",
             map_name="Simple96",
