@@ -200,28 +200,28 @@ class L1Agent:
 
     def econ_do_nothing(self, obs, check_action_availability_only):
         ## print("  econ_nothing(%i)" % check_action_availability_only)
-        log_info = not check_action_availability_only
+        should_log = not check_action_availability_only
         if check_action_availability_only:
             return True
-        self.log_decisions("noop,OK", log_info)
+        self.log_decisions("noop,OK", should_log)
         return None
         # return actions.RAW_FUNCTIONS.no_op()
 
     def war_do_nothing(self, obs, check_action_availability_only):
         ## print(" war_nothing(%i)" % check_action_availability_only)
-        log_info = not (check_action_availability_only)
+        should_log = not (check_action_availability_only)
         if check_action_availability_only:
             return True
-        self.log_decisions("noop,OK", log_info)
+        self.log_decisions("noop,OK", should_log)
         return None
         # return actions.RAW_FUNCTIONS.no_op()
 
     def econ_harvest_minerals(self, obs, check_action_availability_only):
         ## print(" econ_harvest_minerals(%i)" % check_action_availability_only)
-        log_info = not (check_action_availability_only)
+        should_log = not (check_action_availability_only)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
         idle_scvs = [scv for scv in scvs if scv.order_length == 0]
-        self.log_decisions("idle_scvs=%i" % len(idle_scvs), log_info)
+        self.log_decisions("idle_scvs=%i" % len(idle_scvs), should_log)
         if len(idle_scvs) > 0:
             mineral_patches = [unit for unit in obs.observation.raw_units
                                if unit.unit_type in [
@@ -243,25 +243,25 @@ class L1Agent:
             # ToDo: check if the distance from SCV or from StarBase
             distances = self.get_distances(obs, mineral_patches, (scv.x, scv.y))
             mineral_patch = mineral_patches[np.argmin(distances)]
-            self.log_decisions(",OK", log_info)
+            self.log_decisions(",OK", should_log)
             if check_action_availability_only:
                 return True
             return actions.RAW_FUNCTIONS.Harvest_Gather_unit(
                 "now", scv.tag, mineral_patch.tag)
-        self.log_decisions(",FAIL", log_info)
+        self.log_decisions(",FAIL", should_log)
         if check_action_availability_only:
             return False
         return actions.RAW_FUNCTIONS.no_op()
 
     def econ_build_supply_depot(self, obs, check_action_availability_only):
         ## print(" econ_build_supply_depot(%i)" % check_action_availability_only)
-        log_info = not (check_action_availability_only)
+        should_log = not (check_action_availability_only)
         supply_depots = self.get_my_units_by_type(obs, units.Terran.SupplyDepot)
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
         self.log_decisions("supply_depots=%i minerals=%i scvs=%i" % (
             len(supply_depots),
             obs.observation.player.minerals,
-            len(scvs)), log_info)
+            len(scvs)), should_log)
         if (len(supply_depots) < 4 and obs.observation.player.minerals >= 100 and
                 len(scvs) > 0):
             # supply_depot_xy = (22, 26) if self.base_top_left else (35, 42)
@@ -275,19 +275,19 @@ class L1Agent:
                 supply_depot_xy = (20 - 3, 27 + 7) if self.base_top_left else (69 - 5, 77 - 7)  # 96 res
             distances = self.get_distances(obs, scvs, supply_depot_xy)
             scv = scvs[np.argmax(distances)]
-            self.log_decisions(",OK", log_info)
+            self.log_decisions(",OK", should_log)
             if check_action_availability_only:
                 return True
             return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
                 "now", scv.tag, supply_depot_xy)
-        self.log_decisions(",FAIL", log_info)
+        self.log_decisions(",FAIL", should_log)
         if check_action_availability_only:
             return False
         return actions.RAW_FUNCTIONS.no_op()
 
     def econ_build_barracks(self, obs, check_action_availability_only):
         ## print(" econ_build_barracks(%i)" % check_action_availability_only)
-        log_info = not (check_action_availability_only)
+        should_log = not (check_action_availability_only)
         completed_supply_depots = self.get_my_completed_units_by_type(
             obs, units.Terran.SupplyDepot)
         barrackses = self.get_my_units_by_type(obs, units.Terran.Barracks)
@@ -296,7 +296,7 @@ class L1Agent:
             len(completed_supply_depots),
             len(barrackses),
             obs.observation.player.minerals,
-            len(scvs)), log_info)
+            len(scvs)), should_log)
         if (len(completed_supply_depots) > 0 and len(barrackses) < 5 and
                 obs.observation.player.minerals >= 150 and len(scvs) > 0):
 
@@ -322,18 +322,18 @@ class L1Agent:
             distances = self.get_distances(obs, scvs, barracks_xy)
             # scv = scvs[np.argmin(distances)]
             scv = scvs[np.argmax(distances)]
-            self.log_decisions(",OK", log_info)
+            self.log_decisions(",OK", should_log)
             if check_action_availability_only:
                 return True
             return actions.RAW_FUNCTIONS.Build_Barracks_pt(
                 "now", scv.tag, barracks_xy)
-        self.log_decisions(",FAIL", log_info)
+        self.log_decisions(",FAIL", should_log)
         if check_action_availability_only:
             return False
         return actions.RAW_FUNCTIONS.no_op()
 
     def econ_train_marine(self, obs, check_action_availability_only):
-        log_info = not (check_action_availability_only)
+        should_log = not (check_action_availability_only)
         completed_barrackses = self.get_my_completed_units_by_type(
             obs, units.Terran.Barracks)
         free_supply = (obs.observation.player.food_cap -
@@ -341,7 +341,7 @@ class L1Agent:
         self.log_decisions("completed_barrackses=%i free_supply=%i minerals=%i" % (
             len(completed_barrackses),
             free_supply,
-            obs.observation.player.minerals), log_info)
+            obs.observation.player.minerals), should_log)
 
         # BugFix: price for Mariner is 50, not 100
         if (len(completed_barrackses) > 0 and obs.observation.player.minerals >= 50
@@ -359,21 +359,21 @@ class L1Agent:
             #     fh_action_logic.write("Load length: %s\r\n" % str(all_order_length))
             #     fh_action_logic.write("Chosen barrack with length: %i\r\n" % best_barrack.order_length)
 
-            self.log_decisions("(best) barracks.order_length=%i" % best_barrack.order_length, log_info)
+            self.log_decisions("(best) barracks.order_length=%i" % best_barrack.order_length, should_log)
             if best_barrack.order_length < 5:
-                self.log_decisions(",OK", log_info)
+                self.log_decisions(",OK", should_log)
                 if check_action_availability_only:
                     return True
                 return actions.RAW_FUNCTIONS.Train_Marine_quick("now", best_barrack.tag)
-        self.log_decisions(",FAIL", log_info)
+        self.log_decisions(",FAIL", should_log)
         if check_action_availability_only:
             return False
         return actions.RAW_FUNCTIONS.no_op()
 
     def war_attack(self, obs, check_action_availability_only):
-        log_info = not (check_action_availability_only)
+        should_log = not (check_action_availability_only)
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
-        self.log_decisions("marines=%i" % len(marines), log_info)
+        self.log_decisions("marines=%i" % len(marines), should_log)
         if len(marines) > 0:
             # attack_xy = (38, 44) if self.base_top_left else (19, 23) # 64
             attack_xy = (
@@ -432,14 +432,14 @@ class L1Agent:
 
             x_offset = random.randint(-4, 4)
             y_offset = random.randint(-4, 4)
-            self.log_decisions(" target='%s',OK" % selected_target, log_info)
+            self.log_decisions(" target='%s',OK" % selected_target, should_log)
             if check_action_availability_only:
                 return True
             return actions.RAW_FUNCTIONS.Attack_pt(
                 "now", marine_army, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
             # "now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
 
-        self.log_decisions(",FAIL", log_info)
+        self.log_decisions(",FAIL", should_log)
         if check_action_availability_only:
             return False
         return actions.RAW_FUNCTIONS.no_op()
