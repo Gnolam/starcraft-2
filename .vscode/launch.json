@@ -7,8 +7,11 @@
         {
             "name": "Python: Current File",
             "type": "python",
-            "request": "launch",
-            "program": "${file}",
+            "request": "launch",            
+            "program": "${workspaceFolder}/00_mariner_rush.py",
+            "pythonPath": "${command:python.interpreterPath}",
+            "cwd": "${workspaceFolder}",            
+            //"program": "${file}",
             "console": "integratedTerminal"
         }
     ]

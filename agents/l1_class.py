@@ -107,7 +107,7 @@ class L1Agent:
         if obs.first():
             self.base_top_left = (command_centres[0].x < 32)
 
-        self.log_decisions("\r\nstep,agent=%s" % self.agent_name)
+        self.log_decisions("\r\nstep,agent=%s" % self.agent_name, should_log=True)
 
         state = str(self.get_state(obs))
 

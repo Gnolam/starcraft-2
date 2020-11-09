@@ -1,16 +1,11 @@
 import logging
 import os
-
-from absl import app
-from pysc2.agents import base_agent
-from pysc2.env import sc2_env, run_loop
-from pysc2.lib import actions, features
+from pysc2.lib import actions
 
 # from agents.l1_class import L1Agent
 from agents.l2_econ import L2AgentBob
 from agents.l2_war import L2AgentPeps
-
-# New checkpoint
+from pysc2.agents import base_agent
 
 run_id = 'test2'
 
@@ -47,9 +42,7 @@ fn_global_debug = '%s/global.log' % project_path
 consistent_econ = False # True
 consistent_war = False # True
 
-
 ########################################################################################################################
-
 
 class SmartAgentG2(base_agent.BaseAgent):
     agent_name = "SmartAgent Gen2"
@@ -106,38 +99,3 @@ class SmartAgentG2(base_agent.BaseAgent):
             self.AI_Peps.finalise_game()
 
         return res
-
-
-########################################################################################################################
-
-
-def main(unused_argv):
-    agentSmart1 = SmartAgentG2()
-    
-    with sc2_env.SC2Env(
-            # map_name="Simple64",
-            map_name="Simple96",
-            # map_name="AbyssalReef",
-            # players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Agent(sc2_env.Race.terran)],
-            players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.medium)],
-            # players=[sc2_env.Agent(sc2_env.Race.terran), sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.medium_hard )],
-            agent_interface_format=features.AgentInterfaceFormat(
-                action_space=actions.ActionSpace.RAW,
-                use_raw_units=True,
-                # raw_resolution=64,
-                raw_resolution=96
-            ),
-            step_mul=48,
-            disable_fog=True,
-    ) as env:
-        run_loop.run_loop([agentSmart1], env, max_episodes=1000)
-        # run_loop.run_loop([agentSmart1, agentRandom], env, max_episodes=1000)
-        # run_loop.run_loop([agentSmart1, agentSmart2], env, max_episodes=1000)
-    try:
-        pass
-    except KeyboardInterrupt:
-        pass
-
-
-if __name__ == "__main__":
-    app.run(main)
