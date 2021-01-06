@@ -15,7 +15,7 @@ from agents.l2_war import L2AgentPeps
 from pysc2.agents import base_agent
 
 ########################################################################################################################
-run_id = 'test2'
+run_id = 'json-test1'
 project_path = "runs/%s" % run_id
 if not os.path.exists(project_path):
     os.makedirs(project_path)
@@ -23,10 +23,10 @@ if not os.path.exists(project_path):
 DQN_econ = 'DQNs/%s_econ.gz' % run_id
 DQN_war = 'DQNs/%s_war.gz' % run_id
 
-logging.basicConfig(format='%(asctime)-15s %(message)s')
+logging.basicConfig(format='%(asctime)-15s %(message)s') #/
 log = logging.FileHandler('%s/main.log' % project_path)
 logger = logging.getLogger()
-logger.setLevel("INFO")
+logger.setLevel("INFO") #
 
 fh_econ_state_csv = None
 fh_econ_decisions = '%s/econ_decisions.log' % project_path
@@ -51,6 +51,9 @@ consistent_war = False # True
 class SmartAgentG2(base_agent.BaseAgent):
     agent_name = "SmartAgent Gen2"
     should_log_actions = True
+
+    # ToDo: init the config object
+    #   - pass the results here
 
     AI_Peps = L2AgentPeps(
         DQN_filename=DQN_war,

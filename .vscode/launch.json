@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",            
             "program": "${workspaceFolder}/00_mariner_rush.py",
-            "pythonPath": "${command:python.interpreterPath}",
+            "python": "${command:python.interpreterPath}",
             "cwd": "${workspaceFolder}",            
             //"program": "${file}",
             "console": "integratedTerminal"

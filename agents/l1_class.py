@@ -7,7 +7,6 @@ from pysc2.lib import actions, features, units
 
 from agents.q_table import QLearningTable
 
-
 class L1Agent:
     agent_name = "L1"
     DQN_filename = None

@@ -1,0 +1,22 @@
+{
+    "logger": {
+        "Level": "INFO",
+        "config": "%(asctime)-15s %(message)s"
+    },
+    "bob": {
+        "consistent": true,
+        "log": {
+            "main": true,
+            "decision": true
+        }
+    },
+    "peps": {
+        "consistent": true,
+        "log": {
+            "main": true,
+            "actions": true,
+            "phase_decision": true,
+            "phase_check": true
+        }
+    }
+}
