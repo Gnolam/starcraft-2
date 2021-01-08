@@ -8,7 +8,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",            
-            "program": "${workspaceFolder}/00_mariner_rush.py",
+            "program": "${workspaceFolder}/_main.py",
             "python": "${command:python.interpreterPath}",
             "cwd": "${workspaceFolder}",            
             //"program": "${file}",

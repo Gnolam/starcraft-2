@@ -1,11 +1,12 @@
 import os
 import random
+import logging
 
 import numpy as np
 import pandas as pd
 from pysc2.lib import actions, features, units
 
-from src.q_table import QLearningTable
+from lib.q_table import QLearningTable
 
 class L1Agent:
     agent_name = "L1"
@@ -21,7 +22,7 @@ class L1Agent:
     game_num = 0
 
     def __init__(self, cfg):
-        print(f">> L1({self.agent_name}) started")
+        logging.getLogger("__main__").debug(f"L1.init({self.agent_name})")
 
         self.qtable = QLearningTable(self.action_list)
 
@@ -54,17 +55,16 @@ class L1Agent:
         # json = json.dumps(self.decisions_hist)
         if True:
             f = open("logs/decisions_G2.%s_%s.json" % (self.agent_name, self.game_num), "w")
-            # f.write(json)
             f.write(str(self.decisions_hist))
             f.close()
 
     def save_DQN(self):
-        self.logger.info('Record current learnings (%s): %s' % (self.agent_name, self.DQN_filename))
+        logging.getLogger("__main__").debug('Record current learnings (%s): %s' % (self.agent_name, self.DQN_filename))
         self.qtable.q_table.to_pickle(self.DQN_filename, 'gzip')
 
     def load_DQN(self):
         if os.path.isfile(self.DQN_filename):
-            self.logger.info('Load previous learnings (%s)' % self.agent_name)
+            logging.getLogger("__main__").info('Load previous learnings (%s)' % self.agent_name)
             self.qtable.q_table = pd.read_pickle(self.DQN_filename, compression='gzip')
         else:
             self.logger.info('NO previous learnings located (%s)' % self.agent_name)

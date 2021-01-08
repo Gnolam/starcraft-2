@@ -2,10 +2,12 @@ version: 1
 
 formatters:
     simple:
-        format: "%(name)s - %(lineno)d -  %(message)s"
+        format: "%(asctime)s %(levelname)-8s %(message)s"
+        datefmt: '%Y-%m-%d %H:%M:%S'
 
     complex:
-        format: "%(asctime)s - %(name)s - %(lineno)d -  %(message)s"
+        format: "%(asctime)s %(filename)-15s %(levelname)-8s %(message)s"
+        datefmt: '%Y-%m-%d %H:%M:%S'
 
 
 handlers:
@@ -14,12 +16,12 @@ handlers:
         level: INFO
         formatter: simple
 
-    file:
+    file_main:
         class: logging.handlers.TimedRotatingFileHandler
         when: midnight
         backupCount: 5
         level: DEBUG
-        formatter: simple
+        formatter: complex
         filename : logs/main.log
 
     file_bob:
@@ -43,24 +45,21 @@ loggers:
 
     __main__: 
         level: DEBUG
-        handlers: [console,file]
+        handlers: [console,file_main]
         propagate: yes
 
     bob: 
         level: DEBUG
-        handlers: [console,file_bob]
-        formatter: simple
+        handlers: [file_bob]
         propagate: yes
 
     peps: 
         level: DEBUG
-        handlers: [console,file_peps]
+        handlers: [file_peps]
         filename: logs/econ.log
-        formatter: simple
         propagate: yes
 
     L1:
         level: DEBUG
-        handlers: [console,file]
-        formatter: simple
+        handlers: [file_main]
         propagate: yes

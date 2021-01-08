@@ -1,4 +1,4 @@
-from src.l1_class import L1Agent
+from l1_class import L1Agent
 from pysc2.lib import units
 import logging
 
@@ -11,9 +11,8 @@ class L2AgentPeps(L1Agent):
     agent_name = "peps"
 
     def __init__(self, cfg):
-        print(f">> L2AgentPeps started ({__name__})")
+        logging.getLogger("__main__").debug(f"L2AgentPeps.init({__name__})")        
         self.logger = logging.getLogger(self.agent_name)
-        self.logger.debug('Initialized')
         super(L2AgentPeps, self).__init__(cfg)
 
 
