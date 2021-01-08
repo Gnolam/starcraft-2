@@ -5,10 +5,11 @@ import numpy as np
 import pandas as pd
 from pysc2.lib import actions, features, units
 
-from agents.q_table import QLearningTable
+from src.q_table import QLearningTable
 
 class L1Agent:
     agent_name = "L1"
+    action_list = []
     DQN_filename = None
     fh_decisions = None
     fh_state_csv = None
@@ -19,9 +20,22 @@ class L1Agent:
     step_counter = 0
     game_num = 0
 
-    def __init__(self):
+    def __init__(self, cfg):
+        print(f">> L1({self.agent_name}) started")
+
         self.qtable = QLearningTable(self.action_list)
+
+        self.DQN_filename,\
+        self.fh_decisions,\
+        self.fh_state_csv,\
+        self.fn_global_debug\
+            = cfg.get_filenames(self.agent_name)
+            
+        self.agent_cfg = cfg.run.get(self.agent_name)
+        self.consistent_decision_agent = cfg.run.get(self.agent_name)["consistent"]
         self.new_game()
+
+        self.logger.debug(f'consistent_decision_agent = {self.consistent_decision_agent}')
 
     def reset(self):
         self.new_game()
@@ -100,8 +114,8 @@ class L1Agent:
         enemy_bases = self.get_enemy_completed_units_by_type(obs, units.Terran.CommandCenter)
 
         if len(enemy_bases) > 0 and False:
-            fh_action_logic.write("MyBase (x,y) = %i,%i \n\r" % (command_center.x, command_center.y))
-            fh_action_logic.write("Enemy base = %i,%i\n\r" % (enemy_bases[0].x, enemy_bases[0].y))
+            self.logger.info("MyBase (x,y) = %i,%i \n\r" % (command_center.x, command_center.y))
+            self.logger.info("Enemy base = %i,%i\n\r" % (enemy_bases[0].x, enemy_bases[0].y))
 
         if obs.first():
             self.base_top_left = (command_centres[0].x < 32)

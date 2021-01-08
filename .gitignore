@@ -7,3 +7,4 @@ zTemp/
 src/__pycache__/
 runs/
 .ipynb_checkpoints
+log/

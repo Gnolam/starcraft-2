@@ -1,0 +1,66 @@
+version: 1
+
+formatters:
+    simple:
+        format: "%(name)s - %(lineno)d -  %(message)s"
+
+    complex:
+        format: "%(asctime)s - %(name)s - %(lineno)d -  %(message)s"
+
+
+handlers:
+    console:
+        class: logging.StreamHandler
+        level: INFO
+        formatter: simple
+
+    file:
+        class: logging.handlers.TimedRotatingFileHandler
+        when: midnight
+        backupCount: 5
+        level: DEBUG
+        formatter: simple
+        filename : logs/main.log
+
+    file_bob:
+        class: logging.handlers.TimedRotatingFileHandler
+        when: midnight
+        backupCount: 5
+        level: DEBUG
+        formatter: simple
+        filename : logs/bob.log
+
+    file_peps:
+        class: logging.handlers.TimedRotatingFileHandler
+        when: midnight
+        backupCount: 5
+        level: DEBUG
+        formatter: simple
+        filename : logs/peps.log
+
+
+loggers:
+
+    __main__: 
+        level: DEBUG
+        handlers: [console,file]
+        propagate: yes
+
+    bob: 
+        level: DEBUG
+        handlers: [console,file_bob]
+        formatter: simple
+        propagate: yes
+
+    peps: 
+        level: DEBUG
+        handlers: [console,file_peps]
+        filename: logs/econ.log
+        formatter: simple
+        propagate: yes
+
+    L1:
+        level: DEBUG
+        handlers: [console,file]
+        formatter: simple
+        propagate: yes

@@ -1,51 +1,22 @@
-import logging
+# System libs
+import logging, logging.config, yaml
 from pysc2.env import sc2_env, run_loop
 from pysc2.lib import actions, features
-# from agents.G2 import SmartAgentG2
-from absl import app
-import json
-
-#import logging
-import os
-#from pysc2.lib import actions
-
-# from agents.l1_class import L1Agent
-from agents.l2_econ import L2AgentBob
-from agents.l2_war import L2AgentPeps
 from pysc2.agents import base_agent
+from absl import app
+import os
+
+# Custom libs
+from src.l2_econ import L2AgentBob
+from src.l2_war import L2AgentPeps
+from src.config import Config
 
 ########################################################################################################################
-run_id = 'json-test1'
-project_path = "runs/%s" % run_id
-if not os.path.exists(project_path):
-    os.makedirs(project_path)
+cfg = Config('config/agents.yml', 'config/logging.yml')
 
-DQN_econ = 'DQNs/%s_econ.gz' % run_id
-DQN_war = 'DQNs/%s_war.gz' % run_id
+logger=logging.getLogger(__name__)
+logger.debug("Logging initiated")
 
-logging.basicConfig(format='%(asctime)-15s %(message)s') #/
-log = logging.FileHandler('%s/main.log' % project_path)
-logger = logging.getLogger()
-logger.setLevel("INFO") #
-
-fh_econ_state_csv = None
-fh_econ_decisions = '%s/econ_decisions.log' % project_path
-
-fh_war_state_csv = None
-fh_war_decisions = open('%s/war_decisions.log' % project_path, "w")
-fh_war_decisions.write("Hi there!")
-fh_war_decisions.close()
-fh_war_decisions = '%s/war_decisions.log' % project_path
-
-global_debug = False
-
-fn_global_debug = '%s/global.log' % project_path
-
-# global_log_action = True
-# global_log_action_logic = False
-
-consistent_econ = False # True
-consistent_war = False # True
 ########################################################################################################################
 
 class SmartAgentG2(base_agent.BaseAgent):
@@ -55,27 +26,13 @@ class SmartAgentG2(base_agent.BaseAgent):
     # ToDo: init the config object
     #   - pass the results here
 
-    AI_Peps = L2AgentPeps(
-        DQN_filename=DQN_war,
-        fh_decisions=fh_war_decisions,
-        fh_state_csv=fh_war_state_csv,
-        consistent_decision_agent=consistent_war,
-        logger=logger,
-        fn_global_debug=fn_global_debug
-    )
-
-    AI_Bob = L2AgentBob(
-        DQN_filename=DQN_econ,
-        fh_decisions=fh_econ_decisions,
-        fh_state_csv=fh_econ_state_csv,
-        consistent_decision_agent=consistent_econ,
-        logger=logger,
-        fn_global_debug=fn_global_debug
-    )
+    AI_Peps = L2AgentPeps(cfg)
+    AI_Bob = L2AgentBob(cfg)
 
     def __init__(self):
         super(SmartAgentG2, self).__init__()
 
+        print(">> SmartAgentG2 started")
         self.AI_Bob.new_game()
         self.AI_Peps.new_game()
 
@@ -139,5 +96,12 @@ def main(unused_argv):
     except KeyboardInterrupt:
         pass
 
-if __name__ == "__main__":
-    app.run(main)
+#if __name__ == "__main__":
+#    app.run(main)
+agentSmart1 = SmartAgentG2()
+# %%
+# data["run_id"]
+
+# %%
+
+
