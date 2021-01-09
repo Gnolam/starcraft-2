@@ -11,7 +11,7 @@ class Config:
     fname_decisions_war = None
 
 
-    def read_config(self, agent_config_path):
+    def __init__(self, agent_config_path):
         # read the config file
         if not os.path.exists(agent_config_path):
             print("!!! Agent config file does not exist !!!")
@@ -27,6 +27,13 @@ class Config:
             print("!!! Config file corrupted: 'run_id' is not present !!!")
             exit(-2)
 
+        # init variables 
+        self.project_path = f'runs/{self.run_id}' 
+
+        print("Set project path to:", self.project_path)
+        if not os.path.exists(self.project_path):
+            os.makedirs(self.project_path)
+
 
     def init_logging(self, logging_config_path):
         if not os.path.exists(logging_config_path):
@@ -37,7 +44,10 @@ class Config:
         with open(logging_config_path) as f:
             logging_config = yaml.safe_load(f.read())
             f.close()
+
         logging.config.dictConfig(logging_config)
+        logging.getLogger("main").info(f"Logging system initiated with '{logging_config_path}'")
+
 
     def get_filenames(self, agent_name):
         fname_DQN = f'{self.project_path}/DQN_{agent_name}.gz'
@@ -45,17 +55,3 @@ class Config:
         fname_csv = f'{self.project_path}/stats_{agent_name}.csv'
         fname_DQN_debug = f'{self.project_path}/DQN_{agent_name}.dbg'
         return fname_DQN,fname_decisions,fname_csv,fname_DQN_debug
-
-    def __init__(self, agent_config_path, logging_config_path):
-        self.read_config(agent_config_path)
-        self.init_logging(logging_config_path)
-
-        # init variables 
-        self.project_path = f'runs/{self.run_id}' 
-
-        print("Set project path to:", self.project_path)
-        if not os.path.exists(self.project_path):
-            os.makedirs(self.project_path)
-
-
-    #def get_file_names(self):
