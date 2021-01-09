@@ -32,8 +32,8 @@ class L1Agent:
         self.fn_global_debug\
             = cfg.get_filenames(self.agent_name)
             
-        self.agent_cfg = cfg.run.get(self.agent_name)
-        self.consistent_decision_agent = cfg.run.get(self.agent_name)["consistent"]
+        self.agent_cfg = cfg.run_cfg.get(self.agent_name)
+        self.consistent_decision_agent = cfg.run_cfg.get(self.agent_name)["consistent"]
         self.new_game()
 
         self.logger.debug(f'consistent_decision_agent = {self.consistent_decision_agent}')

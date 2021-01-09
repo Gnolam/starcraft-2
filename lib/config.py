@@ -1,4 +1,7 @@
-import yaml, os, logging
+import yaml
+import os
+import logging
+import absl.logging
 
 class Config:
     # global_debug = False
@@ -10,19 +13,18 @@ class Config:
     fname_decisions_econ = None
     fname_decisions_war = None
 
-
-    def __init__(self, agent_config_path):
+    def init_project(self, run_config_path):
         # read the config file
-        if not os.path.exists(agent_config_path):
-            print("!!! Agent config file does not exist !!!")
+        if not os.path.exists(run_config_path):
+            print("!!! Run config file does not exist !!!")
             exit(-1)
 
-        print("Reading agents config file:", agent_config_path)
-        with open(agent_config_path) as f:
-            self.run = yaml.safe_load(f.read())
+        print("Reading agents config file:", run_config_path)
+        with open(run_config_path) as f:
+            self.run_cfg = yaml.safe_load(f.read())
             f.close()
 
-        self.run_id = self.run.get("run_id")
+        self.run_id = self.run_cfg.get("run_id")
         if not self.run_id:
             print("!!! Config file corrupted: 'run_id' is not present !!!")
             exit(-2)
@@ -55,3 +57,10 @@ class Config:
         fname_csv = f'{self.project_path}/stats_{agent_name}.csv'
         fname_DQN_debug = f'{self.project_path}/DQN_{agent_name}.dbg'
         return fname_DQN,fname_decisions,fname_csv,fname_DQN_debug
+
+
+    def fix_ADSL_logging(self):
+        absl.logging.set_stderrthreshold('info')
+        absl.logging.set_verbosity('info')
+        logging.root.removeHandler(absl.logging._absl_handler)
+        absl.logging._warn_preinit_stderr = False

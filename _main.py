@@ -1,28 +1,16 @@
-# System libs
 import logging
 import logging.config, yaml, os
 from pysc2.env import sc2_env, run_loop
 from pysc2.lib import actions, features
 from absl import app
-import absl.logging
-
-
-# Custom libs
 from lib.config import Config
 from SmartAgentG2 import SmartAgentG2
 
 def main(unused_argv):
-    # Delete all existing handlers... (including ABSL)
-    # logger = logging.getLogger()
-    # while logger.hasHandlers():
-    #     logger.removeHandler(logger.handlers[0])
-    absl.logging.set_stderrthreshold('info')
-    absl.logging.set_verbosity('info')
-    logging.root.removeHandler(absl.logging._absl_handler)
-    absl.logging._warn_preinit_stderr = False
-
-    cfg = Config('config/agents.yml')
+    cfg = Config()
+    cfg.init_project('config/agents.yml')
     cfg.init_logging('config/logging.yml')
+    cfg.fix_ADSL_logging()
     
     logging.getLogger("main").info("main() called")
     # testLogger = logging.getLogger('absl')
