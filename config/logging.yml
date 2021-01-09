@@ -62,22 +62,21 @@ loggers:
         handlers: [file_main]
         propagate: yes
 
-
     bob: 
         level: DEBUG
         handlers: [file_bob, file_main]
-        propagate: yes
+        propagate: false
 
     peps: 
         level: DEBUG
         handlers: [file_peps, file_main]
         filename: logs/econ.log
-        propagate: yes
+        propagate: false
 
     L1:
         level: DEBUG
-        handlers: [file_main]
-        propagate: yes
+        handlers: [file_bob]
+        propagate: false
 
     res:
         level: INFO

@@ -73,7 +73,9 @@ class L1Agent:
         if self.fh_decisions is not None and should_log:
             fh = open(self.fh_decisions, "a+")
             fh.write(s_message)
-            fh.close()
+            fh.close() 
+            self.logger.debug(s_message)
+            # self.logger.debug(s_message)
 
     def log_state(self, s_message, should_print=True):
         if should_print and self.fh_state_csv is not None:
