@@ -9,9 +9,10 @@ from lib.config import Config
 from SmartAgentG2 import SmartAgentG2
 
 def main(unused_argv):
-    cfg = Config('config/agents.yml', 'config/logging.yml')
-    logger=logging.getLogger(__name__)
-    logger.info("main() called")
+    cfg = Config('config/agents.yml')
+    cfg.init_logging('config/logging.yml')
+    
+    logging.getLogger("main").info("main() called")
 
     agentSmart1 = SmartAgentG2(cfg)
     

@@ -11,10 +11,9 @@ class L2AgentPeps(L1Agent):
     agent_name = "peps"
 
     def __init__(self, cfg):
-        logging.getLogger("__main__").debug(f"L2AgentPeps.init({__name__})")        
         self.logger = logging.getLogger(self.agent_name)
+        self.logger.info(f"L2AgentPeps.init({__name__})")        
         super(L2AgentPeps, self).__init__(cfg)
-
 
     def step(self, obs):
         return super(L2AgentPeps, self).step(obs)

@@ -22,7 +22,7 @@ class L1Agent:
     game_num = 0
 
     def __init__(self, cfg):
-        logging.getLogger("__main__").debug(f"L1.init({self.agent_name})")
+        logging.getLogger("__main__").info(f"L1.init({self.agent_name})")
 
         self.qtable = QLearningTable(self.action_list)
 

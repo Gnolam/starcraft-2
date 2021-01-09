@@ -15,8 +15,8 @@ class L2AgentBob(L1Agent):
     agent_name = "bob"
 
     def __init__(self, cfg):
-        logging.getLogger("__main__").debug(f"L2AgentBob.init({__name__})")
         self.logger = logging.getLogger(self.agent_name)
+        self.logger.info(f"L2AgentBob.init({__name__})")
         super(L2AgentBob, self).__init__(cfg)
 
     def step(self, obs):

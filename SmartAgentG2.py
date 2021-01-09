@@ -11,7 +11,7 @@ class SmartAgentG2(base_agent.BaseAgent):
 
     def __init__(self, cfg):
         super(SmartAgentG2, self).__init__()
-        logging.getLogger("__main__").debug("SmartAgentG2 created")
+        logging.getLogger("main").info("SmartAgentG2 created")
 
         self.AI_Peps = L2AgentPeps(cfg)
         self.AI_Bob = L2AgentBob(cfg)
