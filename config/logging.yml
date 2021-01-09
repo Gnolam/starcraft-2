@@ -9,6 +9,10 @@ formatters:
         format: "%(asctime)s  %(name)-8s %(levelname)-8s %(message)s"
         datefmt: '%Y-%m-%d %H:%M:%S'
 
+    raw:
+        format: "%(asctime)s %(message)s"
+        datefmt: '%Y-%m-%d %H:%M:%S'
+
 
 handlers:
     console:
@@ -40,6 +44,11 @@ handlers:
         formatter: simple
         filename : logs/peps.log
 
+    file_result:
+        class: logging.handlers.TimedRotatingFileHandler
+        formatter: raw
+        filename : logs/result.log
+
 
 loggers:
 
@@ -69,3 +78,8 @@ loggers:
         level: DEBUG
         handlers: [file_main]
         propagate: yes
+
+    res:
+        level: INFO
+        handlers: [file_result, file_main]
+        propagate: yes        

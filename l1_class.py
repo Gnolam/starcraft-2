@@ -22,7 +22,7 @@ class L1Agent:
     game_num = 0
 
     def __init__(self, cfg):
-        logging.getLogger("__main__").info(f"L1.init({self.agent_name})")
+        logging.getLogger(self.agent_name).info(f"L1.init({self.agent_name})")
 
         self.qtable = QLearningTable(self.action_list)
 
@@ -59,12 +59,12 @@ class L1Agent:
             f.close()
 
     def save_DQN(self):
-        logging.getLogger("__main__").debug('Record current learnings (%s): %s' % (self.agent_name, self.DQN_filename))
+        logging.getLogger(self.agent_name).debug('Record current learnings (%s): %s' % (self.agent_name, self.DQN_filename))
         self.qtable.q_table.to_pickle(self.DQN_filename, 'gzip')
 
     def load_DQN(self):
         if os.path.isfile(self.DQN_filename):
-            logging.getLogger("__main__").info('Load previous learnings (%s)' % self.agent_name)
+            logging.getLogger(self.agent_name).info('Load previous learnings (%s)' % self.agent_name)
             self.qtable.q_table = pd.read_pickle(self.DQN_filename, compression='gzip')
         else:
             self.logger.info('NO previous learnings located (%s)' % self.agent_name)
@@ -141,6 +141,9 @@ class L1Agent:
         # Temporarily accept Draw as Win
         reward = .5 if obs.last() and obs.reward == 0 else obs.reward
         next_state = 'terminal' if obs.last() else state
+
+        if obs.last() and self.agent_name == 'bob':
+            logging.getLogger("res").info(f"Game over. Result:  {obs.reward}")
 
         # 'LEARN' should be across the WHOLE history
         # Q-Table should be updated to consume 'batch' history
