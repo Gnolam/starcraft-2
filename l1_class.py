@@ -207,20 +207,10 @@ class L1Agent:
         actions.RAW_FUNCTIONS.no_op()
 
     def econ_do_nothing(self, obs, check_action_availability_only):
-        ## print("  econ_nothing(%i)" % check_action_availability_only)
-        should_log = not check_action_availability_only
-        if check_action_availability_only:
-            return True
-        # if should_log: self.logger.debug("action: Noop")
-        return None
+        return True if check_action_availability_only else None
         
     def war_do_nothing(self, obs, check_action_availability_only):
-        ## print(" war_nothing(%i)" % check_action_availability_only)
-        should_log = not (check_action_availability_only)
-        if check_action_availability_only:
-            return True
-        # if should_log: self.logger.debug("action: Noop")
-        return None
+        return True if check_action_availability_only else None
 
     def econ_harvest_minerals(self, obs, check_action_availability_only):
         ## print(" econ_harvest_minerals(%i)" % check_action_availability_only)

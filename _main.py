@@ -8,29 +8,12 @@ from SmartAgentG2 import SmartAgentG2
 
 def main(unused_argv):
     cfg = Config()
+    cfg.fix_ADSL_logging()    
     cfg.init_project('config/agents.yml')
-    cfg.init_logging('config/logging.yml')
-    cfg.fix_ADSL_logging()
+    cfg.init_logging('config/logging.yml')    
     
     logging.getLogger("main").info("main() called")
-    # testLogger = logging.getLogger('absl')
-    # testLogger.handlers = []
-
-    # print("-- testLogger=",testLogger)
-    #absl.logging.get_absl_handler().use_absl_log_file('log', "./logs")
-    #absl.logging.get_absl_handler().setFormatter(None)
-
-    agentSmart1 = SmartAgentG2(cfg)
-    
-    # print("Loggers:", [logging.getLogger(name) for name in logging.root.manager.loggerDict])
-    # for logger in [logging.getLogger(name) for name in logging.root.manager.loggerDict]:
-    #     print("Logger =", logger)
-    #     if "ABSLLogger" in str(logger):
-    #         print("  Our guy")
-    #         logger.removeHandler(logger)
-    # logging.getLogger("main").info("testing")
-
-    print("LOGLEVEL =", os.environ.get('LOGLEVEL', 'INFO').upper())
+    agentSmart1 = SmartAgentG2(cfg)   
 
     with sc2_env.SC2Env(
             # map_name="Simple64",
@@ -58,4 +41,3 @@ def main(unused_argv):
 
 if __name__ == "__main__":
     app.run(main)
-    # main("")
