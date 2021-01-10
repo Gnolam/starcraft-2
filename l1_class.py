@@ -123,12 +123,17 @@ class L1Agent:
             return None  # It is a simulation of NOOP
 
         # Original 'best known' action based on Q-Table
-        action = self.qtable.choose_action(state)
-        self.logger.debug(f"Q-Action='{action.upper()}'") # , state='{state}'")
+        action = self.qtable.choose_action(state)        
+        originally_suggested_action = action
 
         while not (getattr(self, action)(obs, check_action_availability_only=True)):
             # previous action was not feasible, choose the alternative action randomly
             action = np.random.choice(self.action_list)
+        
+        if originally_suggested_action != action:
+            self.logger.debug(f"Q-Action: '{originally_suggested_action.upper()}(unable to comply)' -> '{action.upper()}'")
+        else:
+            self.logger.debug(f"Q-Action: '{action.upper()}'")
 
         # Temporarily accept Draw as Win
         reward = .5 if obs.last() and obs.reward == 0 else obs.reward
@@ -139,14 +144,6 @@ class L1Agent:
 
         # 'LEARN' should be across the WHOLE history
         # Q-Table should be updated to consume 'batch' history
-        # if self.previous_action is not None:
-        #     self.qtable.learn(
-        #         self.previous_state,
-        #         self.previous_action,
-        #         reward,
-        #         next_state
-        #     )
-
         # Record decision for later 'batch' learning
         # ToDo: add Q-Table coef here instead of reward
         if self.previous_action is not None:
@@ -240,7 +237,7 @@ class L1Agent:
             distances = self.get_distances(obs, mineral_patches, (scv.x, scv.y))
             mineral_patch = mineral_patches[np.argmin(distances)]
 
-            if should_log: self.logger.debug("action: Harvest_Gather_unit")
+            if should_log: self.logger.debug("Action: Harvest_Gather_unit")
             if check_action_availability_only:
                 return True
             return actions.RAW_FUNCTIONS.Harvest_Gather_unit(
@@ -270,7 +267,7 @@ class L1Agent:
             distances = self.get_distances(obs, scvs, supply_depot_xy)
             scv = scvs[np.argmax(distances)]
 
-            if should_log: self.logger.debug("action: Build_SupplyDepot")
+            if should_log: self.logger.debug("Action: Build_SupplyDepot")
             if check_action_availability_only:
                 return True
             return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
@@ -320,7 +317,7 @@ class L1Agent:
             distances = self.get_distances(obs, scvs, barracks_xy)
             # scv = scvs[np.argmin(distances)]
             scv = scvs[np.argmax(distances)]
-            if should_log: self.logger.debug("action: Build_Barracks")
+            if should_log: self.logger.debug("Action: Build_Barracks")
             if check_action_availability_only:
                 return True
             return actions.RAW_FUNCTIONS.Build_Barracks_pt(
@@ -331,6 +328,7 @@ class L1Agent:
         return actions.RAW_FUNCTIONS.no_op()
 
     def econ_train_marine(self, obs, check_action_availability_only):
+
         should_log = not (check_action_availability_only)
         completed_barrackses = self.get_my_completed_units_by_type(
             obs, units.Terran.Barracks)
@@ -363,7 +361,7 @@ class L1Agent:
             if should_log: self.logger.debug("  > min(barracks.order_length)=%i" % best_barrack.order_length)
             
             if best_barrack.order_length < 5:
-                if should_log: self.logger.debug("action: Train_Marine")
+                if should_log: self.logger.debug("Action: Train_Marine")
                 if check_action_availability_only:
                     return True
                 return actions.RAW_FUNCTIONS.Train_Marine_quick("now", best_barrack.tag)
@@ -411,7 +409,7 @@ class L1Agent:
 
                 if attack_target is not None:
                     attack_xy = (attack_target.x, attack_target.y)
-                    self.logger.debug(f"  > No target was selected. 'selected_target' case is: '{selected_target}'")
+                    if should_log: self.logger.debug(f"  > No target was selected. 'selected_target' case is: '{selected_target}'")
                     
                     # self.log_decisions(
                     #     "No target was selected.\n  'Any enemy' vector is: %s\n" % str(any_enemy_targets),
@@ -436,7 +434,7 @@ class L1Agent:
 
             x_offset = random.randint(-4, 4)
             y_offset = random.randint(-4, 4)
-            if should_log: self.logger.debug("action: Attack('%s')" % selected_target)
+            if should_log: self.logger.debug("Action: Attack('%s')" % selected_target)
             if check_action_availability_only:
                 return True
             return actions.RAW_FUNCTIONS.Attack_pt(
