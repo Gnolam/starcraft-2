@@ -10,7 +10,7 @@ formatters:
         datefmt: '%Y-%m-%d %H:%M:%S'
 
     complex:
-        format: "%(asctime)s %(module)-10s %(funcName)-15s %(lineno)-4d %(levelname)-8s %(message)s"
+        format: "%(asctime)s %(module)-10s %(funcName)-24s %(lineno)-4d %(levelname)-8s %(message)s"
         datefmt: '%Y-%m-%d %H:%M:%S'
 
     raw:

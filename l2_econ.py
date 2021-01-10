@@ -45,12 +45,12 @@ class L2AgentBob(L1Agent):
         can_afford_barracks = obs.observation.player.minerals >= 150
         can_afford_marine = obs.observation.player.minerals >= 50
 
-        enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
-        enemy_command_centers = self.get_enemy_units_by_type(obs, units.Terran.CommandCenter)
-        enemy_supply_depots = self.get_enemy_units_by_type(obs, units.Terran.SupplyDepot)
-        enemy_barrackses = self.get_enemy_units_by_type(obs, units.Terran.Barracks)
-        enemy_factories = self.get_enemy_units_by_type(obs, units.Terran.Factory)
-        enemy_starport = self.get_enemy_units_by_type(obs, units.Terran.Starport)
+        # enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
+        # enemy_command_centers = self.get_enemy_units_by_type(obs, units.Terran.CommandCenter)
+        # enemy_supply_depots = self.get_enemy_units_by_type(obs, units.Terran.SupplyDepot)
+        # enemy_barrackses = self.get_enemy_units_by_type(obs, units.Terran.Barracks)
+        # enemy_factories = self.get_enemy_units_by_type(obs, units.Terran.Factory)
+        # enemy_starport = self.get_enemy_units_by_type(obs, units.Terran.Starport)
 
         # state_dict = {
         #     "command_centers": len(command_centers),
