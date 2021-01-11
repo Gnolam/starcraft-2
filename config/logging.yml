@@ -84,5 +84,5 @@ loggers:
 
     res:
         level: INFO
-        handlers: [file_result, file_main]
-        propagate: yes        
+        handlers: [file_result, file_main, console]
+        propagate: false
