@@ -6,15 +6,16 @@ class QLearningTable:
         self.actions = actions
         self.learning_rate = learning_rate
         self.reward_decay = reward_decay
-        self.e_greedy = reward_decay
+        self.e_greedy = e_greedy
         self.q_table = pd.DataFrame(columns=self.actions, dtype=np.float64)
 
-    def choose_action(self, observation):
-        self.check_state_exist(observation)
+
+    def choose_action(self, state):
+        self.check_state_exist(state)
         if np.random.uniform() < self.e_greedy:
             # if global_log_action:
             #     fh_decisions.write("<=>")
-            state_action = self.q_table.loc[observation, :]
+            state_action = self.q_table.loc[state, :]
             action = np.random.choice(
                 state_action[state_action == np.max(state_action)].index)
         else:
@@ -22,6 +23,7 @@ class QLearningTable:
             # if global_log_action:
             #     fh_decisions.write("<~>")
         return action
+
 
     def learn(self, s, a, r, s_, fn):
         self.check_state_exist(s_)
@@ -39,6 +41,11 @@ class QLearningTable:
         fh.write('Learning:\n  q_table.loc[%s, %s] = %s\n  self.q_table.loc[%s, :].max() = %s\n   (new) self.q_table.loc[%s, %s] = %s\n\n' %
                  (s, a, q_predict, s_, q_target, s, a, self.q_table.loc[s, a]))
         fh.close()
+
+
+    def declare_action_invalid(self, state, action):
+        self.q_table.loc[state, action] = -9999
+
 
     def check_state_exist(self, state):
         if state not in self.q_table.index:

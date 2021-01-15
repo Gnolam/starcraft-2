@@ -109,7 +109,7 @@ class L1Agent:
 
     def step(self, obs):
         command_centres = self.get_my_units_by_type(obs, units.Terran.CommandCenter)
-        
+
         # enemy_bases = self.get_enemy_completed_units_by_type(obs, units.Terran.CommandCenter)
         # if len(enemy_bases) > 0 and False:
         #     self.logger.info("MyBase (x,y) = %i,%i \n\r" % (command_center.x, command_center.y))
@@ -131,7 +131,10 @@ class L1Agent:
         originally_suggested_action = action
 
         while not (getattr(self, action)(obs, check_action_availability_only=True)):
-            # previous action was not feasible, choose the alternative action randomly
+            # previous action was not feasible, mark it as impossible to choose in future
+            self.qtable.declare_action_invalid(state, action)
+
+            # choose the alternative action randomly
             action = np.random.choice(self.action_list)
         
         if originally_suggested_action != action:
