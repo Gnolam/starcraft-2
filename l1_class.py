@@ -109,11 +109,11 @@ class L1Agent:
 
     def step(self, obs):
         command_centres = self.get_my_units_by_type(obs, units.Terran.CommandCenter)
-        enemy_bases = self.get_enemy_completed_units_by_type(obs, units.Terran.CommandCenter)
-
-        if len(enemy_bases) > 0 and False:
-            self.logger.info("MyBase (x,y) = %i,%i \n\r" % (command_center.x, command_center.y))
-            self.logger.info("Enemy base = %i,%i\n\r" % (enemy_bases[0].x, enemy_bases[0].y))
+        
+        # enemy_bases = self.get_enemy_completed_units_by_type(obs, units.Terran.CommandCenter)
+        # if len(enemy_bases) > 0 and False:
+        #     self.logger.info("MyBase (x,y) = %i,%i \n\r" % (command_center.x, command_center.y))
+        #     self.logger.info("Enemy base = %i,%i\n\r" % (enemy_bases[0].x, enemy_bases[0].y))
 
         if obs.first():
             self.base_top_left = (command_centres[0].x < 32)
@@ -123,7 +123,7 @@ class L1Agent:
         # No action should take place in case state did not change
         #   no learning either
         if self.consistent_decision_agent and state == self.previous_state and (not obs.last()):
-            self.logger.debug("States did not change: skipping")
+            self.logger.debug("States did not change: skipping (" + state + ")")
             return None  # It is a simulation of NOOP
 
         # Original 'best known' action based on Q-Table
@@ -135,7 +135,7 @@ class L1Agent:
             action = np.random.choice(self.action_list)
         
         if originally_suggested_action != action:
-            self.logger.debug(f"Q-Action: '{originally_suggested_action.upper()}(unable to comply)' -> '{action.upper()}'")
+            self.logger.debug(f"Q-Action: '{originally_suggested_action.upper()}(unable to comply)' -> '{action.upper()} (st: {state})'")
         else:
             self.logger.debug(f"Q-Action: '{action.upper()}'")
 
