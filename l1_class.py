@@ -24,22 +24,36 @@ class L1Agent:
     def __init__(self, cfg):
         logging.getLogger(self.agent_name).info(f"L1.init({self.agent_name})")
 
+        self.cfg = cfg
         self.qtable = QLearningTable(self.action_list)
 
         self.DQN_filename,\
         self.fh_decisions,\
         self.fh_state_csv,\
-        self.fn_global_debug\
+        self.fn_global_debug,\
+        self.fn_global_state\
             = cfg.get_filenames(self.agent_name)
             
         self.agent_cfg = cfg.run_cfg.get(self.agent_name)
         self.consistent_decision_agent = cfg.run_cfg.get(self.agent_name)["consistent"]
-        self.new_game()
+        self.read_global_state()
+        self.new_game()       
 
-        self.logger.debug(f'consistent_decision_agent = {self.consistent_decision_agent}')
+        self.logger.debug(f"Run number: {self.game_num}")
+        self.logger.debug(f'consistent_decision_agent: {self.consistent_decision_agent}')
 
     def reset(self):
         self.new_game()
+
+    def read_global_state(self):
+        global_state = self.cfg.read_yaml_file(self.fn_global_state)
+        self.game_num = int(global_state["run_number"]) - 1
+
+    def save_global_state(self):
+        self.cfg.write_yaml_file(
+            self.fn_global_state,
+            dict(run_number = self.game_num)
+        )
 
     def get_state(self, dummy):
         # This function is a place holder
@@ -157,7 +171,7 @@ class L1Agent:
         next_state = 'terminal' if obs.last() else state
 
         if obs.last() and self.agent_name == 'bob':
-            logging.getLogger("res").info(f"Game over. Result:  {obs.reward}")
+            logging.getLogger("res").info(f"Game: {self.game_num}. Outcome: {obs.reward}")
 
         # 'LEARN' should be across the WHOLE history
         # Q-Table should be updated to consume 'batch' history

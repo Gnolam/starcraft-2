@@ -15,38 +15,20 @@ class Config:
 
     def init_project(self, run_config_path):
         # read the config file
-        if not os.path.exists(run_config_path):
-            print("!!! Run config file does not exist !!!")
-            exit(-1)
-
-        print("Reading agents config file:", run_config_path)
-        with open(run_config_path) as f:
-            self.run_cfg = yaml.safe_load(f.read())
-            f.close()
-
+        self.run_cfg = self.read_yaml_file(run_config_path)
         self.run_id = self.run_cfg.get("run_id")
         if not self.run_id:
-            print("!!! Config file corrupted: 'run_id' is not present !!!")
-            exit(-2)
+            raise Exception("!!! Config file corrupted: 'run_id' is not present !!!")
 
         # init variables 
         self.project_path = f'runs/{self.run_id}' 
-
         print("Set project path to:", self.project_path)
         if not os.path.exists(self.project_path):
             os.makedirs(self.project_path)
 
 
     def init_logging(self, logging_config_path):
-        if not os.path.exists(logging_config_path):
-            print("!!! Logging config file does not exist !!!")
-            exit(-3)
-
-        print("Reading logging config file:", logging_config_path)
-        with open(logging_config_path) as f:
-            logging_config = yaml.safe_load(f.read())
-            f.close()
-
+        logging_config = self.read_yaml_file(logging_config_path)
         logging.config.dictConfig(logging_config)
         logging.getLogger("main").info(f"Logging system initiated with '{logging_config_path}'")
 
@@ -56,7 +38,8 @@ class Config:
         fname_decisions = f'{self.project_path}/decision_hist_{agent_name}.log'
         fname_csv = f'{self.project_path}/stats_{agent_name}.csv'
         fname_DQN_debug = f'{self.project_path}/DQN_{agent_name}.dbg'
-        return fname_DQN,fname_decisions,fname_csv,fname_DQN_debug
+        fname_state = f'{self.project_path}/global_state.yaml'
+        return fname_DQN,fname_decisions,fname_csv,fname_DQN_debug,fname_state
 
 
     def fix_ADSL_logging(self):
@@ -64,3 +47,16 @@ class Config:
         absl.logging.set_verbosity('info')
         logging.root.removeHandler(absl.logging._absl_handler)
         absl.logging._warn_preinit_stderr = False
+
+    def read_yaml_file(self, fname):
+        if not os.path.exists(fname):
+            raise Exception(f".yaml file '{fname}' does not exist")
+        with open(fname) as f:
+            cfg = yaml.safe_load(f.read())
+            f.close()
+        return cfg
+
+    def write_yaml_file(self, fname, data):
+        with open(fname, 'w') as outfile:
+            yaml.dump(data, outfile, default_flow_style=False)
+            outfile.close()
