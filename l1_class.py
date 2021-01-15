@@ -57,7 +57,7 @@ class L1Agent:
 
     def dump_decisions_hist(self):
         # json = json.dumps(self.decisions_hist)
-        if True:
+        if False:
             f = open("logs/decisions_G2.%s_%s.json" % (self.agent_name, self.game_num), "w")
             f.write(str(self.decisions_hist))
             f.close()
@@ -126,14 +126,24 @@ class L1Agent:
             self.logger.debug("States did not change: skipping (" + state + ")")
             return None  # It is a simulation of NOOP
 
+        # Remove impossible actions from the list
+        for action in self.action_list:            
+            if not (getattr(self, action)(obs, check_action_availability_only=True)):
+                # mark it as impossible to choose in future
+                self.qtable.declare_action_invalid(state, action)
+                #self.logger.debug(f"   check action: '{action.upper()}' -> bad")
+            else:
+                #self.logger.debug(f"   check action: '{action.upper()}' -> good")
+                pass
+
         # Original 'best known' action based on Q-Table
         action = self.qtable.choose_action(state)        
         originally_suggested_action = action
 
+        # This check should be redundant with the application of declare_action_invalid() above
+        # The only option of 'unable to comply' is 'explore' choice in Q-Table
         while not (getattr(self, action)(obs, check_action_availability_only=True)):
-            # previous action was not feasible, mark it as impossible to choose in future
-            self.qtable.declare_action_invalid(state, action)
-
+            # previous action was not feasible         
             # choose the alternative action randomly
             action = np.random.choice(self.action_list)
         
