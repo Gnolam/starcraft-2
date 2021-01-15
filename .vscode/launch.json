@@ -7,8 +7,11 @@
         {
             "name": "Python: Current File",
             "type": "python",
-            "request": "launch",
-            "program": "${file}",
+            "request": "launch",            
+            "program": "${workspaceFolder}/_main.py",
+            "python": "${command:python.interpreterPath}",
+            "cwd": "${workspaceFolder}",            
+            //"program": "${file}",
             "console": "integratedTerminal"
         }
     ]

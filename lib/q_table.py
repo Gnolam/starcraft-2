@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
 
-
-
 class QLearningTable:
     def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
         self.actions = actions

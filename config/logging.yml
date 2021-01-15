@@ -1,0 +1,88 @@
+version: 1
+
+formatters:
+    simple:
+        format: "%(levelname)-8s %(message)s"
+        datefmt: '%Y-%m-%d %H:%M:%S'
+
+    reduced:
+        format: "%(asctime)s %(name)-8s %(levelname)-8s %(message)s"
+        datefmt: '%Y-%m-%d %H:%M:%S'
+
+    complex:
+        format: "%(asctime)s %(module)-10s %(funcName)-24s %(lineno)-4d %(levelname)-8s %(message)s"
+        datefmt: '%Y-%m-%d %H:%M:%S'
+
+    raw:
+        format: "%(asctime)s %(message)s"
+        datefmt: '%Y-%m-%d %H:%M:%S'
+
+
+handlers:
+    console:
+        class: logging.StreamHandler
+        level: INFO
+        formatter: simple
+
+    file_main:
+        class: logging.handlers.TimedRotatingFileHandler
+        when: midnight
+        backupCount: 5
+        level: INFO
+        formatter: reduced
+        filename : logs/main.log
+
+    file_bob:
+        class: logging.handlers.TimedRotatingFileHandler
+        when: midnight
+        backupCount: 5
+        level: DEBUG
+        formatter: complex
+        filename : logs/bob.log
+
+    file_peps:
+        class: logging.handlers.TimedRotatingFileHandler
+        when: midnight
+        backupCount: 5
+        level: DEBUG
+        formatter: complex
+        filename : logs/peps.log
+
+    file_result:
+        class: logging.handlers.TimedRotatingFileHandler
+        formatter: raw
+        filename : logs/result.log
+
+
+loggers:
+
+    main: 
+        level: INFO
+        handlers: [console,file_main]
+        propagate: yes
+
+    GameAgent:
+        level: INFO
+        handlers: [file_main]
+        propagate: yes
+
+    bob: 
+        level: DEBUG
+        handlers: [file_bob, file_main]
+        propagate: false
+
+    peps: 
+        level: DEBUG
+        handlers: [file_peps, file_main]
+        filename: logs/econ.log
+        propagate: false
+
+    L1:
+        level: DEBUG
+        handlers: [file_bob]
+        propagate: false
+
+    res:
+        level: INFO
+        handlers: [file_result, file_main, console]
+        propagate: false

@@ -1,21 +1,19 @@
-from agents.l1_class import L1Agent
+from l1_class import L1Agent
 from pysc2.lib import units
+import logging
+
 
 class L2AgentPeps(L1Agent):
     action_list = ("war_do_nothing", "war_attack")
     # "war_regroup",
     # "war_defend",
 
-    agent_name = "Peps"
+    agent_name = "peps"
 
-    def __init__(self, logger, DQN_filename, fh_decisions, fh_state_csv, consistent_decision_agent, fn_global_debug):
-        self.DQN_filename = DQN_filename
-        self.fh_decisions = fh_decisions
-        self.fh_state_csv = fh_state_csv
-        self.consistent_decision_agent = consistent_decision_agent
-        self.logger = logger
-        self.fn_global_debug=fn_global_debug
-        super(L2AgentPeps, self).__init__()
+    def __init__(self, cfg):
+        self.logger = logging.getLogger(self.agent_name)
+        self.logger.info(f"L2AgentPeps.init({__name__})")        
+        super(L2AgentPeps, self).__init__(cfg)
 
     def step(self, obs):
         return super(L2AgentPeps, self).step(obs)

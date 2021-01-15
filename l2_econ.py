@@ -1,5 +1,7 @@
-from agents.l1_class import L1Agent
+from l1_class import L1Agent
 from pysc2.lib import units
+import logging
+
 
 class L2AgentBob(L1Agent):
     action_list = (
@@ -10,16 +12,12 @@ class L2AgentBob(L1Agent):
         "econ_train_marine"
     )
 
-    agent_name = "Bob"
+    agent_name = "bob"
 
-    def __init__(self, logger, DQN_filename, fh_decisions, fh_state_csv, consistent_decision_agent, fn_global_debug):
-        self.DQN_filename = DQN_filename
-        self.fh_decisions = fh_decisions
-        self.fh_state_csv = fh_state_csv
-        self.fn_global_debug = fn_global_debug
-        self.consistent_decision_agent = consistent_decision_agent
-        self.logger = logger
-        super(L2AgentBob, self).__init__()
+    def __init__(self, cfg):
+        self.logger = logging.getLogger(self.agent_name)
+        self.logger.info(f"L2AgentBob.init({__name__})")
+        super(L2AgentBob, self).__init__(cfg)
 
     def step(self, obs):
         ## print("step at L2AgentBob (%s)" % self.agent_name)
@@ -47,12 +45,12 @@ class L2AgentBob(L1Agent):
         can_afford_barracks = obs.observation.player.minerals >= 150
         can_afford_marine = obs.observation.player.minerals >= 50
 
-        enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
-        enemy_command_centers = self.get_enemy_units_by_type(obs, units.Terran.CommandCenter)
-        enemy_supply_depots = self.get_enemy_units_by_type(obs, units.Terran.SupplyDepot)
-        enemy_barrackses = self.get_enemy_units_by_type(obs, units.Terran.Barracks)
-        enemy_factories = self.get_enemy_units_by_type(obs, units.Terran.Factory)
-        enemy_starport = self.get_enemy_units_by_type(obs, units.Terran.Starport)
+        # enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
+        # enemy_command_centers = self.get_enemy_units_by_type(obs, units.Terran.CommandCenter)
+        # enemy_supply_depots = self.get_enemy_units_by_type(obs, units.Terran.SupplyDepot)
+        # enemy_barrackses = self.get_enemy_units_by_type(obs, units.Terran.Barracks)
+        # enemy_factories = self.get_enemy_units_by_type(obs, units.Terran.Factory)
+        # enemy_starport = self.get_enemy_units_by_type(obs, units.Terran.Starport)
 
         # state_dict = {
         #     "command_centers": len(command_centers),
