@@ -1,11 +1,21 @@
 '''
  POC stage
+
+Gen:
+- choose the next best order, which is 'wait until x units are ready and rush them'
+- once they are ready, join them into TF1
+
+Peps:
+- always attack with whatever is in TF1
+
+
+
  2 TFs:
    - TF1: attack
    - TF2: reserve
  3 states:
  - wait for TF1 to deplete, attack meanwhile
- - wait till TF2 >= 10 mariners
+ - wait till TF2 >= 10 marines
  - (init with: TF2->TF1) 
 
 try again:
@@ -33,7 +43,7 @@ from l1_class import L1Agent
 from l2_war_sgt import L2AgentPeps
 
 class L2AgentGrievous(L1Agent):
-    action_list = ("Use4", "Use8", "Use12") # "Add5", "Add8", "Use12"
+    action_list = ("Gen_Add4_marines_to_TF1", "Gen_Add_8_marines_to_TF1", "Gen_Add_12_marines_to_TF1", "Gen_Add_16_marines_to_TF1") 
 
     action = None
     agent_name = "grievous"
@@ -45,7 +55,8 @@ class L2AgentGrievous(L1Agent):
         super(L2AgentGrievous, self).__init__(cfg)
 
     def debug(self, obs):
-        self.logger.debug("state: "+ str(self.get_state(obs, return_dict = True)))
+        self.logger.debug("state: "+ str(self.get_state(obs, return_dict = False)))
+        self.Gen_Add_4_marines_to_TF1(obs, True)
 
     def step(self, obs):
         return super(L2AgentGrievous, self).step(obs)
@@ -86,3 +97,22 @@ class L2AgentGrievous(L1Agent):
             f"hells:{count_enemy_hells} barrackses:{count_enemy_barrackses} " +\
             f"factories:{count_enemy_factories}, factories:{count_enemy_factories}, starport:{count_enemy_starport}" 
           )
+
+    def Gen_Add_4_marines_to_TF1(self, obs, check_action_availability_only):
+        self.Gen_Add_X_marines_to_TF1(obs, 4)
+
+    def Gen_Add_8_marines_to_TF1(self, obs, check_action_availability_only):
+        self.Gen_Add_X_marines_to_TF1(obs, 8)
+
+    def Gen_Add_12_marines_to_TF1(self, obs, check_action_availability_only):
+        self.Gen_Add_X_marines_to_TF1(obs, 12)
+
+    def Gen_Add_16_marines_to_TF1(self, obs, check_action_availability_only):
+        self.Gen_Add_X_marines_to_TF1(obs, 16)
+
+    def Gen_Add_X_marines_to_TF1(self, obs, number_of_marines):
+        marines = self.get_my_units_by_type(obs, units.Terran.Marine)
+        marine_IDs = [(marine.tag) for marine in marines]        
+        self.logger.debug(f"IDs: {str(marine_IDs)}")
+          
+        
