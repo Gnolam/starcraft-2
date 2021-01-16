@@ -22,7 +22,8 @@ class L1Agent:
     game_num = 0
 
     def __init__(self, cfg):
-        logging.getLogger(self.agent_name).info(f"L1.init({self.agent_name})")
+        self.logger = logging.getLogger(self.agent_name)
+        self.logger.info(f"L1.init({self.agent_name})")
 
         self.cfg = cfg
         self.qtable = QLearningTable(self.action_list)
@@ -58,6 +59,7 @@ class L1Agent:
     def get_state(self, dummy):
         # This function is a place holder
         self.logger.critical('Incorrect function was called: L1::get_state()')
+        raise Exception('Incorrect function was called: L1::get_state()')
 
     def new_game(self):
         self.base_top_left = None

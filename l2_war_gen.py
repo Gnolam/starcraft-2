@@ -40,8 +40,7 @@ class L2AgentGrievous(L1Agent):
     sgt = None
 
     def __init__(self, cfg, sgt):
-        self.logger = logging.getLogger(self.agent_name)
-        self.logger.info(f"L2AgentGrievous.init({__name__})")
+        logging.getLogger(self.agent_name).info(f"L2AgentGrievous.init({__name__})")
         self.sgt = sgt
         super(L2AgentGrievous, self).__init__(cfg)
 
