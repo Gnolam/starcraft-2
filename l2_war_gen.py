@@ -48,6 +48,7 @@ class L2AgentGrievous(L1Agent):
     action = None
     agent_name = "grievous"
     sgt = None
+    TF1 = None
 
     def __init__(self, cfg, sgt):
         logging.getLogger(self.agent_name).info(f"L2AgentGrievous.init({__name__})")
@@ -112,7 +113,18 @@ class L2AgentGrievous(L1Agent):
 
     def Gen_Add_X_marines_to_TF1(self, obs, number_of_marines):
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
-        marine_IDs = [(marine.tag) for marine in marines]        
+        marine_IDs = [(marine.tag) for marine in marines]
         self.logger.debug(f"IDs: {str(marine_IDs)}")
+      
+        if self.TF1 is None:
+          if len(marines) > 0:
+            self.TF1 = marine_IDs
+        else:
+          now_marine_IDs = [(marine.tag) for marine in marines]
+          new_marine_IDs = list(set(now_marine_IDs).difference(self.TF1))
+          self.logger.debug(f"new IDs: {str(new_marine_IDs)}")
+          self.TF1 = now_marine_IDs
+
+
           
         
