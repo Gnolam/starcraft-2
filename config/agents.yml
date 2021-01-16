@@ -7,3 +7,9 @@ bob:
 
 peps:
     consistent: true
+
+grievous:
+    allowed_orders:
+        - Use4
+        - Use8
+        - Use12

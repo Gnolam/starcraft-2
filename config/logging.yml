@@ -48,6 +48,14 @@ handlers:
         formatter: complex
         filename : logs/peps.log
 
+    file_grievous:
+        class: logging.handlers.TimedRotatingFileHandler
+        when: midnight
+        backupCount: 5
+        level: DEBUG
+        formatter: complex
+        filename : logs/grievous.log        
+
     file_result:
         class: logging.handlers.TimedRotatingFileHandler
         formatter: raw
@@ -74,8 +82,12 @@ loggers:
     peps: 
         level: DEBUG
         handlers: [file_peps, file_main]
-        filename: logs/econ.log
         propagate: false
+
+    grievous: 
+        level: DEBUG
+        handlers: [file_grievous, file_main]
+        propagate: false            
 
     L1:
         level: DEBUG

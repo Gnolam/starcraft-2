@@ -3,7 +3,8 @@ from pysc2.lib import actions, features
 import logging
 
 from l2_econ import L2AgentBob
-from l2_war import L2AgentPeps
+from l2_war_sgt import L2AgentPeps
+from l2_war_gen import L2AgentGrievous
 
 class SmartAgentG2(base_agent.BaseAgent):
     agent_name = "SmartAgent Gen2"
@@ -13,8 +14,9 @@ class SmartAgentG2(base_agent.BaseAgent):
         super(SmartAgentG2, self).__init__()
         logging.getLogger("main").info("SmartAgentG2 created")
 
-        self.AI_Peps = L2AgentPeps(cfg)
         self.AI_Bob = L2AgentBob(cfg)
+        self.AI_Peps = L2AgentPeps(cfg)
+        self.AI_Grievous = L2AgentGrievous(cfg, self.AI_Peps)
 
         self.AI_Bob.new_game()
         self.AI_Peps.new_game()
