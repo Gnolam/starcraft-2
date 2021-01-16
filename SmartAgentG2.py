@@ -48,4 +48,6 @@ class SmartAgentG2(base_agent.BaseAgent):
             self.AI_Peps.finalise_game()
             self.AI_Bob.save_global_state()
 
+        self.AI_Grievous.debug(obs)
+
         return res
