@@ -76,8 +76,20 @@ class L2AgentPeps(L1Agent):
 
     def war_attack(self, obs, check_action_availability_only):
         should_log = not (check_action_availability_only)
-        marines = self.get_my_units_by_type(obs, units.Terran.Marine)        
-        if should_log: self.logger.debug("  > marines=%i" % len(marines))
+        marines = self.get_my_units_by_type(obs, units.Terran.Marine)
+        if should_log: self.logger.debug("  > all marines=%i" % len(marines))
+
+        if self.TF1 is None:
+            marines = []
+        else:
+            marines =  [unit for unit in obs.observation.raw_units
+                if unit.unit_type == units.Terran.Marine
+                and unit.alliance == features.PlayerRelative.SELF
+                 and unit.tag in set(self.TF1) ]
+            marines =  [marine for marine in marines
+                 if marine.tag in set(self.TF1) ]
+
+        if should_log: self.logger.debug("  > TF1 marines=%i" % len(marines))
         if len(marines) > 0:
             # attack_xy = (38, 44) if self.base_top_left else (19, 23) # 64
             attack_xy = (
