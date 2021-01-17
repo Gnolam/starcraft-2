@@ -9,8 +9,8 @@ import random
 
 class L2AgentPeps(L1Agent):
     action_list = ("war_do_nothing", "war_attack")
-
     agent_name = "peps"
+    TF1 = None
 
     def __init__(self, cfg):
         logging.getLogger(self.agent_name).info(f"L2AgentPeps.init({__name__})")
@@ -149,3 +149,9 @@ class L2AgentPeps(L1Agent):
         if check_action_availability_only:
             return False
         return actions.RAW_FUNCTIONS.no_op()
+    
+    def assign_TF1(self, unit_IDs):
+        if unit_IDs is not None:
+            if len(unit_IDs) > 0:
+                self.TF1 = unit_IDs
+                self.logger.debug(f"New TF1 assignment. Size: {len(unit_IDs)}, IDs: {str(unit_IDs)}")

@@ -57,7 +57,7 @@ class L2AgentGrievous(L1Agent):
 
     def debug(self, obs):
         self.logger.debug("state: "+ str(self.get_state(obs, return_dict = False)))
-        self.Gen_Add_4_marines_to_TF1(obs, True)
+        self.Gen_Add_8_marines_to_TF1(obs, True)
 
     def step(self, obs):
         return super(L2AgentGrievous, self).step(obs)
@@ -111,7 +111,8 @@ class L2AgentGrievous(L1Agent):
     def Gen_Add_16_marines_to_TF1(self, obs, check_action_availability_only):
         self.Gen_Add_X_marines_to_TF1(obs, 16)
 
-    def Gen_Add_X_marines_to_TF1(self, obs, number_of_marines):
+
+    def Gen_Add_X_marines_to_TF1(self, obs, number_of_marines_in_reinforcement):
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
         marine_IDs = [(marine.tag) for marine in marines]
         self.logger.debug(f"IDs: {str(marine_IDs)}")
@@ -120,10 +121,13 @@ class L2AgentGrievous(L1Agent):
           if len(marines) > 0:
             self.TF1 = marine_IDs
         else:
-          now_marine_IDs = [(marine.tag) for marine in marines]
-          new_marine_IDs = list(set(now_marine_IDs).difference(self.TF1))
-          self.logger.debug(f"new IDs: {str(new_marine_IDs)}")
-          self.TF1 = now_marine_IDs
+          TF2_marine_IDs = list(set(marine_IDs).difference(self.TF1))
+          self.logger.debug(f"TF2 Size: {len(TF2_marine_IDs)}, IDs: {str(TF2_marine_IDs)}")
+
+          if len(TF2_marine_IDs) >= number_of_marines_in_reinforcement:
+            self.logger.debug(f"Reinforcement has arrived: Transferring {len(TF2_marine_IDs)} marines to TF1")
+            self.TF1 = marine_IDs
+            self.sgt.assign_TF1(marine_IDs)
 
 
           
