@@ -20,6 +20,7 @@ class L1Agent:
     decisions_hist = {}
     step_counter = 0
     game_num = 0
+    current_action = None
 
     def __init__(self, cfg):
         self.logger = logging.getLogger(self.agent_name)
@@ -167,6 +168,8 @@ class L1Agent:
             self.logger.debug(f"Q-Action: '{originally_suggested_action.upper()}(unable to comply)' -> '{action.upper()} (st: {state})'")
         else:
             self.logger.debug(f"Q-Action: '{action.upper()}'")
+
+        self.current_action = action
 
         # Temporarily accept Draw as Win
         reward = .5 if obs.last() and obs.reward == 0 else obs.reward

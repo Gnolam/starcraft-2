@@ -1,6 +1,11 @@
 '''
  POC stage
 
+how to make sure that the decision is considered and logged only after TF is transferred?
+get_state should indicate that
+
+
+
 Gen:
 - choose the next best order, which is 'wait until x units are ready and rush them'
 - once they are ready, join them into TF1
@@ -48,7 +53,8 @@ class L2AgentGrievous(L1Agent):
     action = None
     agent_name = "grievous"
     sgt = None
-    TF1 = None
+    TF1 = []
+    prev_state = ""
 
     def __init__(self, cfg, sgt):
         logging.getLogger(self.agent_name).info(f"L2AgentGrievous.init({__name__})")
@@ -56,18 +62,19 @@ class L2AgentGrievous(L1Agent):
         super(L2AgentGrievous, self).__init__(cfg)
 
     def debug(self, obs):
-        self.logger.debug("state: "+ str(self.get_state(obs, return_dict = False)))
-        self.Gen_Add_8_marines_to_TF1(obs, True)
+        self.logger.debug("state: "+ str(self.get_state(obs, is_debug = True)))
+        self.Gen_Add_8_marines_to_TF1(obs, check_action_availability_only=False)
 
     def step(self, obs):
         return super(L2AgentGrievous, self).step(obs)
 
-    def get_state(self, obs, return_dict = True):
-        count_marines = len(self.get_my_units_by_type(obs, units.Terran.Marine))
+    def get_state(self, obs, is_debug = False):
+        if self.current_action is not None and not is_debug:
+          if not (getattr(self, self.current_action)(obs, check_action_availability_only=False)):
+            # Gen still founds it impossible to issue an order
+            return self.prev_state
 
-        # enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
-        # enemy_command_centers = self.get_enemy_units_by_type(obs, units.Terran.CommandCenter)
-        # enemy_supply_depots = self.get_enemy_units_by_type(obs, units.Terran.SupplyDepot)
+        count_marines = len(self.get_my_units_by_type(obs, units.Terran.Marine))
         count_enemy_barrackses = len(self.get_enemy_units_by_type(obs, units.Terran.Barracks))
         count_enemy_factories = len(self.get_enemy_units_by_type(obs, units.Terran.Factory))
         count_enemy_starport = len(self.get_enemy_units_by_type(obs, units.Terran.Starport))
@@ -81,8 +88,14 @@ class L2AgentGrievous(L1Agent):
         enemy_marines_band = 0 if count_enemy_marines ==0 else (int(count_enemy_marines/3)+1)*3
         enemy_marauders_band = 0 if count_enemy_marauders ==0 else (int(count_enemy_marauders/2)+1)*2
 
-        if return_dict:
-          return (
+        if is_debug:
+          return ( # TF1/reserve?
+            f"our marines:{count_marines}, enemy marines:~{enemy_marines_band}, marauders:~{enemy_marauders_band}, tanks:{count_enemy_tanks} " +\
+            f"hells:{count_enemy_hells} barrackses:{count_enemy_barrackses} " +\
+            f"factories:{count_enemy_factories}, factories:{count_enemy_factories}, starport:{count_enemy_starport}" 
+          )
+
+        new_state = (
             count_marines, # TF1/reserve
             enemy_marines_band,
             enemy_marauders_band,
@@ -92,42 +105,38 @@ class L2AgentGrievous(L1Agent):
             count_enemy_tanks,
             count_enemy_hells            
           )
-        else:
-          return ( # TF1/reserve
-            f"our marines:{count_marines}, enemy marines:~{enemy_marines_band}, marauders:~{enemy_marauders_band}, tanks:{count_enemy_tanks} " +\
-            f"hells:{count_enemy_hells} barrackses:{count_enemy_barrackses} " +\
-            f"factories:{count_enemy_factories}, factories:{count_enemy_factories}, starport:{count_enemy_starport}" 
-          )
+        self.prev_state = new_state
+        return new_state
+        
 
     def Gen_Add_4_marines_to_TF1(self, obs, check_action_availability_only):
-        self.Gen_Add_X_marines_to_TF1(obs, 4)
+        self.Gen_Add_X_marines_to_TF1(obs, 4, check_action_availability_only)
 
     def Gen_Add_8_marines_to_TF1(self, obs, check_action_availability_only):
-        self.Gen_Add_X_marines_to_TF1(obs, 8)
+        self.Gen_Add_X_marines_to_TF1(obs, 8, check_action_availability_only)
 
     def Gen_Add_12_marines_to_TF1(self, obs, check_action_availability_only):
-        self.Gen_Add_X_marines_to_TF1(obs, 12)
+        self.Gen_Add_X_marines_to_TF1(obs, 12, check_action_availability_only)
 
     def Gen_Add_16_marines_to_TF1(self, obs, check_action_availability_only):
-        self.Gen_Add_X_marines_to_TF1(obs, 16)
+        self.Gen_Add_X_marines_to_TF1(obs, 16, check_action_availability_only)
 
 
-    def Gen_Add_X_marines_to_TF1(self, obs, number_of_marines_in_reinforcement):
+    def Gen_Add_X_marines_to_TF1(self, obs, number_of_marines_in_reinforcement, check_action_availability_only):
+        if check_action_availability_only:
+          return True
+
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
         marine_IDs = [(marine.tag) for marine in marines]
-        self.logger.debug(f"IDs: {str(marine_IDs)}")
-      
-        if self.TF1 is None:
-          if len(marines) > 0:
-            self.TF1 = marine_IDs
-        else:
-          TF2_marine_IDs = list(set(marine_IDs).difference(self.TF1))
-          self.logger.debug(f"TF2 Size: {len(TF2_marine_IDs)}, IDs: {str(TF2_marine_IDs)}")
+        TF2_marine_IDs = list(set(marine_IDs).difference(self.TF1))
+        self.logger.debug(f"TF1 Size:{len(marine_IDs)-len(TF2_marine_IDs)}, TF2 Size: {len(TF2_marine_IDs)}, IDs: {str(TF2_marine_IDs)}")
 
-          if len(TF2_marine_IDs) >= number_of_marines_in_reinforcement:
-            self.logger.debug(f"Reinforcement has arrived: Transferring {len(TF2_marine_IDs)} marines to TF1")
-            self.TF1 = marine_IDs
-            self.sgt.assign_TF1(marine_IDs)
+        if len(TF2_marine_IDs) >= number_of_marines_in_reinforcement:
+          self.logger.debug(f"Reinforcement has arrived: Transferring {len(TF2_marine_IDs)} marines to TF1")
+          self.TF1 = marine_IDs
+          self.sgt.assign_TF1(marine_IDs)
+          return True        
+        return False
 
 
           
