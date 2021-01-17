@@ -56,17 +56,20 @@ class L2AgentGrievous(L1Agent):
     TF1 = []
     prev_state = ""
 
-    def __init__(self, cfg, sgt):
-        logging.getLogger(self.agent_name).info(f"L2AgentGrievous.init({__name__})")
+    # def __init__(self, cfg, sgt):
+    #     logging.getLogger(self.agent_name).info(f"L2AgentGrievous.init({__name__})")
+    #     super(L2AgentGrievous, self).__init__(cfg)
+
+    def assgin_sergant(self, sgt):
+        self.logger.debug(f"Sergant: {str(sgt.agent_name)} was assigned for duty")
         self.sgt = sgt
-        super(L2AgentGrievous, self).__init__(cfg)
 
     def debug(self, obs):
         self.logger.debug("state: "+ str(self.get_state(obs, is_debug = True)))
         self.Gen_Add_8_marines_to_TF1(obs, check_action_availability_only=False)
 
-    def step(self, obs):
-        return super(L2AgentGrievous, self).step(obs)
+    # def step(self, obs):
+    #     return super(L2AgentGrievous, self).step(obs)
 
     def get_state(self, obs, is_debug = False):
         if self.current_action is not None and not is_debug:

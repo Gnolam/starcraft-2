@@ -18,13 +18,13 @@ class L2AgentBob(L1Agent):
 
     agent_name = "bob"
 
-    def __init__(self, cfg):
-        logging.getLogger(self.agent_name).info(f"L2AgentBob.init({__name__})")
-        super(L2AgentBob, self).__init__(cfg)
+    # def __init__(self, cfg):
+    #     logging.getLogger(self.agent_name).info(f"L2AgentBob.init({__name__})")
+    #     super(L2AgentBob, self).__init__(cfg)
 
-    def step(self, obs):
-        ## print("step at L2AgentBob (%s)" % self.agent_name)
-        return super(L2AgentBob, self).step(obs)
+    # def step(self, obs):
+    #     ## print("step at L2AgentBob (%s)" % self.agent_name)
+    #     return super(L2AgentBob, self).step(obs)
 
     def get_state(self, obs):
         # info for counters

@@ -16,7 +16,9 @@ class SmartAgentG2(base_agent.BaseAgent):
 
         self.AI_Bob = L2AgentBob(cfg)
         self.AI_Peps = L2AgentPeps(cfg)
-        self.AI_Grievous = L2AgentGrievous(cfg, self.AI_Peps)
+        self.AI_Grievous = L2AgentGrievous(cfg)
+        
+        self.AI_Grievous.assgin_sergant(self.AI_Peps)
 
         self.AI_Bob.new_game()
         self.AI_Peps.new_game()

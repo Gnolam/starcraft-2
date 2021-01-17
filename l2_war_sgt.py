@@ -12,12 +12,12 @@ class L2AgentPeps(L1Agent):
     agent_name = "peps"
     TF1 = None
 
-    def __init__(self, cfg):
-        logging.getLogger(self.agent_name).info(f"L2AgentPeps.init({__name__})")
-        super(L2AgentPeps, self).__init__(cfg)
+    # def __init__(self, cfg):
+    #     logging.getLogger(self.agent_name).info(f"L2AgentPeps.init({__name__})")
+    #     super(L2AgentPeps, self).__init__(cfg)
 
-    def step(self, obs):
-        return super(L2AgentPeps, self).step(obs)
+    # def step(self, obs):
+    #     return super(L2AgentPeps, self).step(obs)
 
     def get_state(self, obs):
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
