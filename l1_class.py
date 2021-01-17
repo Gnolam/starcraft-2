@@ -1,6 +1,7 @@
 import os
 import random
 import logging
+import json
 
 import numpy as np
 import pandas as pd
@@ -76,7 +77,8 @@ class L1Agent:
         # json = json.dumps(self.decisions_hist)
         if False:
             f = open("logs/decisions_G2.%s_%s.json" % (self.agent_name, self.game_num), "w")
-            f.write(str(self.decisions_hist))
+            #f.write(str(self.decisions_hist))
+            f.write(json.dumps(self.decisions_hist), indent = 4)
             f.close()
 
     def save_DQN(self):
@@ -134,7 +136,6 @@ class L1Agent:
 
         if obs.first():
             self.base_top_left = (command_centres[0].x < 32)
-
         state = str(self.get_state(obs))
 
         # No action should take place in case state did not change
@@ -142,15 +143,15 @@ class L1Agent:
         if self.consistent_decision_agent and state == self.previous_state and (not obs.last()):
             self.logger.debug("States did not change: skipping (" + state + ")")
             return None  # It is a simulation of NOOP
-
+        
         # Remove impossible actions from the list
         for action in self.action_list:            
             if not (getattr(self, action)(obs, check_action_availability_only=True)):
                 # mark it as impossible to choose in future
                 self.qtable.declare_action_invalid(state, action)
-                #self.logger.debug(f"   check action: '{action.upper()}' -> bad")
+                # self.logger.debug(f"   check action: '{action.upper()}' -> bad")
             else:
-                #self.logger.debug(f"   check action: '{action.upper()}' -> good")
+                # self.logger.debug(f"   check action: '{action.upper()}' -> good")
                 pass
 
         # Original 'best known' action based on Q-Table
@@ -163,7 +164,7 @@ class L1Agent:
             # previous action was not feasible         
             # choose the alternative action randomly
             action = np.random.choice(self.action_list)
-        
+
         if originally_suggested_action != action:
             self.logger.debug(f"Q-Action: '{originally_suggested_action.upper()}(unable to comply)' -> '{action.upper()} (st: {state})'")
         else:
@@ -199,11 +200,9 @@ class L1Agent:
         return action_res
 
     def finalise_game(self):
-        #print("[%s]: finalise_game()" % self.agent_name)
         self.dump_decisions_hist()
         self.learn_from_game()
         self.save_DQN()
-        return
 
     def learn_from_game(self):
         reward = None
@@ -233,4 +232,3 @@ class L1Agent:
 
             reward *= reward_decay
         return
-        

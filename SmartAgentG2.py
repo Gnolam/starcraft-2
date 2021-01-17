@@ -15,21 +15,23 @@ class SmartAgentG2(base_agent.BaseAgent):
         logging.getLogger("main").info("SmartAgentG2 created")
 
         self.AI_Bob = L2AgentBob(cfg)
-        self.AI_Peps = L2AgentPeps(cfg)
+        self.agent_Peps = L2AgentPeps(cfg)
         self.AI_Grievous = L2AgentGrievous(cfg)
         
-        self.AI_Grievous.assgin_sergant(self.AI_Peps)
+        self.AI_Grievous.assgin_sergant(self.agent_Peps)
 
         self.AI_Bob.new_game()
-        self.AI_Peps.new_game()
+        self.AI_Grievous.new_game()
+        self.agent_Peps.new_game()
 
         self.AI_Bob.load_DQN()
-        self.AI_Peps.load_DQN()
+        self.AI_Grievous.load_DQN()
 
     def reset(self):
         super(SmartAgentG2, self).reset()
         self.AI_Bob.reset()
-        self.AI_Peps.reset()
+        self.AI_Grievous.reset()
+        self.agent_Peps.reset()
 
     def step(self, obs):
         super(SmartAgentG2, self).step(obs)
@@ -40,16 +42,22 @@ class SmartAgentG2(base_agent.BaseAgent):
         # Econ (AKA 'Bob, the builder') has the precedence over War (AKA Sargent Pepper)
         res = self.AI_Bob.step(obs)
         if res is None or obs.last():  # obs.last() is a time for learning!!!
-            res = self.AI_Peps.step(obs)
+            self.AI_Grievous.step(obs) # General is kind of always ready to give orders
+            if self.agent_Peps.war_attack(obs, check_action_availability_only=True):
+                # Sgt should always attack if he has TF1
+                res = self.agent_Peps.war_attack(obs, check_action_availability_only=False)
+
+        # .war_attack() results into no_op() itself but just in case...
         if res is None:
             # Potentially analyze the situation, while the system is 'idle'
             res = actions.RAW_FUNCTIONS.no_op()
 
         if obs.last():
             self.AI_Bob.finalise_game()
-            self.AI_Peps.finalise_game()
+            self.AI_Grievous.finalise_game()
+            #self.agent_Peps.finalise_game()
             self.AI_Bob.save_global_state()
 
-        self.AI_Grievous.debug(obs)
+        # self.AI_Grievous.debug(obs)
 
         return res

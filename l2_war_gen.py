@@ -48,7 +48,7 @@ from l1_class import L1Agent
 from l2_war_sgt import L2AgentPeps
 
 class L2AgentGrievous(L1Agent):
-    action_list = ("Gen_Add4_marines_to_TF1", "Gen_Add_8_marines_to_TF1", "Gen_Add_12_marines_to_TF1", "Gen_Add_16_marines_to_TF1") 
+    action_list = ("Gen_Add_4_marines_to_TF1", "Gen_Add_8_marines_to_TF1", "Gen_Add_12_marines_to_TF1", "Gen_Add_16_marines_to_TF1") 
 
     action = None
     agent_name = "grievous"
@@ -61,9 +61,9 @@ class L2AgentGrievous(L1Agent):
     #     super(L2AgentGrievous, self).__init__(cfg)
 
     def assgin_sergant(self, sgt):
-        self.logger.debug(f"Sergant: {str(sgt.agent_name)} was assigned for duty")
+        self.logger.debug(f"Sergant: '{str(sgt.agent_name)}' was assigned for duty")
         self.sgt = sgt
-
+        
     def debug(self, obs):
         self.logger.debug("state: "+ str(self.get_state(obs, is_debug = True)))
         self.Gen_Add_8_marines_to_TF1(obs, check_action_availability_only=False)
@@ -113,16 +113,16 @@ class L2AgentGrievous(L1Agent):
         
 
     def Gen_Add_4_marines_to_TF1(self, obs, check_action_availability_only):
-        self.Gen_Add_X_marines_to_TF1(obs, 4, check_action_availability_only)
+        return self.Gen_Add_X_marines_to_TF1(obs, 4, check_action_availability_only)
 
     def Gen_Add_8_marines_to_TF1(self, obs, check_action_availability_only):
-        self.Gen_Add_X_marines_to_TF1(obs, 8, check_action_availability_only)
+        return self.Gen_Add_X_marines_to_TF1(obs, 8, check_action_availability_only)
 
     def Gen_Add_12_marines_to_TF1(self, obs, check_action_availability_only):
-        self.Gen_Add_X_marines_to_TF1(obs, 12, check_action_availability_only)
+        return self.Gen_Add_X_marines_to_TF1(obs, 12, check_action_availability_only)
 
     def Gen_Add_16_marines_to_TF1(self, obs, check_action_availability_only):
-        self.Gen_Add_X_marines_to_TF1(obs, 16, check_action_availability_only)
+        return self.Gen_Add_X_marines_to_TF1(obs, 16, check_action_availability_only)
 
 
     def Gen_Add_X_marines_to_TF1(self, obs, number_of_marines_in_reinforcement, check_action_availability_only):
@@ -135,7 +135,7 @@ class L2AgentGrievous(L1Agent):
         self.logger.debug(f"TF1 Size:{len(marine_IDs)-len(TF2_marine_IDs)}, TF2 Size: {len(TF2_marine_IDs)}, IDs: {str(TF2_marine_IDs)}")
 
         if len(TF2_marine_IDs) >= number_of_marines_in_reinforcement:
-          self.logger.debug(f"Reinforcement has arrived: Transferring {len(TF2_marine_IDs)} marines to TF1")
+          self.logger.info(f"Reinforcement has arrived: Transferring {len(TF2_marine_IDs)} marines to TF1")
           self.TF1 = marine_IDs
           self.sgt.assign_TF1(marine_IDs)
           return True        
