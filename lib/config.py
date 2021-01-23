@@ -48,6 +48,7 @@ class Config:
         logging.root.removeHandler(absl.logging._absl_handler)
         absl.logging._warn_preinit_stderr = False
 
+
     def read_yaml_file(self, fname):
         if not os.path.exists(fname):
             raise Exception(f".yaml file '{fname}' does not exist")
@@ -55,6 +56,7 @@ class Config:
             cfg = yaml.safe_load(f.read())
             f.close()
         return cfg
+
 
     def write_yaml_file(self, fname, data):
         with open(fname, 'w') as outfile:

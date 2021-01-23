@@ -1,9 +1,16 @@
 version: 1
 
-run_id: yaml1
+run_id: grievous-med
 
 bob: 
     consistent: true
 
 peps:
     consistent: true
+
+grievous:
+    consistent: true
+    allowed_orders:
+        - Use4
+        - Use8
+        - Use12
