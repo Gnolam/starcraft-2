@@ -1,5 +1,16 @@
 # ToDo's:
 
+## Generation 3: decision pipeline
+
+Key features:
+
+- single AI to make a decision, when the previous order is accomplished
+  if previous order was not complete, map the current with the same action (decision)
+- Bob: pipeline agent just checks what is the current decision and fullfills it
+- Tom: checks if there are any SCVs, which are doing nothing, bring the back to work
+- Sgt peps: uses TF1 to do constant attacks
+
+
 ## Logging
 
 - when state changes and `L1::step()` prints it, the 'friendly' version should be used for logs

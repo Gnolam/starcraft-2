@@ -1,6 +1,12 @@
 import pandas as pd
 import numpy as np
 
+# This class should be able to store history within itself
+# then when save DQN (another function) it should load it again / save it
+# Load again at the beginning of each round after init
+# think about another game using it. All f()s should be contained here
+
+
 class QLearningTable:
     def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
         self.actions = actions

@@ -3,12 +3,13 @@ import os
 import logging
 import absl.logging
 
+
 class Config:
     # global_debug = False
 
     cfg = None
     project_path = None
-    fname_DQN_econ= None
+    fname_DQN_econ = None
     fname_DQN_war = None
     fname_decisions_econ = None
     fname_decisions_war = None
@@ -20,8 +21,8 @@ class Config:
         if not self.run_id:
             raise Exception("!!! Config file corrupted: 'run_id' is not present !!!")
 
-        # init variables 
-        self.project_path = f'runs/{self.run_id}' 
+        # init variables
+        self.project_path = f'runs/{self.run_id}'
         print("Set project path to:", self.project_path)
         if not os.path.exists(self.project_path):
             os.makedirs(self.project_path)
@@ -39,7 +40,7 @@ class Config:
         fname_csv = f'{self.project_path}/stats_{agent_name}.csv'
         fname_DQN_debug = f'{self.project_path}/DQN_{agent_name}.dbg'
         fname_state = f'{self.project_path}/global_state.yaml'
-        return fname_DQN,fname_decisions,fname_csv,fname_DQN_debug,fname_state
+        return fname_DQN, fname_decisions, fname_csv, fname_DQN_debug, fname_state
 
 
     def fix_ADSL_logging(self):
@@ -50,6 +51,7 @@ class Config:
 
 
     def read_yaml_file(self, fname):
+        print("read_yaml_file(", fname,")")
         if not os.path.exists(fname):
             raise Exception(f".yaml file '{fname}' does not exist")
         with open(fname) as f:
