@@ -11,6 +11,8 @@ Key features:
 - Sgt peps: uses TF1 to do constant attacks
 
 
+# Done
+ 
 ## Logging
 
 - when state changes and `L1::step()` prints it, the 'friendly' version should be used for logs
@@ -28,6 +30,8 @@ Key features:
 - in case run counter is not present, replace it with 0-count
 
 - remove commented `__init__()` and other unused L2 functions, which were moved to L1
+
+# Later (long run) DoDo
 
 ### Major
 
