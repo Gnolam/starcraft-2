@@ -26,9 +26,8 @@ def main(unused_argv):
             #   sc2_env.Agent(sc2_env.Race.terran)],
             players=[
                 sc2_env.Agent(sc2_env.Race.terran),
-                sc2_env.Bot(
-                    sc2_env.Race.terran,
-                    sc2_env.Difficulty.medium)],
+                sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.medium)
+            ],
             # players=[
             #   sc2_env.Agent(sc2_env.Race.terran),
             #   sc2_env.Bot(
@@ -42,8 +41,7 @@ def main(unused_argv):
                 action_space=actions.ActionSpace.RAW,
                 use_raw_units=True,
                 # raw_resolution=64,
-                raw_resolution=96
-            ),
+                raw_resolution=96),
             step_mul=48,
             disable_fog=True,
     ) as env:

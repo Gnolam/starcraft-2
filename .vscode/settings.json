@@ -3,5 +3,7 @@
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
     "python.linting.pycodestyleEnabled": true,
-    "python.linting.pycodestyleArgs": ["--ignore=E303"]
+    "editor.formatOnSave": true,
+    "python.formatting.provider": "yapf",
+    "python.linting.pycodestyleArgs": ["--ignore=E303,W504,W503,E501"]
 }
