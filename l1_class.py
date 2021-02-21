@@ -178,7 +178,7 @@ class L1Agent:
                 pass
 
         # Original 'best known' action based on Q-Table
-        action = self.qtable.choose_action(state)
+        action, best_score = self.qtable.choose_action(state)
         originally_suggested_action = action
 
         # This check should be redundant with the application
@@ -194,9 +194,11 @@ class L1Agent:
         if originally_suggested_action != action:
             self.logger.debug(
                 f"Q-Action: '{originally_suggested_action.upper()}" +
-                "(unable to comply)' -> '{action.upper()} (st: {state})'")
+                f", score = '{best_score}', " +
+                f"(unable to comply)' -> '{action.upper()} (st: {state})'")
         else:
-            self.logger.debug(f"Q-Action: '{action.upper()}'")
+            self.logger.debug(f"Q-Action: '{action.upper()}'" +
+                              f", score = '{best_score}'")
 
         self.current_action = action
 
