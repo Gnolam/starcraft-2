@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 import numpy as np
 
@@ -20,21 +21,25 @@ class QLearningTable:
         self.q_table = pd.DataFrame(columns=self.actions, dtype=np.float64)
 
     def choose_action(self, state):
-        self.check_state_exist(state)
+        self.force_state_existence(state)
+        state_action = self.q_table.loc[state, :]
         if np.random.uniform() < self.e_greedy:
             # if global_log_action:
             #     fh_decisions.write("<=>")
-            state_action = self.q_table.loc[state, :]
+            best_score = np.max(state_action)
             action = np.random.choice(
                 state_action[state_action == np.max(state_action)].index)
+            best_score = f"best = {action}:{best_score} of\n{str(state_action)}"
+
         else:
             action = np.random.choice(self.actions)
+            best_score = 'random'
             # if global_log_action:
             #     fh_decisions.write("<~>")
-        return action
+        return action, best_score
 
     def learn(self, s, a, r, s_, fn):
-        self.check_state_exist(s_)
+        self.force_state_existence(s_)
         q_predict = self.q_table.loc[s, a]
 
         if s_ != 'terminal':
@@ -53,11 +58,19 @@ class QLearningTable:
         fh.close()
 
     def declare_action_invalid(self, state, action):
+        self.force_state_existence(state)
         self.q_table.loc[state, action] = -9999
 
-    def check_state_exist(self, state):
+    def force_state_existence(self, state):
+        # logger = logging.getLogger("bob")
         if state not in self.q_table.index:
             self.q_table = self.q_table.append(
                 pd.Series([0] * len(self.actions),
                           index=self.q_table.columns,
                           name=state))
+            # state_action = self.q_table.loc[state, :]
+            # logger.debug(f"state ({state}) is new:\n{state_action} ")
+        else:
+            # state_action = self.q_table.loc[state, :]
+            # logger.debug(f"state ({state}) exists: {state_action} ")
+            pass
