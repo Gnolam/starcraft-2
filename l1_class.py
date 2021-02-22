@@ -172,10 +172,10 @@ class L1Agent:
                     obs, check_action_availability_only=True)):
                 # mark it as impossible to choose in future
                 self.qtable.declare_action_invalid(state, action)
-                # self.logger.debug(f"   check: '{action.upper()}' -> bad")
+                self.logger.debug(f"   check: '{action.upper()}' -> bad")
             else:
-                # self.logger.debug(f"   check: '{action.upper()}' -> good")
-                pass
+                self.logger.debug(f"   check: '{action.upper()}' -> good")
+                # pass
 
         # Original 'best known' action based on Q-Table
         action, best_score = self.qtable.choose_action(state)
