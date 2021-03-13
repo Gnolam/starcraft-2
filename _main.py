@@ -6,7 +6,8 @@ from pysc2.env import sc2_env, run_loop
 from pysc2.lib import actions, features
 from absl import app
 from lib.config import Config
-from SmartAgentG2 import SmartAgentG2
+from SmartAgentG3 import SmartAgentG3
+from lib.pipeline import *
 
 
 def main(unused_argv):
@@ -16,7 +17,7 @@ def main(unused_argv):
     cfg.init_logging('config/logging.yml')
 
     logging.getLogger("main").info("main() called")
-    agentSmart1 = SmartAgentG2(cfg)
+    agentSmart1 = SmartAgentG3(cfg)
 
     with sc2_env.SC2Env(
             # map_name="Simple64",
@@ -54,5 +55,16 @@ def main(unused_argv):
         pass
 
 
-if __name__ == "__main__":
-    app.run(main)
+# if __name__ == "__main__":
+#     app.run(main)
+
+a = Pipeline()
+
+### ToDo: remove non-necessary a.fn(fn(a))
+# pipeline should link itself to oder during the init state
+#order should not act immediately
+
+a.add_order(poAddMariners(a, 4))
+# a.add_order(poAddMariners( 4))
+
+a.run()

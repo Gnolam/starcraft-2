@@ -7,13 +7,12 @@ from l2_war_sgt import L2AgentPeps
 from l2_war_gen import L2AgentGrievous
 
 
-class SmartAgentG2(base_agent.BaseAgent):
-    agent_name = "SmartAgent Gen2"
-    should_log_actions = True
+class SmartAgentG3(base_agent.BaseAgent):
+    agent_name = "SmartAgent Gen3"
 
     def __init__(self, cfg):
-        super(SmartAgentG2, self).__init__()
-        logging.getLogger("main").info("SmartAgentG2 created")
+        super(SmartAgentG3, self).__init__()
+        logging.getLogger("main").info("SmartAgentG3 created")
 
         self.AI_Bob = AgentBob(cfg)
         self.agent_Peps = L2AgentPeps(cfg)
@@ -29,13 +28,13 @@ class SmartAgentG2(base_agent.BaseAgent):
         self.AI_Grievous.load_DQN()
 
     def reset(self):
-        super(SmartAgentG2, self).reset()
+        super(SmartAgentG3, self).reset()
         self.AI_Bob.reset()
         self.AI_Grievous.reset()
         self.agent_Peps.reset()
 
     def step(self, obs):
-        super(SmartAgentG2, self).step(obs)
+        super(SmartAgentG3, self).step(obs)
 
         # NOOP is not entering the learning matrix as a result....
         # should be recorded in the decisions log anyways
