@@ -2,7 +2,7 @@ import numpy as np
 from pysc2.lib import features
 
 
-class L1_ObsAPI:
+class ObsAPI:
     def get_my_units_by_type(self, obs, unit_type):
         return [
             unit for unit in obs.observation.raw_units

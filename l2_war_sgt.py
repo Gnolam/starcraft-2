@@ -1,12 +1,11 @@
 import random
 import numpy as np
 
-from class_l1_game_lifecycle import L1_GameLifecycle
-from class_l1_obs_api import L1_ObsAPI
+from class_02_game_lifecycle import GameLifecycle
 from pysc2.lib import units, features, actions
 
 
-class L2AgentPeps(L1_GameLifecycle, L1_ObsAPI):
+class L2AgentPeps(GameLifecycle):
     action_list = ("war_do_nothing", "war_attack")
     agent_name = "peps"
     TF1 = None

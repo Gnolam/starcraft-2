@@ -41,11 +41,10 @@ Gen: contains Peps
 '''
 
 from pysc2.lib import units
-from class_l1_game_lifecycle import L1_GameLifecycle
-from class_l1_obs_api import L1_ObsAPI
+from class_02_game_lifecycle import GameLifecycle
 
 
-class L2AgentGrievous(L1_GameLifecycle, L1_ObsAPI):
+class L2AgentGrievous(GameLifecycle):
     action_list = ("Gen_Add_4_marines_to_TF1", "Gen_Add_8_marines_to_TF1",
                    "Gen_Add_12_marines_to_TF1", "Gen_Add_16_marines_to_TF1")
 

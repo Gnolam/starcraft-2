@@ -2,9 +2,10 @@ from pysc2.agents import base_agent
 from pysc2.lib import actions, features
 import logging
 
-from l2_econ import L2AgentBob
+from class_E2_agent import AgentBob
 from l2_war_sgt import L2AgentPeps
 from l2_war_gen import L2AgentGrievous
+
 
 class SmartAgentG2(base_agent.BaseAgent):
     agent_name = "SmartAgent Gen2"
@@ -14,10 +15,10 @@ class SmartAgentG2(base_agent.BaseAgent):
         super(SmartAgentG2, self).__init__()
         logging.getLogger("main").info("SmartAgentG2 created")
 
-        self.AI_Bob = L2AgentBob(cfg)
+        self.AI_Bob = AgentBob(cfg)
         self.agent_Peps = L2AgentPeps(cfg)
         self.AI_Grievous = L2AgentGrievous(cfg)
-        
+
         self.AI_Grievous.assgin_sergant(self.agent_Peps)
 
         self.AI_Bob.new_game()
@@ -42,10 +43,13 @@ class SmartAgentG2(base_agent.BaseAgent):
         # Econ (AKA 'Bob, the builder') has the precedence over War (AKA Sargent Pepper)
         res = self.AI_Bob.step(obs)
         if res is None or obs.last():  # obs.last() is a time for learning!!!
-            self.AI_Grievous.step(obs) # General is kind of always ready to give orders
-            if self.agent_Peps.war_attack(obs, check_action_availability_only=True):
+            self.AI_Grievous.step(
+                obs)  # General is kind of always ready to give orders
+            if self.agent_Peps.war_attack(obs,
+                                          check_action_availability_only=True):
                 # Sgt should always attack if he has TF1
-                res = self.agent_Peps.war_attack(obs, check_action_availability_only=False)
+                res = self.agent_Peps.war_attack(
+                    obs, check_action_availability_only=False)
 
         # .war_attack() results into no_op() itself but just in case...
         if res is None:

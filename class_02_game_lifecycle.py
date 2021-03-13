@@ -7,9 +7,10 @@ import pandas as pd
 from pysc2.lib import units
 
 from lib.q_table import QLearningTable
+from class_01_obs_api import ObsAPI
 
 
-class L1_GameLifecycle:
+class GameLifecycle(ObsAPI):
     agent_name = "L1"
     action_list = []
     DQN_filename = None
