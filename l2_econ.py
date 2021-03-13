@@ -1,13 +1,11 @@
-from l1_class import L1Agent
-# from pysc2.lib import units
-import logging
-from pysc2.lib import actions, features, units
+from class_l1_game_lifecycle import L1_GameLifecycle
+from class_l1_obs_api import L1_ObsAPI
+from pysc2.lib import actions, units
 import numpy as np
-import pandas as pd
 import random
 
 
-class L2AgentBob(L1Agent):
+class L2AgentBob(L1_GameLifecycle, L1_ObsAPI):
     action_list = ("econ_do_nothing", "econ_harvest_minerals",
                    "econ_build_supply_depot", "econ_build_barracks",
                    "econ_train_marine")

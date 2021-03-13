@@ -1,16 +1,15 @@
 import os
-import random
 import logging
 import json
 
 import numpy as np
 import pandas as pd
-from pysc2.lib import actions, features, units
+from pysc2.lib import units
 
 from lib.q_table import QLearningTable
 
 
-class L1Agent:
+class L1_GameLifecycle:
     agent_name = "L1"
     action_list = []
     DQN_filename = None
@@ -101,44 +100,6 @@ class L1Agent:
     def log_state(self, s_message, should_print=True):
         if should_print and self.fh_state_csv is not None:
             self.fh_state_csv.write(s_message)
-
-    def get_my_units_by_type(self, obs, unit_type):
-        return [
-            unit for unit in obs.observation.raw_units
-            if unit.unit_type == unit_type
-            and unit.alliance == features.PlayerRelative.SELF
-        ]
-
-    def get_all_enemy_units(self, obs):
-        return [
-            unit for unit in obs.observation.raw_units
-            if unit.alliance == features.PlayerRelative.ENEMY
-        ]
-
-    def get_enemy_units_by_type(self, obs, unit_type):
-        return [
-            unit for unit in obs.observation.raw_units
-            if unit.unit_type == unit_type
-            and unit.alliance == features.PlayerRelative.ENEMY
-        ]
-
-    def get_my_completed_units_by_type(self, obs, unit_type):
-        return [
-            unit for unit in obs.observation.raw_units
-            if unit.unit_type == unit_type and unit.build_progress == 100
-            and unit.alliance == features.PlayerRelative.SELF
-        ]
-
-    def get_enemy_completed_units_by_type(self, obs, unit_type):
-        return [
-            unit for unit in obs.observation.raw_units
-            if unit.unit_type == unit_type and unit.build_progress == 100
-            and unit.alliance == features.PlayerRelative.ENEMY
-        ]
-
-    def get_distances(self, obs, units, xy):
-        units_xy = [(unit.x, unit.y) for unit in units]
-        return np.linalg.norm(np.array(units_xy) - np.array(xy), axis=1)
 
     def step(self, obs):
         command_centres =\
