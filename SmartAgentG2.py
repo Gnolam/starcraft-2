@@ -2,7 +2,7 @@ from pysc2.agents import base_agent
 from pysc2.lib import actions, features
 import logging
 
-from class_E2_agent import AgentBob
+from E2_agent import AgentBob
 from l2_war_sgt import L2AgentPeps
 from l2_war_gen import L2AgentGrievous
 
@@ -59,7 +59,7 @@ class SmartAgentG2(base_agent.BaseAgent):
         if obs.last():
             self.AI_Bob.finalise_game()
             self.AI_Grievous.finalise_game()
-            #self.agent_Peps.finalise_game()
+            # self.agent_Peps.finalise_game()
             self.AI_Bob.save_global_state()
 
         # self.AI_Grievous.debug(obs)

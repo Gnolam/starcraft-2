@@ -1,4 +1,4 @@
-from class_E1_orders import EconomicOrders
+from E1_orders import EconomicOrders
 from pysc2.lib import actions, units
 import numpy as np
 import random

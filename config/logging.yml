@@ -10,7 +10,7 @@ formatters:
         datefmt: '%Y-%m-%d %H:%M:%S'
 
     complex:
-        format: "%(asctime)s %(module)-10s %(funcName)-24s %(lineno)-4d %(levelname)-8s %(message)s"
+        format: "%(asctime)s %(module)-16s %(funcName)-24s %(lineno)-4d %(levelname)-8s %(message)s"
         datefmt: '%Y-%m-%d %H:%M:%S'
 
     raw:
@@ -54,47 +54,55 @@ handlers:
         backupCount: 5
         level: DEBUG
         formatter: complex
-        filename : logs/grievous.log        
+        filename : logs/grievous.log
 
     file_result:
         class: logging.handlers.TimedRotatingFileHandler
         formatter: raw
         filename : logs/result.log
 
+    file_all:
+        class: logging.handlers.TimedRotatingFileHandler
+        when: midnight
+        backupCount: 5
+        level: DEBUG
+        formatter: complex
+        filename : logs/zAll.log        
+
 
 loggers:
 
     main: 
         level: INFO
-        handlers: [console,file_main]
+        handlers: [console,file_main,file_all]
         propagate: yes
 
     GameAgent:
         level: INFO
-        handlers: [file_main]
+        handlers: [file_main,file_all]
         propagate: yes
 
     bob: 
         level: DEBUG
-        handlers: [file_bob, file_main]
+        handlers: [file_bob, file_main,file_all]
         propagate: false
 
     peps: 
         level: DEBUG
-        handlers: [file_peps, file_main]
+        handlers: [file_peps, file_main,file_all]
         propagate: false
 
     grievous: 
         level: DEBUG
-        handlers: [file_grievous, file_main]
+        handlers: [file_grievous, file_main,file_all]
         propagate: false            
 
     L1:
         level: DEBUG
-        handlers: [file_bob]
+        handlers: [file_bob,file_all]
         propagate: false
 
     res:
         level: INFO
-        handlers: [file_result, file_main, console]
+        handlers: [file_result, file_main, console,file_all]
         propagate: false

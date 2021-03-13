@@ -7,7 +7,7 @@ import pandas as pd
 from pysc2.lib import units
 
 from lib.q_table import QLearningTable
-from class_01_obs_api import ObsAPI
+from c01_obs_api import ObsAPI
 
 
 class GameLifecycle(ObsAPI):

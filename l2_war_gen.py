@@ -41,7 +41,7 @@ Gen: contains Peps
 '''
 
 from pysc2.lib import units
-from class_02_game_lifecycle import GameLifecycle
+from c02_lifecycle import GameLifecycle
 
 
 class L2AgentGrievous(GameLifecycle):

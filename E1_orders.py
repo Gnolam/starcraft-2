@@ -1,4 +1,4 @@
-from class_02_game_lifecycle import GameLifecycle
+from c02_lifecycle import GameLifecycle
 from pysc2.lib import actions, units
 import numpy as np
 import random
