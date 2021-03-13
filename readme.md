@@ -12,6 +12,9 @@ Key features:
 
 
 # Done
+
+## Refactoring into multiple classes
+ - separation of agent and econ_ function
  
 ## Logging
 
