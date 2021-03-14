@@ -21,19 +21,22 @@ class Pipeline(PipelineBase):
         self.logger.info(
             f"Adding '{order.__class__.__name__ }' to pipeline. ID:{self.order_counter}"
         )
+        self.pipeline.append({'ID': self.order_counter, 'Order': order})
         order.link_to_pipeline(parent_pipeline=self,
                                order_id=self.order_counter)
         return self.order_counter
 
-    def remove_order(self, order_id: int):
-        # ToDo: check that there are no other orders, which have this order as dependency
+    def is_empty(self) -> bool:
+        '''
+        Returns True if current pipeline has all orders 'COMPLETE'
+        '''
         pass
 
     def run(self):
         '''
-            Run
+        Scans: through all the orders in the book and tries to run those, which are active
 
-            runs the
+        Stop: if PipelineOrder::Run() returns true
         '''
         pass
 

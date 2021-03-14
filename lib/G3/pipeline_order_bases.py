@@ -18,6 +18,10 @@ class PipelineOrderBase(PipelineBase):
     Contains the place holders for downstream classes
     '''
 
+    status_complete = "COMPLETE"
+    status_init = "INIT"
+    status_blocked = "BLOCKED"
+
     order_id: int = None
     status: str = None
     depends_on = []
@@ -32,22 +36,31 @@ class PipelineOrderBase(PipelineBase):
     def __str__(self):
         self.logger.debug(f"Hi from '{self.__class__.__name__}'")
 
-    def link_to_pipeline(self, parent_pipeline: PipelineBase, order_id: int):
+    def link_to_pipeline(self, parent_pipeline: PipelineBase,
+                         order_id: int) -> None:
+        '''
+        Secondary action, performed by Pipeline::add_order()
+        '''
         self.parent_pipelene = parent_pipeline
         self.order_id = order_id
         self.logger.debug(
             f"Assgining ID:'{order_id}' received from '{parent_pipeline.__class__.__name__}'"
         )
-        pass
 
     def is_complete(self) -> bool:
-        '''
-        Placehoder. returns true if the order is complete
-        '''
-        pass
+        return True if self.status == self.status_complete else False
 
     def run(self):
+        '''try to execute, add new orders and depenedncies later on
+
+        Return: dictionary
+        - _SC2 order assigned_:
+          - `None`: no SC2 orders
+          - `pysc2.lib.actions`: an order to be executed
+        - *New actions created*: indicates that pipeline should be re-scanned
+
+                ``asx``: __ghghg__
         '''
-        try to execute, add new orders and depenedncies later on
-        '''
+        if self.status == self.status_complete:
+            return {'New actions created': False, 'SC2 order assigned': None}
         pass
