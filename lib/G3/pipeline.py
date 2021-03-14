@@ -6,12 +6,12 @@ class Pipeline(PipelineBase):
     '''
     Class to manage the set of current `PipelineOrder`'s
     '''
-    pipeline = []
+    pipeline = []  # {'ID': self.order_counter, 'Order': order}
     order_counter: int = None
 
     def __init__(self):
         super().__init__()
-        self.order_counter = 0
+        self.order_counter = -1
 
     def add_order(self, order: PipelineOrderBase) -> int:
         '''
@@ -42,3 +42,10 @@ class Pipeline(PipelineBase):
 
     def talk(self):
         print(f"Hi from '{self.__class__.__name__}'")
+
+    def scan(self):
+        print("  Current content of the pipeline gross book:\n    " + "-" * 40)
+        for ticket in self.pipeline:
+            ID = ticket['ID']
+            cur_order = ticket['Order']
+            print(f"    ID:{ID}, {str(cur_order)}")
