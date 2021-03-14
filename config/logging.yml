@@ -6,11 +6,15 @@ formatters:
         datefmt: '%Y-%m-%d %H:%M:%S'
 
     reduced:
-        format: "%(asctime)s %(name)-8s %(levelname)-8s %(message)s"
+        format: "%(asctime)s %(levelname)-8s %(name)-16s %(message)s"
         datefmt: '%Y-%m-%d %H:%M:%S'
 
     complex:
-        format: "%(asctime)s %(module)-16s %(funcName)-24s %(lineno)-4d %(levelname)-8s %(message)s"
+        format: "%(asctime)s %(levelname)-8s %(name)-8s %(module)-16s %(lineno)-4d %(funcName)-24s %(message)s"
+        datefmt: '%Y-%m-%d %H:%M:%S'
+
+    complex2:
+        format: "%(asctime)s %(levelname)-8s %(name)-16s %(funcName)-20s %(message)s"
         datefmt: '%Y-%m-%d %H:%M:%S'
 
     raw:
@@ -67,42 +71,69 @@ handlers:
         backupCount: 5
         level: DEBUG
         formatter: complex
-        filename : logs/zAll.log        
+        filename : logs/z_all.log
+
+    file_pipeline_orders:
+        class: logging.handlers.TimedRotatingFileHandler
+        formatter: complex2
+        level: DEBUG
+        filename : logs/pipeline_orders.log
+
+    file_pipeline:
+        class: logging.handlers.TimedRotatingFileHandler
+        formatter: raw
+        level: INFO
+        filename : logs/pipeline.log
 
 
 loggers:
 
     main: 
         level: INFO
-        handlers: [console,file_main,file_all]
+        handlers: [console,file_main]
         propagate: yes
 
     GameAgent:
         level: INFO
-        handlers: [file_main,file_all]
+        handlers: [file_main]
         propagate: yes
 
     bob: 
         level: DEBUG
-        handlers: [file_bob, file_main,file_all]
+        handlers: [file_bob, file_main]
         propagate: false
 
     peps: 
         level: DEBUG
-        handlers: [file_peps, file_main,file_all]
+        handlers: [file_peps, file_main]
         propagate: false
 
     grievous: 
         level: DEBUG
-        handlers: [file_grievous, file_main,file_all]
+        handlers: [file_grievous, file_main]
         propagate: false            
 
     L1:
         level: DEBUG
-        handlers: [file_bob,file_all]
+        handlers: [file_bob]
         propagate: false
 
     res:
         level: INFO
-        handlers: [file_result, file_main, console,file_all]
+        handlers: [file_result, file_main, console]
+        propagate: false
+
+    Pipeline:
+        level: INFO
+        handlers: [file_pipeline, file_pipeline_orders, console]
+        propagate: false
+
+    poBuildBarracks:
+        level: DEBUG
+        handlers: [file_pipeline_orders, console]
+        propagate: false
+
+    poBuildMariners:
+        level: DEBUG
+        handlers: [file_pipeline_orders, console]
         propagate: false

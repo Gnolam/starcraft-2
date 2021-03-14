@@ -10,13 +10,13 @@ class poBuildBarracks(PipelineOrderBase):
         pass
 
 
-class poAddMariners(PipelineOrderBase):
-    number_of_mariners_to_produce: int = None
+class poBuildMariners(PipelineOrderBase):
+    number_of_mariners_to_build: int = None
 
-    def __init__(self, number_of_mariners: int):
+    def __init__(self, number_of_mariners_to_build: int):
         '''
         ???
         '''
         super().__init__()
-        self.number_of_mariners_to_produce = number_of_mariners
+        self.number_of_mariners_to_build = number_of_mariners_to_build
         pass

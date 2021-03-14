@@ -8,7 +8,7 @@ from absl import app
 from lib.config import Config
 from lib.agentG3 import SmartAgentG3
 from lib.G3.pipeline import Pipeline
-from lib.G3.pipeline_orders import poAddMariners, poBuildBarracks
+from lib.G3.pipeline_orders import poBuildMariners, poBuildBarracks
 
 
 def main(unused_argv):
@@ -59,7 +59,11 @@ def main(unused_argv):
 # if __name__ == "__main__":
 #   app.run(main)
 
+cfg = Config()
+cfg.fix_ADSL_logging()
+cfg.init_logging('config/logging.yml')
+
 a = Pipeline()
-a.add_order(poAddMariners(4))
+a.add_order(poBuildMariners(number_of_mariners_to_build=4))
 a.add_order(poBuildBarracks())
 a.run()
