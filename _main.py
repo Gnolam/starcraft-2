@@ -7,7 +7,8 @@ from pysc2.lib import actions, features
 from absl import app
 from lib.config import Config
 from SmartAgentG3 import SmartAgentG3
-from lib.pipeline import *
+from lib.pipeline import Pipeline
+from lib.pipeline_orders import *
 
 
 def main(unused_argv):
@@ -60,4 +61,5 @@ def main(unused_argv):
 
 a = Pipeline()
 a.add_order(poAddMariners(4))
+a.add_order(poBuildBarracks())
 a.run()
