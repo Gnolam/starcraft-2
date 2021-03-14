@@ -1,7 +1,7 @@
 import random
 import numpy as np
 
-from c02_lifecycle import GameLifecycle
+from lib.c02_lifecycle import GameLifecycle
 from pysc2.lib import units, features, actions
 
 

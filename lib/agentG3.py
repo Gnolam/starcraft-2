@@ -2,9 +2,9 @@ from pysc2.agents import base_agent
 from pysc2.lib import actions, features
 import logging
 
-from E2_agent import AgentBob
-from l2_war_sgt import L2AgentPeps
-from l2_war_gen import L2AgentGrievous
+from lib.E2_agent import AgentBob
+from lib.l2_war_sgt import L2AgentPeps
+from lib.l2_war_gen import L2AgentGrievous
 
 
 class SmartAgentG3(base_agent.BaseAgent):

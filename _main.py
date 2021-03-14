@@ -6,7 +6,7 @@ from pysc2.env import sc2_env, run_loop
 from pysc2.lib import actions, features
 from absl import app
 from lib.config import Config
-from SmartAgentG3 import SmartAgentG3
+from lib.agentG3 import SmartAgentG3
 from lib.pipeline import Pipeline
 from lib.pipeline_orders import *
 
