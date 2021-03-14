@@ -17,9 +17,10 @@ class Pipeline(PipelineBase):
         '''
         Adds order to the pipeline and assigns it an order ID
         '''
-        self.logger.info(f"Adding '{order.__class__.__name__ }' to pipeline")
         self.order_counter += 1
-        self.pipeline.append((order, self.order_counter))
+        self.logger.info(
+            f"Adding '{order.__class__.__name__ }' to pipeline. ID:{self.order_counter}"
+        )
         order.link_to_pipeline(parent_pipeline=self,
                                order_id=self.order_counter)
         return self.order_counter

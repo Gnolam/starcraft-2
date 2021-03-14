@@ -29,58 +29,48 @@ handlers:
         formatter: simple
 
     file_main:
-        class: logging.handlers.TimedRotatingFileHandler
-        when: midnight
-        backupCount: 5
+        class: logging.FileHandler # logging.handlers.TimedRotatingFileHandler
         level: INFO
         formatter: reduced
         filename : logs/main.log
 
     file_bob:
-        class: logging.handlers.TimedRotatingFileHandler
-        when: midnight
-        backupCount: 5
+        class: logging.FileHandler
         level: DEBUG
         formatter: complex
         filename : logs/bob.log
 
     file_peps:
-        class: logging.handlers.TimedRotatingFileHandler
-        when: midnight
-        backupCount: 5
+        class: logging.FileHandler
         level: DEBUG
         formatter: complex
         filename : logs/peps.log
 
     file_grievous:
-        class: logging.handlers.TimedRotatingFileHandler
-        when: midnight
-        backupCount: 5
+        class: logging.FileHandler
         level: DEBUG
         formatter: complex
         filename : logs/grievous.log
 
     file_result:
-        class: logging.handlers.TimedRotatingFileHandler
+        class: logging.FileHandler
         formatter: raw
         filename : logs/result.log
 
     file_all:
-        class: logging.handlers.TimedRotatingFileHandler
-        when: midnight
-        backupCount: 5
+        class: logging.FileHandler
         level: DEBUG
         formatter: complex
         filename : logs/z_all.log
 
     file_pipeline_orders:
-        class: logging.handlers.TimedRotatingFileHandler
+        class: logging.FileHandler
         formatter: complex2
         level: DEBUG
         filename : logs/pipeline_orders.log
 
     file_pipeline:
-        class: logging.handlers.TimedRotatingFileHandler
+        class: logging.FileHandler
         formatter: raw
         level: INFO
         filename : logs/pipeline.log
