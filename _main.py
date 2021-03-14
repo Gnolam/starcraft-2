@@ -59,12 +59,5 @@ def main(unused_argv):
 #     app.run(main)
 
 a = Pipeline()
-
-### ToDo: remove non-necessary a.fn(fn(a))
-# pipeline should link itself to oder during the init state
-#order should not act immediately
-
-a.add_order(poAddMariners(a, 4))
-# a.add_order(poAddMariners( 4))
-
+a.add_order(poAddMariners(4))
 a.run()

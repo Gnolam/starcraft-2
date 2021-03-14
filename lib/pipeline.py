@@ -4,7 +4,7 @@ class PipelineBase:
         pass
 
 
-#----------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 
 class PipelineOrder:
@@ -20,11 +20,17 @@ class PipelineOrder:
 
     parent_pipelene: PipelineBase = None
 
-    def __init__(self, parent_pipeline: PipelineBase):
+    def __init__(self):
         '''
         To be called by either
         '''
+        print(f"{self.__class__.__name__}::Init()")
+        pass
+
+    def link_to_pipeline(self, parent_pipeline: PipelineBase):
         self.parent_pipelene = parent_pipeline
+        print(f"{self.__class__.__name__}::link() to " +
+              parent_pipeline.__class__.__name__)
         pass
 
     def is_complete(self) -> bool:
@@ -40,30 +46,32 @@ class PipelineOrder:
         pass
 
 
-#----------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 
 class poBuildBarracks(PipelineOrder):
-    def __init__(self, parent_pipeline: PipelineBase):
+    def __init__(self):
         '''
         Checks the presence
         '''
-        super().__init__(parent_pipeline)
-        self.parent_pipelene.add_order(PipelineOrder(parent_pipeline))
+        super().__init__()
         pass
 
 
 class poAddMariners(PipelineOrder):
-    def __init__(self, parent_pipeline: PipelineBase, number_of_mariners: int):
+    number_of_mariners_to_produce: int = None
+
+    def __init__(self, number_of_mariners: int):
         '''
         Checks the presence
         '''
-        super().__init__(parent_pipeline)
-        self.parent_pipelene.add_order(poBuildBarracks(parent_pipeline))
+        super().__init__()
+        self.number_of_mariners_to_produce = number_of_mariners
+        # self.parent_pipelene.add_order(poBuildBarracks(parent_pipeline))
         pass
 
 
-#----------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 
 class Pipeline(PipelineBase):
@@ -72,8 +80,14 @@ class Pipeline(PipelineBase):
     '''
     pipeline = []
 
+    def __init__(self):
+        print(f"{self.__class__.__name__}::Init()")
+
     def add_order(self, order: PipelineOrder):
+        print(f"{self.__class__.__name__}::add_order() is adding '" +
+              order.__class__.__name__ + "'")
         self.pipeline.append(order)
+        order.link_to_pipeline(self)
         pass
 
     def remove_order(self, order_id: int):
@@ -87,3 +101,6 @@ class Pipeline(PipelineBase):
             runs the
         '''
         pass
+
+    def talk(self):
+        print(f"Hi from '{self.__class__.__name__}'")
