@@ -1,4 +1,4 @@
-from lib.pipeline_order_bases import PipelineBase, PipelineOrderBase
+from lib.G3.pipeline_order_bases import PipelineBase, PipelineOrderBase
 
 
 class Pipeline(PipelineBase):
