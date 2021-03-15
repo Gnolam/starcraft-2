@@ -66,9 +66,9 @@ cfg.init_logging('config/logging.yml')
 a = Pipeline()
 a.add_order(poBuildMariners(number_of_mariners_to_build=4))
 a.pipeline[0]["Order"].run("")
-a.scan()
+print(a)
 a.pipeline[1]["Order"].resign_as_blocker()
-a.scan()
+print(a)
 
 # ToDo: change ID to 'isActive' (bool)
 # ToDo: practice list compression for pipeline. E.g. list only active orders

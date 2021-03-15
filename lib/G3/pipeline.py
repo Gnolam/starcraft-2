@@ -46,9 +46,10 @@ class Pipeline(PipelineBase):
     def talk(self):
         print(f"Hi from '{self.__class__.__name__}'")
 
-    def scan(self):
-        print("  Current content of the pipeline gross book:\n    " + "-" * 40)
+    def __str__(self):
+        ret = "  Current content of the pipeline gross book:\n    " + "-" * 40
         for ticket in self.pipeline:
             ID = ticket['ID']
             cur_order = ticket['Order']
-            print(f"    ID:{ID}, {str(cur_order)}")
+            ret += f"\n    ID:{ID}, {str(cur_order)}"
+        return ret
