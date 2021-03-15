@@ -73,25 +73,37 @@ class PipelineOrderBase(PipelineConventions):
         return True if self.status == self.status_complete else False
 
     def add_dependency(self, order_id: int) -> None:
+
+        self.logger.debug(
+            f"add_dependency({order_id}:'{self.parent_pipelene.who_is(order_id)}')"
+        )
         if self.depends_on is None:
             self.depends_on = []
         self.depends_on.append(order_id)
 
     def remove_dependency(self, order_id: int) -> None:
         # ToDo: Verify first that such element exists
+        self.logger.debug(
+            f"remove_dependency({order_id}:'{self.parent_pipelene.who_is(order_id)}')"
+        )
         if self.depends_on is None:
             raise Exception("No dependency is recorded")
         self.depends_on.remove(order_id)
 
     def assign_as_blocker(self, order_id: int) -> None:
+        self.logger.debug(
+            f"assign_as_blocker({order_id}:'{self.parent_pipelene.who_is(order_id)}')"
+        )
         self.blocks_whom_id = order_id
 
     def resign_as_blocker(self) -> None:
+        self.logger.debug(
+            f"resign_as_blocker() (hint:blocks_whom_id={self.blocks_whom_id}:"
+            + f"'{self.parent_pipelene.who_is(self.blocks_whom_id)}')")
         if self.blocks_whom_id is None:
             raise Exception("No blocked ID is specified")
 
         # ToDo: should be search by match with ID in dict
-        self.logger.debug(f"blocks_whom_id={self.blocks_whom_id}")
         blocked_order = self.parent_pipelene.pipeline[
             self.blocks_whom_id]['Order']
         blocked_order.remove_dependency(self.my_order_id)

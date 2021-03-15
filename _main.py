@@ -69,3 +69,6 @@ a.pipeline[0]["Order"].run("")
 a.scan()
 a.pipeline[1]["Order"].resign_as_blocker()
 a.scan()
+
+# ToDo: change ID to 'isActive' (bool)
+# ToDo: practice list compression for pipeline. E.g. list only active orders

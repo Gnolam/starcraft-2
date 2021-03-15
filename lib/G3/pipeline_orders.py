@@ -14,9 +14,6 @@ class poBuildMariners(PipelineOrderBase):
     number_of_mariners_to_build: int = None
 
     def __init__(self, number_of_mariners_to_build: int):
-        '''
-        ???
-        '''
         super().__init__()
         self.number_of_mariners_to_build = number_of_mariners_to_build
 
@@ -25,6 +22,7 @@ class poBuildMariners(PipelineOrderBase):
         return s + f", {self.number_of_mariners_to_build} marines to build"
 
     def run(self, obs):
+        self.logger.debug(f"~> Let's do something")
         bk1 = poBuildBarracks()
         bk2 = poBuildBarracks()
         self.add_dependency(self.parent_pipelene.add_order(bk1))

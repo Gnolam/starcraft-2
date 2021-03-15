@@ -32,6 +32,9 @@ class Pipeline(PipelineBase):
         '''
         pass
 
+    def who_is(self, order_id: int) -> str:
+        return self.pipeline[order_id]["Order"].__class__.__name__
+
     def run(self):
         '''
         Scans: through all the orders in the book and tries to run those, which are active
