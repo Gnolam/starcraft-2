@@ -1,7 +1,7 @@
-from lib.G3.pipeline_order_bases import PipelineOrderBase
+from lib.G3.pipeline_order_bases import PipelineTicketBase
 
 
-class poBuildBarracks(PipelineOrderBase):
+class poBuildBarracks(PipelineTicketBase):
     def __init__(self):
         '''
         ???
@@ -10,7 +10,7 @@ class poBuildBarracks(PipelineOrderBase):
         pass
 
 
-class poBuildMariners(PipelineOrderBase):
+class poBuildMariners(PipelineTicketBase):
     number_of_mariners_to_build: int = None
 
     def __init__(self, number_of_mariners_to_build: int):

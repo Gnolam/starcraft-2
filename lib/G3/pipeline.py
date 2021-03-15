@@ -1,19 +1,18 @@
 import logging
-from lib.G3.pipeline_order_bases import PipelineBase, PipelineOrderBase
+from lib.G3.pipeline_order_bases import PipelineBase, PipelineTicketBase
 
 
 class Pipeline(PipelineBase):
     '''
-    Class to manage the set of current `PipelineOrder`'s
+    Class to manage the set of current `PipelineTicket`'s
     '''
-    pipeline = []  # {'ID': self.order_counter, 'Order': order}
     order_counter: int = None
 
     def __init__(self):
         super().__init__()
         self.order_counter = -1
 
-    def add_order(self, order: PipelineOrderBase) -> int:
+    def add_order(self, order: PipelineTicketBase) -> int:
         '''
         Adds order to the pipeline and assigns it an order ID
         '''
@@ -36,10 +35,8 @@ class Pipeline(PipelineBase):
         return self.pipeline[order_id]["Order"].__class__.__name__
 
     def run(self):
-        '''
-        Scans: through all the orders in the book and tries to run those, which are active
+        '''Scans: through all the orders in the book and tries to run those, which are active
 
-        Stop: if PipelineOrder::Run() returns true
         '''
         pass
 

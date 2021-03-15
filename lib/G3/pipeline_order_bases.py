@@ -24,6 +24,8 @@ class PipelineBase(PipelineConventions):
     Promise' class definition. Must not be called directly.
     Parent class for `Pipeline`
     '''
+    pipeline = []  # {'ID': self.order_counter, 'Order': order}
+
     def add_order(self, order):
         pass
 
@@ -31,9 +33,9 @@ class PipelineBase(PipelineConventions):
 # ------------------------------------------------------------------------
 
 
-class PipelineOrderBase(PipelineConventions):
+class PipelineTicketBase(PipelineConventions):
     '''
-    Class to manage the execution of a single `PipelineOrder`'
+    Class to manage the execution of a single `PipelineTicket`'
 
     Contains the place holders for downstream classes
     '''
