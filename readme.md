@@ -14,22 +14,33 @@ Status dictionary:
   - `Done`: Completed and should be ignored for future
   - `Blocked`: Cannot be done until another ticket (one or many) is Done
 
-Scan through all tickets in the pipeline
 
-Init: `blockers_removed = False`
+Scan through all tickets in the pipeline
+- if this list is empty, then order from Gen is complete!
+
+`[CP1]:` checkpoint
+
+Init:
+- `blockers_removed = False` 
+- empty list of `processed_tickets=[]`
+
+Scan through all tickets in the pipeline, which are not in `processed_tickets` list
+- if this list is empty, then `return None`
+
 
 *If* any of the tickets report, that it is `[ret]ticket_was_esolved:true` *then*:
 - change ticket status to `Done`
-- check *if* it was blocking any other tickets
-  - *if* `True` *then* `blockers_removed = True`
+- check *if* it was blocking any other tickets (*obsolete*)
+  - *if* `True` *then* `blockers_removed = True` (*obsolete*)
 - _if_ `[ret]sc2_order` is not `None` (meaning, that the order has produced something for the SC2 engine)
-  - *then* *return* value of `[ret]sc2_order` (is is supposed to be one of the SC2 orders)
+  - *then* `return [ret]sc2_order` (is is supposed to be one of the SC2 orders)
+- add current ticket ID to `processed_tickets` list
 
-Once the loop is complete check:
+Once the loop is complete check:  (*obsolete*)
 *if* `blockers_removed == True` *then* rerun the loop above
 *else* return None
 
-
+rerun the loop above from `[CP1]:` checkpoint
 
 
 ### Key features:
