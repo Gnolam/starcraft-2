@@ -72,3 +72,10 @@ print(a)
 
 # ToDo: change ID to 'isActive' (bool)
 # ToDo: practice list compression for pipeline. E.g. list only active orders
+
+res = [(unit['ID'], unit['Order'].status) for unit in a.pipeline]
+print(res)
+
+res = [(unit['ID'], unit['Order'].status) for unit in a.pipeline
+       if unit["Order"].status == a.status_init]
+print(res)
