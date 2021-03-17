@@ -1,6 +1,18 @@
 from lib.G3.pipeline_order_bases import PipelineTicketBase
 
 
+class poWaitResourceMinerals(PipelineTicketBase):
+    def __init__(self, minerals_required: int):
+        super().__init__()
+        self.minerals_required = minerals_required
+
+    def run(self, obs):
+        # If minerals are available
+        # then remove blocker and
+        self.mark_complete()
+        pass
+
+
 class poBuildBarracks(PipelineTicketBase):
     def __init__(self):
         '''
@@ -24,12 +36,12 @@ class poBuildMariners(PipelineTicketBase):
     def run(self, obs):
         self.logger.debug(f"~> Let's do something")
         bk1 = poBuildBarracks()
-        bk2 = poBuildBarracks()
+        minerals = poWaitResourceMinerals(50)
         self.add_dependency(self.parent_pipelene.add_order(bk1))
-        self.add_dependency(self.parent_pipelene.add_order(bk2))
+        self.add_dependency(self.parent_pipelene.add_order(minerals))
 
         bk1.assign_as_blocker(self.ID)
-        bk2.assign_as_blocker(self.ID)
+        minerals.assign_as_blocker(self.ID)
 
         self.status = self.status_blocked
 

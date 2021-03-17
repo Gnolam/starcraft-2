@@ -46,9 +46,13 @@ class Pipeline(PipelineBase):
         return str(ticket_id) + "_" + self.book[ticket_id].__class__.__name__
 
     def run(self):
-        '''Scans: through all the orders in the book and tries to run those, which are active
-
-        '''
+        """ Scans: through all the orders in the book and tries to run those, which are active """
+        # ToDo:
+        #    Check only tickets IDs, which were used during the last run:
+        #    This it will be possible to
+        #       1. Marine: add $ req.
+        #       2. confim $, clean marine ticket
+        #       3. Marine ticket generate order
         for ticket in [
                 ticket for ticket in self.book
                 if ticket.status in [self.status_ready]

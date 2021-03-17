@@ -99,6 +99,11 @@ class PipelineTicketBase(PipelineConventions):
                 f"'{self.parent_pipelene.who_is(self.blocks_whom_id)}'")
         self.blocks_whom_id = ticket_id
 
+    def mark_complete(self):
+        if self.blocks_whom_id is None:
+            self.resign_as_blocker()
+        self.status = self.status_complete
+
     def resign_as_blocker(self) -> None:
         if self.blocks_whom_id is None:
             raise Exception("resign_as_blocker(): No blocked ID is specified")
