@@ -2,13 +2,10 @@ import logging
 
 
 class PipelineConventions:
-    '''
-    Joint class parent for Pipeline and Orders
-    '''
-    status_complete = "COMPLETE"
-    status_init = "INIT"
+    """ Joint class parent for Pipeline and Orders """
     status_ready = "READY"
     status_blocked = "BLOCKED"
+    status_complete = "COMPLETE"
 
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -20,10 +17,10 @@ class PipelineConventions:
 
 
 class PipelineBase(PipelineConventions):
-    '''
+    """
     Promise' class definition. Must not be called directly.
     Parent class for `Pipeline`
-    '''
+    """
     book = []  # Tickets
 
     def add_order(self, new_ticket):
@@ -36,7 +33,6 @@ class PipelineBase(PipelineConventions):
 class PipelineTicketBase(PipelineConventions):
     '''
     Class to manage the execution of a single `PipelineTicket`'
-
     Contains the place holders for downstream classes
     '''
 
@@ -48,7 +44,7 @@ class PipelineTicketBase(PipelineConventions):
 
     def __init__(self):
         super().__init__()
-        self.status = self.status_init
+        self.status = self.status_ready
 
     def __str__(self):
         extra_info = ""
@@ -71,8 +67,8 @@ class PipelineTicketBase(PipelineConventions):
             f"Assgining ID:'{ticket_id}' received from '{parent_pipeline.__class__.__name__}'"
         )
 
-    def is_complete(self) -> bool:
-        return True if self.status == self.status_complete else False
+    # def is_complete(self) -> bool:
+    #     return True if self.status == self.status_complete else False
 
     def add_dependency(self, ticket_id: int) -> None:
         """ This ticket cannot be resolved until `ticket_id` is complete """

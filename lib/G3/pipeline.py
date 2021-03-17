@@ -51,7 +51,7 @@ class Pipeline(PipelineBase):
         '''
         for ticket in [
                 ticket for ticket in self.book
-                if ticket.status in [self.status_init, self.status_ready]
+                if ticket.status in [self.status_ready]
         ]:
             print(self.who_is(ticket.ID))
 

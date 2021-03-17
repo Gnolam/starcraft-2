@@ -78,7 +78,7 @@ print(a)
 res = [(ticket.ID, ticket.status) for ticket in a.book]
 print(res)
 res = [(ticket.ID, ticket.status) for ticket in a.book
-       if ticket.status == a.status_init]
+       if ticket.status == a.status_ready]
 print(res)
 
 a.run()
