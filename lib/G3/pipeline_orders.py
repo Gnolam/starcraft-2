@@ -28,8 +28,8 @@ class poBuildMariners(PipelineTicketBase):
         self.add_dependency(self.parent_pipelene.add_order(bk1))
         self.add_dependency(self.parent_pipelene.add_order(bk2))
 
-        bk1.assign_as_blocker(self.my_order_id)
-        bk2.assign_as_blocker(self.my_order_id)
+        bk1.assign_as_blocker(self.ID)
+        bk2.assign_as_blocker(self.ID)
 
         self.status = self.status_blocked
 

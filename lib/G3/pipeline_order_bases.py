@@ -24,9 +24,9 @@ class PipelineBase(PipelineConventions):
     Promise' class definition. Must not be called directly.
     Parent class for `Pipeline`
     '''
-    pipeline = []  # {'ID': self.order_counter, 'Order': order}
+    book = []  # Tickets
 
-    def add_order(self, order):
+    def add_order(self, new_ticket):
         pass
 
 
@@ -40,7 +40,7 @@ class PipelineTicketBase(PipelineConventions):
     Contains the place holders for downstream classes
     '''
 
-    my_order_id: int = None
+    ID: int = None
     status: str = None
     depends_on = None
     blocks_whom_id: int = None
@@ -57,58 +57,62 @@ class PipelineTicketBase(PipelineConventions):
                 extra_info += f", depends on '{self.depends_on}'"
 
         if self.blocks_whom_id is not None:
-            extra_info += f", blocks '{self.blocks_whom_id}'"
+            extra_info += (
+                ", blocks " +
+                f"{self.parent_pipelene.who_is(self.blocks_whom_id)}'")
         return f"'{self.__class__.__name__}', status: {self.status}" + extra_info
 
     def link_to_pipeline(self, parent_pipeline: PipelineBase,
-                         order_id: int) -> None:
-        '''
-        Secondary action, performed by Pipeline::add_order()
-        '''
+                         ticket_id: int) -> None:
+        """ Secondary action, performed by Pipeline::add_order() """
         self.parent_pipelene = parent_pipeline
-        self.my_order_id = order_id
+        self.ID = ticket_id
         self.logger.debug(
-            f"Assgining ID:'{order_id}' received from '{parent_pipeline.__class__.__name__}'"
+            f"Assgining ID:'{ticket_id}' received from '{parent_pipeline.__class__.__name__}'"
         )
 
     def is_complete(self) -> bool:
         return True if self.status == self.status_complete else False
 
-    def add_dependency(self, order_id: int) -> None:
-
+    def add_dependency(self, ticket_id: int) -> None:
+        """ This ticket cannot be resolved until `ticket_id` is complete """
         self.logger.debug(
-            f"add_dependency({order_id}:'{self.parent_pipelene.who_is(order_id)}')"
-        )
+            f"add_dependency('{self.parent_pipelene.who_is(ticket_id)}')")
         if self.depends_on is None:
             self.depends_on = []
-        self.depends_on.append(order_id)
+        self.depends_on.append(ticket_id)
 
-    def remove_dependency(self, order_id: int) -> None:
+    def remove_dependency(self, ticket_id: int) -> None:
         # ToDo: Verify first that such element exists
         self.logger.debug(
-            f"remove_dependency({order_id}:'{self.parent_pipelene.who_is(order_id)}')"
-        )
+            f"remove_dependency('{self.parent_pipelene.who_is(ticket_id)}')")
         if self.depends_on is None:
-            raise Exception("No dependency is recorded")
-        self.depends_on.remove(order_id)
+            raise Exception("depends_on is empty")
+        elif ticket_id not in self.depends_on:
+            raise Exception(f"{ticket_id} is not found " +
+                            f"in the depends_on list: {self.depends_on}")
+        else:
+            self.depends_on.remove(ticket_id)
 
-    def assign_as_blocker(self, order_id: int) -> None:
-        self.logger.debug(
-            f"assign_as_blocker({order_id}:'{self.parent_pipelene.who_is(order_id)}')"
-        )
-        self.blocks_whom_id = order_id
+    def assign_as_blocker(self, ticket_id: int) -> None:
+        self.logger.debug(f"assign_as_blocker({ticket_id}:" +
+                          f"'{self.parent_pipelene.who_is(ticket_id)}')")
+        if self.blocks_whom_id is not None:
+            raise Exception(
+                "Cannot assign block. Ticket is already blocking " +
+                f"'{self.parent_pipelene.who_is(self.blocks_whom_id)}'")
+        self.blocks_whom_id = ticket_id
 
     def resign_as_blocker(self) -> None:
-        self.logger.debug(
-            f"resign_as_blocker() (hint:blocks_whom_id={self.blocks_whom_id}:"
-            + f"'{self.parent_pipelene.who_is(self.blocks_whom_id)}')")
         if self.blocks_whom_id is None:
-            raise Exception("No blocked ID is specified")
+            raise Exception("resign_as_blocker(): No blocked ID is specified")
+        self.logger.debug(
+            f"resign_as_blocker() (" +
+            f"'{self.parent_pipelene.who_is(self.blocks_whom_id)}')")
 
         # ToDo: should be search by match with ID in dict
-        blocked_order = self.parent_pipelene.pipeline[
-            self.blocks_whom_id]['Order']
-        blocked_order.remove_dependency(self.my_order_id)
+        blocked_order = self.parent_pipelene.book[self.blocks_whom_id]
+        blocked_order.remove_dependency(self.ID)
 
         # Check if this item was the last blocker
         if len(blocked_order.depends_on) == 0:
