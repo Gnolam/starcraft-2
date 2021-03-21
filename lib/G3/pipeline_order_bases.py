@@ -1,16 +1,13 @@
 import logging
+from lib.ticket_status import TicketStatus
 
 
 class PipelineConventions:
     """ Joint class parent for Pipeline and Orders """
-    status_ready = "READY"
-    status_blocked = "BLOCKED"
-    status_complete = "COMPLETE"
-
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.debug("Created")
-        pass
+        print("PipelineConventions::__init__()")
 
 
 # ------------------------------------------------------------------------
@@ -30,21 +27,22 @@ class PipelineBase(PipelineConventions):
 # ------------------------------------------------------------------------
 
 
-class PipelineTicketBase(PipelineConventions):
+class PipelineTicketBase(PipelineConventions, TicketStatus):
     '''
     Class to manage the execution of a single `PipelineTicket`'
     Contains the place holders for downstream classes
     '''
 
     ID: int = None
-    status: str = None
+    # status: int = None
     depends_on = None
     blocks_whom_id: int = None
     parent_pipelene: PipelineBase = None
 
     def __init__(self):
         super().__init__()
-        self.status = self.status_ready
+        print("PipelineTicketBase::__init__()")
+        # self.status = TicketStatus(TicketStatus.INIT)
 
     def __str__(self):
         extra_info = ""
@@ -56,7 +54,7 @@ class PipelineTicketBase(PipelineConventions):
             extra_info += (
                 ", blocks " +
                 f"{self.parent_pipelene.who_is(self.blocks_whom_id)}'")
-        return f"'{self.__class__.__name__}', status: {self.status}" + extra_info
+        return f"'{self.__class__.__name__}', status: {self.str_status()}" + extra_info
 
     def link_to_pipeline(self, parent_pipeline: PipelineBase,
                          ticket_id: int) -> None:
@@ -102,7 +100,7 @@ class PipelineTicketBase(PipelineConventions):
     def mark_complete(self):
         if self.blocks_whom_id is None:
             self.resign_as_blocker()
-        self.status = self.status_complete
+        self.set_status(TicketStatus.DONE)
 
     def resign_as_blocker(self) -> None:
         if self.blocks_whom_id is None:
@@ -117,13 +115,22 @@ class PipelineTicketBase(PipelineConventions):
 
         # Check if this item was the last blocker
         if len(blocked_order.depends_on) == 0:
-            blocked_order.status = self.status_ready
+            blocked_order.set_status(TicketStatus.ACTIVE)
 
         # Assume only 1 order can be blocked relationsip
         self.blocks_whom_id = None
 
-    def run(self, obs):
+    def run(self, obs, stage):
         '''try to execute, add new orders and depenedncies later on
+
+            : obs : SC2 obs (observation) object
+
+            : stage : modifier
+                1 : 'init'. Check the pre-requests and generate dependencies
+                2 : 'execute'. Check if the all conditions are fulfilled.
+                    Should handle the situation where _previously submitted_
+                    order (e.g. build supply depos building) was requested
+                    but may have not been fulfilled
 
         Return: dictionary
         - _SC2 order assigned_:
@@ -133,7 +140,7 @@ class PipelineTicketBase(PipelineConventions):
 
                 ``asx``: __ghghg__
         '''
-        if self.status == self.status_complete:
+        if self.get_status() == TicketStatus.DONE:
             return {'New actions created': False, 'SC2 order assigned': None}
 
         err_msg = 'This method should not be called directly. It is a placeholder only'

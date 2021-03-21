@@ -1,5 +1,6 @@
 import logging
 from lib.G3.pipeline_order_bases import PipelineBase, PipelineTicketBase
+from lib.ticket_status import TicketStatus
 
 
 class Pipeline(PipelineBase):
@@ -25,6 +26,7 @@ class Pipeline(PipelineBase):
         self.book.append(new_ticket)
         new_ticket.link_to_pipeline(parent_pipeline=self,
                                     ticket_id=self.order_counter)
+        new_ticket.set_status(TicketStatus.INIT)
         return self.order_counter
 
     def is_empty(self) -> bool:
@@ -53,11 +55,11 @@ class Pipeline(PipelineBase):
         #       1. Marine: add $ req.
         #       2. confim $, clean marine ticket
         #       3. Marine ticket generate order
-        for ticket in [
-                ticket for ticket in self.book
-                if ticket.status in [self.status_ready]
+        for ticket_ID in [
+                ticket.ID for ticket in self.book
+                if ticket.get_status() in [TicketStatus.ACTIVE]
         ]:
-            print(self.who_is(ticket.ID))
+            print(self.who_is(ticket_ID))
 
         pass
 

@@ -9,6 +9,7 @@ from lib.config import Config
 from lib.agentG3 import SmartAgentG3
 from lib.G3.pipeline import Pipeline
 from lib.G3.pipeline_orders import poBuildMariners, poBuildBarracks
+from lib.ticket_status import TicketStatus
 
 
 def main(unused_argv):
@@ -64,21 +65,27 @@ cfg.fix_ADSL_logging()
 cfg.init_logging('config/logging.yml')
 
 a = Pipeline()
-a.add_order(poBuildMariners(number_of_mariners_to_build=4))
-a.book[0].run("")
-print(a)
-a.book[1].resign_as_blocker()
-print(a)
-a.book[2].resign_as_blocker()
-print(a)
+order_ID = a.add_order(poBuildMariners(number_of_mariners_to_build=4))
+print(f"new order ID: {order_ID}")
 
-# ToDo: change ID to 'isActive' (bool)
-# ToDo: practice list compression for pipeline. E.g. list only active orders
+if True:
+    a.book[0].run("")
+    print(a)
+    a.book[1].resign_as_blocker()
+    print(a)
+    a.book[2].resign_as_blocker()
+    print(a)
 
-res = [(ticket.ID, ticket.status) for ticket in a.book]
-print(res)
-res = [(ticket.ID, ticket.status) for ticket in a.book
-       if ticket.status == a.status_ready]
-print(res)
+    # ToDo: change ID to 'isActive' (bool)
+    # ToDo: practice list compression for pipeline. E.g. list only active orders
 
-a.run()
+    res = [(ticket.ID, ticket.str_status()) for ticket in a.book]
+    print(res)
+    res = [(ticket.ID, str(ticket.str_status())) for ticket in a.book
+           if ticket.get_status() == TicketStatus.ACTIVE]
+    print(res)
+
+    a.run()
+
+    # c = poBuildMariners(number_of_mariners_to_build=4)
+    # c.run()

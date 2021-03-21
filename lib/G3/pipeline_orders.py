@@ -1,4 +1,5 @@
 from lib.G3.pipeline_order_bases import PipelineTicketBase
+from lib.ticket_status import TicketStatus
 
 
 class poWaitResourceMinerals(PipelineTicketBase):
@@ -43,8 +44,8 @@ class poBuildMariners(PipelineTicketBase):
         bk1.assign_as_blocker(self.ID)
         minerals.assign_as_blocker(self.ID)
 
-        self.status = self.status_blocked
+        self.set_status(TicketStatus.BLOCKED)
 
-        if self.status == self.status_complete:
+        if self.get_status() == TicketStatus.DONE:
             return {'New actions created': False, 'SC2 order assigned': None}
         return {'New actions created': True, 'SC2 order assigned': None}
