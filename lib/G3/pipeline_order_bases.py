@@ -2,9 +2,10 @@ import logging
 from lib.ticket_status import TicketStatus
 
 
-class PipelineConventions:
+class PipelineConventions(object):
     """ Joint class parent for Pipeline and Orders """
     def __init__(self):
+        super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.debug("Created")
         print("~> PipelineConventions::__init__()")
@@ -27,7 +28,7 @@ class PipelineBase(PipelineConventions):
 # ------------------------------------------------------------------------
 
 
-class PipelineTicketBase(PipelineConventions, TicketStatus):
+class PipelineTicketBase(TicketStatus, PipelineConventions):
     '''
     Class to manage the execution of a single `PipelineTicket`'
     Contains the place holders for downstream classes

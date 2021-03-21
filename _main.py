@@ -76,12 +76,11 @@ if True:
     a.book[2].resign_as_blocker()
     print(a)
 
-    
     print([(ticket.ID, ticket.str_status()) for ticket in a.book])
-    
+
     print([(ticket.ID, ticket.str_status()) for ticket in a.book
            if ticket.get_status() == TicketStatus.ACTIVE])
-    
+
     a.run()
 
     # c = poBuildMariners(number_of_mariners_to_build=4)

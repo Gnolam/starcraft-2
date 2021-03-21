@@ -1,4 +1,4 @@
-class TicketStatus:
+class TicketStatus(object):
     # Constants
     INIT = 0
     ACTIVE = 1
@@ -15,6 +15,7 @@ class TicketStatus:
     current_status: int = None
 
     def __init__(self):
+        super().__init__()
         print("~> TicketStatus::__init__()")
 
     # Functions
