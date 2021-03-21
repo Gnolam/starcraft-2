@@ -7,7 +7,7 @@ class PipelineConventions:
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.debug("Created")
-        print("PipelineConventions::__init__()")
+        print("~> PipelineConventions::__init__()")
 
 
 # ------------------------------------------------------------------------
@@ -35,20 +35,25 @@ class PipelineTicketBase(PipelineConventions, TicketStatus):
 
     ID: int = None
     # status: int = None
-    depends_on = None
+    depends_on_list = None
     blocks_whom_id: int = None
     parent_pipelene: PipelineBase = None
 
     def __init__(self):
         super().__init__()
-        print("PipelineTicketBase::__init__()")
+
+        print("~> PipelineTicketBase::__init__()")
         # self.status = TicketStatus(TicketStatus.INIT)
 
     def __str__(self):
         extra_info = ""
-        if self.depends_on is not None:
-            if (len(self.depends_on)):
-                extra_info += f", depends on '{self.depends_on}'"
+        if self.depends_on_list is not None:
+            if (len(self.depends_on_list)):
+                deps = [
+                    self.parent_pipelene.who_is(depends_on)
+                    for depends_on in self.depends_on_list
+                ]
+                extra_info += f", depends on {deps}"
 
         if self.blocks_whom_id is not None:
             extra_info += (
@@ -72,21 +77,21 @@ class PipelineTicketBase(PipelineConventions, TicketStatus):
         """ This ticket cannot be resolved until `ticket_id` is complete """
         self.logger.debug(
             f"add_dependency('{self.parent_pipelene.who_is(ticket_id)}')")
-        if self.depends_on is None:
-            self.depends_on = []
-        self.depends_on.append(ticket_id)
+        if self.depends_on_list is None:
+            self.depends_on_list = []
+        self.depends_on_list.append(ticket_id)
 
     def remove_dependency(self, ticket_id: int) -> None:
         # ToDo: Verify first that such element exists
         self.logger.debug(
             f"remove_dependency('{self.parent_pipelene.who_is(ticket_id)}')")
-        if self.depends_on is None:
+        if self.depends_on_list is None:
             raise Exception("depends_on is empty")
-        elif ticket_id not in self.depends_on:
+        elif ticket_id not in self.depends_on_list:
             raise Exception(f"{ticket_id} is not found " +
-                            f"in the depends_on list: {self.depends_on}")
+                            f"in the depends_on list: {self.depends_on_list}")
         else:
-            self.depends_on.remove(ticket_id)
+            self.depends_on_list.remove(ticket_id)
 
     def assign_as_blocker(self, ticket_id: int) -> None:
         self.logger.debug(f"assign_as_blocker({ticket_id}:" +
@@ -114,7 +119,7 @@ class PipelineTicketBase(PipelineConventions, TicketStatus):
         blocked_order.remove_dependency(self.ID)
 
         # Check if this item was the last blocker
-        if len(blocked_order.depends_on) == 0:
+        if len(blocked_order.depends_on_list) == 0:
             blocked_order.set_status(TicketStatus.ACTIVE)
 
         # Assume only 1 order can be blocked relationsip

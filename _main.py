@@ -76,15 +76,12 @@ if True:
     a.book[2].resign_as_blocker()
     print(a)
 
-    # ToDo: change ID to 'isActive' (bool)
-    # ToDo: practice list compression for pipeline. E.g. list only active orders
-
-    res = [(ticket.ID, ticket.str_status()) for ticket in a.book]
-    print(res)
-    res = [(ticket.ID, str(ticket.str_status())) for ticket in a.book
-           if ticket.get_status() == TicketStatus.ACTIVE]
-    print(res)
-
+    
+    print([(ticket.ID, ticket.str_status()) for ticket in a.book])
+    
+    print([(ticket.ID, ticket.str_status()) for ticket in a.book
+           if ticket.get_status() == TicketStatus.ACTIVE])
+    
     a.run()
 
     # c = poBuildMariners(number_of_mariners_to_build=4)

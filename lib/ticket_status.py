@@ -5,7 +5,17 @@ class TicketStatus:
     DONE = 100
     BLOCKED = 200
 
+    status_dict = {
+        INIT: "INIT",
+        ACTIVE: "ACTIVE",
+        DONE: "DONE",
+        BLOCKED: "BLOCKED"
+    }
+
     current_status: int = None
+
+    def __init__(self):
+        print("~> TicketStatus::__init__()")
 
     # Functions
     def check_if_valid(self):
@@ -14,15 +24,9 @@ class TicketStatus:
 
     def str_status(self):
         self.check_if_valid()
-        if self.current_status == self.INIT:
-            return "INIT"
-        if self.current_status == self.ACTIVE:
-            return "ACTIVE"
-        if self.current_status == self.DONE:
-            return "DONE"
-        if self.current_status == self.BLOCKED:
-            return "BLOCKED"
-        raise Exception(f"Unknown status: {self.current_status}")
+        if self.current_status not in self.status_dict:
+            raise Exception(f"Unknown status: {self.current_status}")
+        return self.status_dict[self.current_status]
 
     def set_status(self, new_status):
         if new_status not in [self.INIT, self.ACTIVE, self.DONE, self.BLOCKED]:
