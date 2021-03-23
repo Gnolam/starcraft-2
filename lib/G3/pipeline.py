@@ -9,11 +9,16 @@ class Pipeline(PipelineBase):
     '''
     order_counter: int = None
 
+    # ToDO: should be added by lifecycle, when setting up the new game
+    base_top_left: bool = None
+
     def __init__(self):
         super().__init__()
         self.order_counter = None
 
-    def add_order(self, new_ticket: PipelineTicketBase) -> int:
+    def add_order(self,
+                  new_ticket: PipelineTicketBase,
+                  blocks_whom_id: int = None) -> int:
         """ Adds order to the pipeline and assigns it an order ID """
         if self.order_counter is None:
             self.order_counter = 0
@@ -27,7 +32,10 @@ class Pipeline(PipelineBase):
         new_ticket.link_to_pipeline(parent_pipeline=self,
                                     ticket_id=self.order_counter)
         new_ticket.set_status(TicketStatus.INIT)
-        return self.order_counter
+        new_ticket.base_top_left = self.base_top_left
+
+        if blocks_whom_id is not None:
+            self.book[blocks_whom_id].add_dependency(self.order_counter)
 
     def is_empty(self) -> bool:
         '''
