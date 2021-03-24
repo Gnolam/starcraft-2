@@ -129,17 +129,20 @@ class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
         # Assume only 1 order can be blocked relationsip
         self.blocks_whom_id = None
 
+    def report_invalid_method(self):
+        err_msg = 'This method should not be called directly. It is a placeholder only'
+        self.logger.error(err_msg)
+        raise Exception(f"{self.__class__.__name__}::run(): {err_msg}")
+
     def generate_sc2_order(self, obs):
         """ Helps isolating logic for placing an order
-        
-        All preconditions must be held in `self.run()`. 
+
+        All preconditions must be held in `self.run()`.
         Should be called from `self.run()`
 
         Returns: pysc2.lib - actions
         """
-        err_msg = 'This method should not be called directly. It is a placeholder only'
-        self.logger.error(err_msg)
-        raise Exception(f"{self.__class__.__name__}::run(): {err_msg}")
+        self.report_invalid_method()
 
     def run_init(self, obs):
         """ Checks the preconditions and creates downstream tickets.
@@ -148,19 +151,29 @@ class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
         pass
 
     def run(self, obs):
-        '''try to execute, add new orders and depenedncies later on
+        ''' Executes an order
 
-            : obs : SC2 obs (observation) object
+            - Check if all conditions are fulfilled.
+            - Issue an SC2 Order if all requiremnets are satisfied
+            - Once SC2 Order is issues then mark self complete
 
-                    - Check if all conditions are fulfilled.
-                    - Should handle the situation where previously submitted
-                        order (e.g. build supply depos building) was requested
-                        but may have not been fulfilled
-                    - should issue SC2 Orders
-                    - should wait till the order is executed before
-                      * reporting complete -> removing upward dependencies
+        Arguments:
+            - `obs` : SC2 obs (observation) object
+        Returns:
+            - (valid, order): tuple
+                - valid: bool: is order valid? If _false_ then it should be 
+                deleted as impossible to execute
+                - order: an SC2 order. `None` by default.
+                if SC2 order is present then stop proceccing any other order
 
-        '# ToDo: make sure that if 'complete' then the dependency is removed
+        Note:         
+            - adding new orders and depenedncies are left for run_init()
+            - Should NOT handle the situation where previously submitted
+                order (e.g. build supply depos building) was requested
+                but may have not been fulfilled
+            - should NOT wait till the order is executed before
+                * reporting complete -> removing upward dependencies
+
 
         Return: 1 value
         - _SC2 order assigned_:
@@ -176,10 +189,5 @@ class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
 
                 ``asx``: __ghghg__
         '''
-        # return None
-        # if self.get_status() == TicketStatus.DONE:
-        #     return {'New actions created': False, 'SC2 order assigned': None}
 
-        err_msg = 'This method should not be called directly. It is a placeholder only'
-        self.logger.error(err_msg)
-        raise Exception(f"{self.__class__.__name__}::run(): {err_msg}")
+        self.report_invalid_method()
