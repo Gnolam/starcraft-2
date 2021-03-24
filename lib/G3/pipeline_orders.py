@@ -29,10 +29,6 @@ class poBuildSupplyDepot(PipelineTicketBase):
             "now", scv_tag, building_xy)
 
     def run(self, obs):
-        """ Build Supply Depot
-            1. Wait till enough money
-            2. Request build Supply Depot + mark complete
-        """
         # This class does not have any downstream dependencies
 
         self.get_len(obs)
@@ -50,7 +46,7 @@ class poBuildSupplyDepot(PipelineTicketBase):
                 and obs.observation.player.minerals >= 100
                 and self.len_scvs > 0):
             self.mark_complete()
-            return True, self.generate_sc2_order(obs, self.len_supply_depots)
+            return True, self.generate_sc2_order(obs)
         return True, None
 
 
@@ -86,10 +82,6 @@ class poBuildBarracks(PipelineTicketBase):
         pass
 
     def run(self, obs):
-        """ Build Barracks
-            1. Wait till enough money
-            2. Request build Barracks + mark complete
-        """
         self.get_len(obs)
 
         self.logger.debug(f"  > barracks={self.len_barrackses} " +
@@ -115,11 +107,13 @@ class poBuildBarracks(PipelineTicketBase):
 class poTrainMarine(PipelineTicketBase):
     number_of_mariners_to_build: int = None
     number_of_mariners_to_build_remaining: int = None
+    number_of_barracks_requested: int = None
 
     def __init__(self, number_of_mariners_to_build: int):
         super().__init__()
         self.number_of_mariners_to_build = number_of_mariners_to_build
         self.number_of_mariners_to_build_remaining = number_of_mariners_to_build
+        self.number_of_barracks_requested = 0
 
     def __str__(self):
         s = super().__str__()
@@ -134,6 +128,7 @@ class poTrainMarine(PipelineTicketBase):
     def run_init(self, obs):
         self.get_len(obs)
         if self.len_barrackses == 0:
+            self.number_of_barracks_requested += 1
             self.parent_pipelene.add_order(poBuildBarracks(),
                                            blocks_whom_id=self.ID)
         if self.free_supply == 0:
@@ -146,6 +141,13 @@ class poTrainMarine(PipelineTicketBase):
                                                blocks_whom_id=self.ID)
 
     def run(self, obs):
+        if self.number_of_mariners_to_build_remaining <= 0:
+            err_msg = ("number_of_mariners_to_build_remaining: " +
+                       str(self.number_of_mariners_to_build_remaining) +
+                       ". This function should not have been called")
+            self.logger.error(err_msg)
+            raise Exception(f"{self.__class__.__name__}::run(): {err_msg}")
+
         self.get_len(obs)
         self.logger.debug(f"  > barracks={self.len_barrackses} " +
                           f"minerals={obs.observation.player.minerals} " +
@@ -156,8 +158,26 @@ class poTrainMarine(PipelineTicketBase):
                 and self.free_supply > 0):
 
             best_barrack = self.get_best_barrack(obs)
+            if self.number_of_barracks_requested < 1 and best_barrack.order_length >= 3:
+                # Request new Barrack if the queue is moderate length
+                self.number_of_barracks_requested += 1
+                self.parent_pipelene.add_order(poBuildBarracks(),
+                                               blocks_whom_id=self.ID)
+                return True, None
+
+            # Request new Barrack if the queue is large length
+            if self.number_of_barracks_requested < 2 and best_barrack.order_length >= 4:
+                self.number_of_barracks_requested += 1
+                self.parent_pipelene.add_order(poBuildBarracks(),
+                                               blocks_whom_id=self.ID)
+                return True, None
+
+            # if there is still a place for a brave new marine?
             if best_barrack.order_length < 5:
-                self.mark_complete()
+                self.number_of_mariners_to_build_remaining -= 1
+                if self.number_of_mariners_to_build_remaining <= 0:
+                    self.mark_complete()
                 return True, self.generate_sc2_order(obs, best_barrack.tag)
             else:
-                return False, None
+                # No place for mariners at the moment
+                return True, None
