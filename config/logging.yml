@@ -66,8 +66,14 @@ handlers:
     file_pipeline_orders:
         class: logging.FileHandler
         formatter: complex2
-        level: DEBUG
+        level: INFO
         filename : logs/pipeline_orders.log
+
+    file_pipeline_orders_debug:
+        class: logging.FileHandler
+        formatter: complex
+        level: DEBUG
+        filename : logs/pipeline_orders_debug.log
 
     file_pipeline:
         class: logging.FileHandler
@@ -114,16 +120,22 @@ loggers:
         propagate: false
 
     Pipeline:
-        level: INFO
-        handlers: [file_pipeline, file_pipeline_orders, console]
+        level: DEBUG
+        handlers: [file_pipeline, file_pipeline_orders, file_pipeline_orders_debug, console]
+        propagate: false
+
+    poBuildSupplyDepot:
+        level: DEBUG
+        handlers: [file_pipeline_orders, console, file_pipeline_orders_debug]
         propagate: false
 
     poBuildBarracks:
         level: DEBUG
-        handlers: [file_pipeline_orders, console]
+        handlers: [file_pipeline_orders, console, file_pipeline_orders_debug]
         propagate: false
 
-    poBuildMariners:
+    poTrainMarine:
         level: DEBUG
-        handlers: [file_pipeline_orders, console]
+        handlers: [file_pipeline_orders, console, file_pipeline_orders_debug]
         propagate: false
+
