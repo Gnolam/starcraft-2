@@ -1,4 +1,4 @@
-from lib.G3.pipeline_order_bases import PipelineTicketBase
+from lib.G3pipe.pipeline_order_bases import PipelineTicketBase
 from lib.ticket_status import TicketStatus
 from pysc2.lib import actions, units
 

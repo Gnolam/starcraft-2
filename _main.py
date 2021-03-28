@@ -8,7 +8,7 @@ from absl import app
 from lib.config import Config
 from lib.agentG3 import SmartAgentG3
 from lib.G3.pipeline import Pipeline
-from lib.G3.pipeline_orders import poBuildMariners, poBuildBarracks
+from lib.G3.pipeline_orders import poTrainMarine, poBuildBarracks
 from lib.ticket_status import TicketStatus
 
 
@@ -57,18 +57,18 @@ def main(unused_argv):
         pass
 
 
-# if __name__ == "__main__":
-#   app.run(main)
+if __name__ == "__main__":
+    app.run(main)
 
-cfg = Config()
-cfg.fix_ADSL_logging()
-cfg.init_logging('config/logging.yml')
+if False:
+    cfg = Config()
+    cfg.fix_ADSL_logging()
+    cfg.init_logging('config/logging.yml')
 
-a = Pipeline()
-order_ID = a.add_order(poBuildMariners(number_of_mariners_to_build=4))
-print(f"new order ID: {order_ID}")
+    a = Pipeline()
+    order_ID = a.add_order(poTrainMarine(number_of_mariners_to_build=4))
+    print(f"new order ID: {order_ID}")
 
-if True:
     a.book[0].run("")
     print(a)
     a.book[1].resign_as_blocker()

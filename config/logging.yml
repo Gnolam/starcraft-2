@@ -94,17 +94,17 @@ loggers:
         handlers: [file_main]
         propagate: yes
 
-    bob: 
+    aiBuilder: 
         level: DEBUG
         handlers: [file_bob, file_main]
         propagate: false
 
-    peps: 
+    aBAU: 
         level: DEBUG
         handlers: [file_peps, file_main]
         propagate: false
 
-    grievous: 
+    aiWarPlanner: 
         level: DEBUG
         handlers: [file_grievous, file_main]
         propagate: false            

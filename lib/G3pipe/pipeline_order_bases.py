@@ -161,12 +161,12 @@ class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
             - `obs` : SC2 obs (observation) object
         Returns:
             - (valid, order): tuple
-                - valid: bool: is order valid? If _false_ then it should be 
+                - valid: bool: is order valid? If _false_ then it should be
                 deleted as impossible to execute
                 - order: an SC2 order. `None` by default.
                 if SC2 order is present then stop proceccing any other order
 
-        Note:         
+        Note:
             - adding new orders and depenedncies are left for run_init()
             - Should NOT handle the situation where previously submitted
                 order (e.g. build supply depos building) was requested

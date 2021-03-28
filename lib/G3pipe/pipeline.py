@@ -1,5 +1,4 @@
-import logging
-from lib.G3.pipeline_order_bases import PipelineBase, PipelineTicketBase
+from lib.G3pipe.pipeline_order_bases import PipelineBase, PipelineTicketBase
 from lib.ticket_status import TicketStatus
 
 
@@ -55,7 +54,7 @@ class Pipeline(PipelineBase):
                             f"(0..{self.order_counter})")
         return str(ticket_id) + "_" + self.book[ticket_id].__class__.__name__
 
-    def run(self):
+    def run(self, obs):
         """ Scans: through all the orders in the book and tries to run those, which are active """
         # ToDo:
         #    Check only tickets IDs, which were used during the last run:
@@ -69,7 +68,7 @@ class Pipeline(PipelineBase):
         ]:
             print(self.who_is(ticket_ID))
 
-        pass
+        return None  # or SC2 order, if inything was resolved
 
     def __str__(self):
         ret = "  Current content of the pipeline gross book:\n    " + "-" * 40

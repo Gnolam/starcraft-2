@@ -1,38 +1,41 @@
 import os
 import logging
-import json
 
-import numpy as np
 import pandas as pd
 from pysc2.lib import units
 
 from lib.q_table import QLearningTable
 from lib.c01_obs_api import ObsAPI
+from lib.G3pipe.pipeline import Pipeline
 
 
-class GameLifecycle(ObsAPI):
+class aiBase(ObsAPI):
     agent_name = "L1"
-    action_list: list = None
+    action_list = []
+    action_container_class = None
     DQN_filename = None
     fh_decisions = None
     fh_state_csv = None
     fn_global_debug = None
     consistent_decision_agent = None
     logger = None
-    decisions_hist: dict = None  # {}
-    step_counter = None
+    decisions_hist = {}
+    step_counter = 0
     game_num = None
     current_action = None
 
+    pipeline: Pipeline = None
+
     def __init__(self, cfg):
+        super().__init__()
         self.logger = logging.getLogger(self.agent_name)
         self.logger.info(f"L1.init({self.agent_name})")
 
         self.cfg = cfg
         self.qtable = QLearningTable(self.action_list)
 
-        if self.action_list is None:
-            self.action_list = []
+        # Creating generic pipeline
+        self.pipeline = Pipeline()
 
         self.DQN_filename,\
             self.fh_decisions,\
@@ -44,7 +47,6 @@ class GameLifecycle(ObsAPI):
         self.agent_cfg = cfg.run_cfg.get(self.agent_name)
         self.read_global_state()
         self.new_game()
-        # * adad
 
         self.logger.debug(f"Run number: {self.game_num}")
         self.consistent_decision_agent =\
@@ -65,8 +67,10 @@ class GameLifecycle(ObsAPI):
 
     def get_state(self, dummy):
         # This function is a place holder
-        self.logger.critical('Incorrect function was called: L1::get_state()')
-        raise Exception('Incorrect function was called: L1::get_state()')
+        if 1 >= 1:
+            self.logger.critical(
+                'Incorrect function was called: L1::get_state()')
+            raise Exception('Incorrect function was called: L1::get_state()')
 
     def new_game(self):
         self.base_top_left = None
@@ -77,15 +81,6 @@ class GameLifecycle(ObsAPI):
         self.decisions_hist = {}
         self.step_counter = 0
         self.game_num += 1
-
-    def dump_decisions_hist(self):
-        # json = json.dumps(self.decisions_hist)
-        if False:
-            fname = f"logs/decisions_G2.{self.agent_name}_{self.game_num}.json"
-            f = open(fname, "w")
-            # f.write(str(self.decisions_hist))
-            f.write(json.dumps(self.decisions_hist), indent=4)
-            f.close()
 
     def save_DQN(self):
         self.logger.debug('Record current learnings (%s): %s' %
@@ -109,69 +104,20 @@ class GameLifecycle(ObsAPI):
         command_centres =\
             self.get_my_units_by_type(obs, units.Terran.CommandCenter)
 
-        if (False):
-            enemy_bases = self.get_enemy_completed_units_by_type(
-                obs, units.Terran.CommandCenter)
-            if len(enemy_bases) > 0 and False:
-                self.logger.info("MyBase (x,y) = %i,%i \n\r" %
-                                 (command_centres.x, command_centres.y))
-                self.logger.info("Enemy base = %i,%i\n\r" %
-                                 (enemy_bases[0].x, enemy_bases[0].y))
-
         if obs.first():
             self.base_top_left = (command_centres[0].x < 32)
+            self.pipeline.base_top_left = self.base_top_left
         state = str(self.get_state(obs))
-
-        # No action should take place in case state did not change
-        #   no learning either
-        if self.consistent_decision_agent \
-            and state == self.previous_state and \
-                (not obs.last()):
-            self.logger.debug("States did not change: skipping (" + state +
-                              ")")
-            return None  # It is a simulation of NOOP
-
-        # Remove impossible actions from the list
-        for action in self.action_list:
-            if not (getattr(self, action)(
-                    obs, check_action_availability_only=True)):
-                # mark it as impossible to choose in future
-                self.qtable.declare_action_invalid(state, action)
-                # self.logger.debug(f"   check: '{action.upper()}' -> bad")
-            else:
-                # self.logger.debug(f"   check: '{action.upper()}' -> good")
-                pass
 
         # Original 'best known' action based on Q-Table
         action, best_score = self.qtable.choose_action(state)
-        originally_suggested_action = action
 
-        # This check should be redundant with the application
-        #   of declare_action_invalid() above
-        # The only option of 'unable to comply'
-        #   is 'explore' choice in Q-Table
-        while not (getattr(self, action)(obs,
-                                         check_action_availability_only=True)):
-            # previous action was not feasible
-            # choose the alternative action randomly
-            action = np.random.choice(self.action_list)
+        self.logger.debug(f"Q-Action: '{action.upper()}'" +
+                          f", score = '{best_score}'")
 
-        if originally_suggested_action != action:
-            self.logger.debug(
-                f"Q-Action: '{originally_suggested_action.upper()}" +
-                f", score = '{best_score}', " +
-                f"(unable to comply)' -> '{action.upper()} (st: {state})'")
-        else:
-            self.logger.debug(f"Q-Action: '{action.upper()}'" +
-                              f", score = '{best_score}'")
-
-        self.current_action = action
-
-        # Temporarily accept Draw as Win
-        reward = .5 if obs.last() and obs.reward == 0 else obs.reward
         next_state = 'terminal' if obs.last() else state
 
-        if obs.last() and self.agent_name == 'bob':
+        if obs.last():  # and self.agent_name == 'bob':
             logging.getLogger("res").info(
                 f"Game: {self.game_num}. Outcome: {obs.reward}")
 
@@ -183,7 +129,7 @@ class GameLifecycle(ObsAPI):
             self.decisions_hist[self.step_counter] = {
                 'previous_state': self.previous_state,
                 'previous_action': self.previous_action,
-                'reward': reward,
+                'reward': obs.reward,
                 'next_state': next_state
             }
 
@@ -192,12 +138,14 @@ class GameLifecycle(ObsAPI):
         self.previous_state = state
         self.previous_action = action
 
-        action_res = getattr(self,
+        # return self.pipeline.run(obs)
+
+        # action_res = getattr(self,
                              action)(obs, check_action_availability_only=False)
-        return action_res
+        # return action_res
 
     def finalise_game(self):
-        self.dump_decisions_hist()
+        # self.dump_decisions_hist()
         self.learn_from_game()
         self.save_DQN()
 
