@@ -65,8 +65,10 @@ class GameLifecycle(ObsAPI):
 
     def get_state(self, dummy):
         # This function is a place holder
-        self.logger.critical('Incorrect function was called: L1::get_state()')
-        raise Exception('Incorrect function was called: L1::get_state()')
+        if 1 >= 1:
+            self.logger.critical(
+                'Incorrect function was called: L1::get_state()')
+            raise Exception('Incorrect function was called: L1::get_state()')
 
     def new_game(self):
         self.base_top_left = None

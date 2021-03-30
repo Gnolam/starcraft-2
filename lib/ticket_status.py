@@ -4,12 +4,14 @@ class TicketStatus(object):
     ACTIVE = 1
     COMPLETE = 100
     BLOCKED = 200
+    INVALID = 400
 
     status_dict = {
         INIT: "INIT",
         ACTIVE: "ACTIVE",
         COMPLETE: "COMPLETE",
-        BLOCKED: "BLOCKED"
+        BLOCKED: "BLOCKED",
+        INVALID: "INVALID"
     }
 
     current_status: int = None
@@ -31,7 +33,8 @@ class TicketStatus(object):
 
     def set_status(self, new_status):
         if new_status not in [
-                self.INIT, self.ACTIVE, self.COMPLETE, self.BLOCKED
+                self.INIT, self.ACTIVE, self.COMPLETE, self.BLOCKED,
+                self.INVALID
         ]:
             raise Exception(f"Unknown status: {new_status}")
         self.current_status = new_status

@@ -148,7 +148,6 @@ class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
         """ Checks the preconditions and creates downstream tickets.
         Can be left empty if no action is required
         """
-        pass
 
     def run(self, obs):
         ''' Executes an order

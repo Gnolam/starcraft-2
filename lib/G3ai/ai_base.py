@@ -73,7 +73,6 @@ class aiBase(ObsAPI):
             raise Exception('Incorrect function was called: L1::get_state()')
 
     def new_game(self):
-        self.base_top_left = None
         self.previous_state = None
         self.previous_action = None
 
@@ -100,26 +99,16 @@ class aiBase(ObsAPI):
         if should_print and self.fh_state_csv is not None:
             self.fh_state_csv.write(s_message)
 
-    def step(self, obs):
-        command_centres =\
-            self.get_my_units_by_type(obs, units.Terran.CommandCenter)
-
-        if obs.first():
-            self.base_top_left = (command_centres[0].x < 32)
-            self.pipeline.base_top_left = self.base_top_left
+    def choose_next_action(self, obs) -> None:
+        """ Picks the next action and updates the pipeline """
         state = str(self.get_state(obs))
 
         # Original 'best known' action based on Q-Table
         action, best_score = self.qtable.choose_action(state)
-
         self.logger.debug(f"Q-Action: '{action.upper()}'" +
                           f", score = '{best_score}'")
 
         next_state = 'terminal' if obs.last() else state
-
-        if obs.last():  # and self.agent_name == 'bob':
-            logging.getLogger("res").info(
-                f"Game: {self.game_num}. Outcome: {obs.reward}")
 
         # 'LEARN' should be across the WHOLE history
         # Q-Table should be updated to consume 'batch' history
@@ -132,17 +121,41 @@ class aiBase(ObsAPI):
                 'reward': obs.reward,
                 'next_state': next_state
             }
-
         self.step_counter += 1
-
         self.previous_state = state
         self.previous_action = action
 
-        # return self.pipeline.run(obs)
+        if not obs.last():
+            # Convert action:str -> new_ticket:PipelineTicket
+            new_ticket = getattr(self, action)()
+            # Add this new_ticket:PipelineTicket to pipeline
+            self.pipeline.add_order(new_ticket)
 
-        # action_res = getattr(self,
-                             action)(obs, check_action_availability_only=False)
-        # return action_res
+    def step(self, obs):
+        """ Core function to respond to game changes
+        1. updates pipeline with new tickets if empty
+        2. tries to resolve pipeline tickets
+
+        Returns
+            * SC2 order: issued by ticket in pipeline
+            * None: if still waiting
+        """
+        if obs.first():
+            command_centres = self.get_my_units_by_type(
+                obs, units.Terran.CommandCenter)
+            self.pipeline.base_top_left = (command_centres[0].x < 32)
+
+        # Pipeline is still _not_ finished, not a good time for the new action
+        if self.pipeline.is_empty():
+            # Great, pipeline _is_ empty. What would be the next step?
+            self.choose_next_action(obs)
+
+        if obs.last():  # and self.agent_name == 'bob':
+            logging.getLogger("res").info(
+                f"Game: {self.game_num}. Outcome: {obs.reward}")
+
+        # Returns None if still waiting or SC2 order
+        return self.pipeline.run(obs)
 
     def finalise_game(self):
         # self.dump_decisions_hist()
