@@ -2,8 +2,7 @@
 
 ## Current ToDo's
 
-- add request Supply Depos to barracks if # of Depos == 0
-- permanently check if enough supplies in Train Maries
+- `get_shortest_queue_building()` fails when trying to train a marine
 
 ## Current focus
 

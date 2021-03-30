@@ -126,16 +126,16 @@ loggers:
 
     poBuildSupplyDepot:
         level: DEBUG
-        handlers: [file_pipeline_orders, console, file_pipeline_orders_debug]
+        handlers: [file_pipeline_orders, file_pipeline_orders_debug]
         propagate: false
 
     poBuildBarracks:
         level: DEBUG
-        handlers: [file_pipeline_orders, console, file_pipeline_orders_debug]
+        handlers: [file_pipeline_orders, file_pipeline_orders_debug]
         propagate: false
 
     poTrainMarine:
         level: DEBUG
-        handlers: [file_pipeline_orders, console, file_pipeline_orders_debug]
+        handlers: [file_pipeline_orders, file_pipeline_orders_debug]
         propagate: false
 

@@ -1,34 +1,10 @@
 import logging
-from lib.ticket_status import TicketStatus
+from lib.G3pipe.ticket_status import TicketStatus
+from lib.G3pipe.pipeline_base import PipelineBase
 from lib.c01_obs_api import ObsAPI
 
 
-class PipelineConventions(object):
-    """ Joint class parent for Pipeline and Orders """
-    def __init__(self):
-        super().__init__()
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.debug("Created <PipelineConventions>")
-
-
-# ------------------------------------------------------------------------
-
-
-class PipelineBase(PipelineConventions):
-    """
-    Promise' class definition. Must not be called directly.
-    Parent class for `Pipeline`
-    """
-    book = []  # Tickets
-
-    def add_order(self, new_ticket, blocks_whom_id: int = None):
-        pass
-
-
-# ------------------------------------------------------------------------
-
-
-class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
+class PipelineTicketBase(TicketStatus, ObsAPI):
     '''
     Class to manage the execution of a single `PipelineTicket`'
     Contains the place holders for downstream classes
@@ -61,8 +37,10 @@ class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
         if self.blocks_whom_id is not None:
             extra_info += (
                 ", blocks " +
-                f"{self.parent_pipelene.who_is(self.blocks_whom_id)}'")
-        return f"'{self.__class__.__name__}', status: {self.str_status()}" + extra_info
+                f"'{self.parent_pipelene.who_is(self.blocks_whom_id)}'")
+        return (
+            f"'{self.ID}_{self.__class__.__name__}', status: {self.str_status()}"
+            + extra_info)
 
     def link_to_pipeline(self, parent_pipeline: PipelineBase,
                          ticket_id: int) -> None:
@@ -85,9 +63,9 @@ class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
         self.depends_on_list.append(ticket_id)
         self.set_status(TicketStatus.BLOCKED)
         self.logger.debug("new status: " + str(self))
+        self.parent_pipelene.book[ticket_id].assign_as_blocker(self.ID)
 
     def remove_dependency(self, ticket_id: int) -> None:
-        # ToDo: Verify first that such element exists
         self.logger.debug(
             f"remove_dependency('{self.parent_pipelene.who_is(ticket_id)}')")
         if self.depends_on_list is None:
@@ -101,8 +79,9 @@ class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
             self.set_status(TicketStatus.ACTIVE)
 
     def assign_as_blocker(self, ticket_id: int) -> None:
-        self.logger.debug(f"assign_as_blocker({ticket_id}:" +
-                          f"'{self.parent_pipelene.who_is(ticket_id)}')")
+        self.logger.debug(
+            f"{self.parent_pipelene.who_is(self.ID)}.assign_as_blocker({ticket_id}:"
+            + f"'{self.parent_pipelene.who_is(ticket_id)}')")
         if self.blocks_whom_id is not None:
             raise Exception(
                 "Cannot assign block. Ticket is already blocking " +
@@ -110,7 +89,7 @@ class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
         self.blocks_whom_id = ticket_id
 
     def mark_complete(self):
-        if self.blocks_whom_id is None:
+        if self.blocks_whom_id is not None:
             self.resign_as_blocker()
         self.set_status(TicketStatus.COMPLETE)
 
@@ -118,16 +97,16 @@ class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
         if self.blocks_whom_id is None:
             raise Exception("resign_as_blocker(): No blocked ID is specified")
         self.logger.debug(
-            f"resign_as_blocker() (" +
+            f"{self.parent_pipelene.who_is(self.ID)}.resign_as_blocker(" +
             f"'{self.parent_pipelene.who_is(self.blocks_whom_id)}')")
 
-        # ToDo: should be search by match with ID in dict
-        blocked_order = self.parent_pipelene.book[self.blocks_whom_id]
-        blocked_order.remove_dependency(self.ID)
+        self.parent_pipelene.book[self.blocks_whom_id].remove_dependency(
+            self.ID)
 
-        # Check if this item was the last blocker
-        if len(blocked_order.depends_on_list) == 0:
-            blocked_order.set_status(TicketStatus.ACTIVE)
+        # Note: Is implemented in remove_dependency()
+        # # Check if this item was the last blocker
+        # if len(blocked_order.depends_on_list) == 0:
+        #     blocked_order.set_status(TicketStatus.ACTIVE)
 
         # Assume only 1 order can be blocked relationsip
         self.blocks_whom_id = None

@@ -1,5 +1,4 @@
-from lib.G3pipe.pipeline_order_bases import PipelineTicketBase
-from lib.ticket_status import TicketStatus
+from lib.G3pipe.ticket_base import PipelineTicketBase
 from pysc2.lib import actions, units
 
 # ----------------------------------------------------------------------------
@@ -73,13 +72,14 @@ class poBuildBarracks(PipelineTicketBase):
         }
         scv_tag, building_xy = self.build_with_scv_xy(obs, xy_options,
                                                       self.len_barrackses)
-        return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
-            "now", scv_tag, building_xy)
+        return actions.RAW_FUNCTIONS.Build_Barracks_pt("now", scv_tag,
+                                                       building_xy)
 
     def run_init(self, obs):
-        # This class depends on existence of a Suppy depos but...
-        # supply depo will be requested by recruit marine... so -> skip
-        pass
+        self.get_len(obs)
+        if self.len_supply_depots == 0:
+            self.parent_pipelene.add_order(poBuildSupplyDepot(),
+                                           blocks_whom_id=self.ID)
 
     def run(self, obs):
         self.get_len(obs)
@@ -152,6 +152,11 @@ class poTrainMarine(PipelineTicketBase):
         self.logger.debug(f"  > barracks={self.len_barrackses} " +
                           f"minerals={obs.observation.player.minerals} " +
                           f"free_supply={self.free_supply}")
+
+        # Inherited from run_init()
+        if self.free_supply == 0:
+            self.parent_pipelene.add_order(poBuildSupplyDepot(),
+                                           blocks_whom_id=self.ID)
 
         # All conditions are met, generate an order and finish
         if (self.len_barrackses > 0 and obs.observation.player.minerals >= 50

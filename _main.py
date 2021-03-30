@@ -1,15 +1,10 @@
 import logging
 import logging.config
-import yaml
-import os
 from pysc2.env import sc2_env, run_loop
 from pysc2.lib import actions, features
 from absl import app
 from lib.config import Config
 from lib.agentG3 import SmartAgentG3
-from lib.G3pipe.pipeline import Pipeline
-from lib.G3pipe.pipeline_orders import poTrainMarine, poBuildBarracks
-from lib.ticket_status import TicketStatus
 
 
 def main(unused_argv):
@@ -59,29 +54,3 @@ def main(unused_argv):
 
 if __name__ == "__main__":
     app.run(main)
-
-if False:
-    cfg = Config()
-    cfg.fix_ADSL_logging()
-    cfg.init_logging('config/logging.yml')
-
-    a = Pipeline()
-    order_ID = a.add_order(poTrainMarine(number_of_mariners_to_build=4))
-    print(f"new order ID: {order_ID}")
-
-    a.book[0].run("")
-    print(a)
-    a.book[1].resign_as_blocker()
-    print(a)
-    a.book[2].resign_as_blocker()
-    print(a)
-
-    print([(ticket.ID, ticket.str_status()) for ticket in a.book])
-
-    print([(ticket.ID, ticket.str_status()) for ticket in a.book
-           if ticket.get_status() == TicketStatus.ACTIVE])
-
-    a.run()
-
-    # c = poBuildMariners(number_of_mariners_to_build=4)
-    # c.run()

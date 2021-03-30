@@ -1,5 +1,6 @@
-from lib.G3pipe.pipeline_order_bases import PipelineBase, PipelineTicketBase
-from lib.ticket_status import TicketStatus
+from lib.G3pipe.ticket_status import TicketStatus
+from lib.G3pipe.pipeline_base import PipelineBase
+from lib.G3pipe.ticket_base import PipelineTicketBase
 
 
 class Pipeline(PipelineBase):
@@ -76,8 +77,13 @@ class Pipeline(PipelineBase):
 
         should_iterate = True
 
-        # verify that list of active did not change between runs
-        last_iteration_ticket_IDs = []
+        # Verify that list of active did not change between runs
+        # init with ACTIVE list so run does not scan twice throught them
+        # if nothing happens
+        last_iteration_ticket_IDs = current_ticket_IDs = [
+            ticket.ID for ticket in self.book
+            if ticket.get_status() in [TicketStatus.ACTIVE]
+        ]
 
         while should_iterate:
             # run_init() for all INIT tickets
@@ -86,7 +92,7 @@ class Pipeline(PipelineBase):
                     ticket for ticket in self.book
                     if ticket.get_status() == TicketStatus.INIT
             ]:
-                self.logger.debug(f"run_init({ticket.ID})")
+                self.logger.debug(f"run_init({self.who_is(ticket.ID)})")
                 ticket.set_status(TicketStatus.ACTIVE)
                 ticket.run_init(obs)
 
