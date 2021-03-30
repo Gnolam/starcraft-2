@@ -1,5 +1,10 @@
 # Generation 3: decision pipeline
 
+## Current ToDo's
+
+- add request Supply Depos to barracks if # of Depos == 0
+- permanently check if enough supplies in Train Maries
+
 ## Current focus
 
 Draft for `Pipeline::Run()`
