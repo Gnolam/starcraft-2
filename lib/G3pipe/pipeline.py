@@ -37,10 +37,11 @@ class Pipeline(PipelineBase):
 
     def is_empty(self) -> bool:
         """ Returns True if current pipeline has no active orders """
-        return ([
+        self.logger.debug(str(self))
+        return len([
             ticket.ID for ticket in self.book
             if ticket.get_status() in [TicketStatus.ACTIVE, TicketStatus.INIT]
-        ] is None)
+        ]) == 0
 
     def who_is(self, ticket_id: int) -> str:
         ''' Get simple representation of the ticket'''
@@ -71,7 +72,7 @@ class Pipeline(PipelineBase):
         # Debug display status
         self.logger.debug("Tickets in the book for run():")
         for ticket_ID in active_ticket_IDs:
-            self.logger.debug(self.who_is(ticket_ID))
+            self.logger.debug(f"  {ticket_ID}. " + self.who_is(ticket_ID))
 
         should_iterate = True
 
@@ -85,14 +86,16 @@ class Pipeline(PipelineBase):
                     ticket for ticket in self.book
                     if ticket.get_status() == TicketStatus.INIT
             ]:
-                ticket.run_init(obs)
+                self.logger.debug(f"run_init({ticket.ID})")
                 ticket.set_status(TicketStatus.ACTIVE)
+                ticket.run_init(obs)
 
             # Run all tickets with ACTIVE status
             for ticket in [
                     ticket for ticket in self.book
                     if ticket.get_status() == TicketStatus.ACTIVE
             ]:
+                self.logger.debug(f"ticket={str(ticket)}")
                 is_valid, sc2_order = ticket.run(obs)
                 if not is_valid:
                     ticket.set_status(TicketStatus.INVALID)
@@ -120,7 +123,7 @@ class Pipeline(PipelineBase):
         return None  # or SC2 order, if inything was resolved
 
     def __str__(self):
-        ret = "  Current content of the pipeline gross book:\n    " + "-" * 40
+        ret = "\n  Current content of the pipeline gross book:\n    " + "-" * 40
         for ticket in self.book:
             ret += f"\n    ID:{ticket.ID}, {str(ticket)}"
         return ret

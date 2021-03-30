@@ -12,6 +12,7 @@ class aiBuilder(aiBase, BuildTicketsEcon):
 
     def __init__(self, cfg):
         super().__init__(cfg)
+        self.logger.debug("aiBuilder::init()")
 
     def get_state(self, obs):
         # State vector should be revised to take into account both ours

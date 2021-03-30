@@ -7,8 +7,8 @@ from pysc2.lib import actions, features
 from absl import app
 from lib.config import Config
 from lib.agentG3 import SmartAgentG3
-from lib.G3.pipeline import Pipeline
-from lib.G3.pipeline_orders import poTrainMarine, poBuildBarracks
+from lib.G3pipe.pipeline import Pipeline
+from lib.G3pipe.pipeline_orders import poTrainMarine, poBuildBarracks
 from lib.ticket_status import TicketStatus
 
 

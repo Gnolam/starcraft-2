@@ -14,7 +14,7 @@ class SmartAgentG3(base_agent.BaseAgent):
 
     def __init__(self, cfg):
         super(SmartAgentG3, self).__init__()
-        logging.getLogger("main").info(f"'{self.agent_name}'' created")
+        logging.getLogger("main").info(f"'{self.agent_name}' created")
 
         self.aiBob = aiBuilder(cfg)
         # self.agent_Peps = L2AgentPeps(cfg)

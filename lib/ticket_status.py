@@ -1,12 +1,13 @@
 class TicketStatus(object):
     # Constants
-    INIT = 0
-    ACTIVE = 1
+    INIT = 1
+    ACTIVE = 2
     COMPLETE = 100
     BLOCKED = 200
     INVALID = 400
 
     status_dict = {
+        None: "N/A",
         INIT: "INIT",
         ACTIVE: "ACTIVE",
         COMPLETE: "COMPLETE",
@@ -18,7 +19,6 @@ class TicketStatus(object):
 
     def __init__(self):
         super().__init__()
-        print("~> TicketStatus::__init__()")
 
     # Functions
     def check_if_valid(self):
@@ -36,7 +36,10 @@ class TicketStatus(object):
                 self.INIT, self.ACTIVE, self.COMPLETE, self.BLOCKED,
                 self.INVALID
         ]:
-            raise Exception(f"Unknown status: {new_status}")
+            raise Exception(f"Unknown new status: {new_status}")
+        self.logger.debug("Changing status " +
+                          self.status_dict[self.current_status] + " -> " +
+                          self.status_dict[new_status])
         self.current_status = new_status
 
     def get_status(self):

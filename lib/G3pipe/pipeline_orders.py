@@ -181,3 +181,4 @@ class poTrainMarine(PipelineTicketBase):
             else:
                 # No place for mariners at the moment
                 return True, None
+        return True, None

@@ -49,10 +49,6 @@ class aiBase(ObsAPI):
         self.new_game()
 
         self.logger.debug(f"Run number: {self.game_num}")
-        self.consistent_decision_agent =\
-            cfg.run_cfg.get(self.agent_name).get("consistent")
-        self.logger.debug(
-            f'consistent_decision_agent: {self.consistent_decision_agent}')
 
     def reset(self):
         self.new_game()
@@ -140,15 +136,21 @@ class aiBase(ObsAPI):
             * SC2 order: issued by ticket in pipeline
             * None: if still waiting
         """
+        self.logger.debug(f"[{self.agent_name}::step] CP")
         if obs.first():
+            self.logger.debug(f"[{self.agent_name}::step] first time")
             command_centres = self.get_my_units_by_type(
                 obs, units.Terran.CommandCenter)
             self.pipeline.base_top_left = (command_centres[0].x < 32)
 
         # Pipeline is still _not_ finished, not a good time for the new action
+        self.logger.debug(f"[{self.agent_name}]: is empty?")
         if self.pipeline.is_empty():
             # Great, pipeline _is_ empty. What would be the next step?
+            self.logger.debug(f"[{self.agent_name}]:   Yes")
             self.choose_next_action(obs)
+        else:
+            self.logger.debug(f"[{self.agent_name}]:   No")
 
         if obs.last():  # and self.agent_name == 'bob':
             logging.getLogger("res").info(

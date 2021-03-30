@@ -8,8 +8,7 @@ class PipelineConventions(object):
     def __init__(self):
         super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.debug("Created")
-        print("~> PipelineConventions::__init__()")
+        self.logger.debug("Created <PipelineConventions>")
 
 
 # ------------------------------------------------------------------------
@@ -84,6 +83,8 @@ class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
         if self.depends_on_list is None:
             self.depends_on_list = []
         self.depends_on_list.append(ticket_id)
+        self.set_status(TicketStatus.BLOCKED)
+        self.logger.debug("new status: " + str(self))
 
     def remove_dependency(self, ticket_id: int) -> None:
         # ToDo: Verify first that such element exists
@@ -96,6 +97,8 @@ class PipelineTicketBase(TicketStatus, ObsAPI, PipelineConventions):
                             f"in the depends_on list: {self.depends_on_list}")
         else:
             self.depends_on_list.remove(ticket_id)
+        if len(self.depends_on_list) == 0:
+            self.set_status(TicketStatus.ACTIVE)
 
     def assign_as_blocker(self, ticket_id: int) -> None:
         self.logger.debug(f"assign_as_blocker({ticket_id}:" +
