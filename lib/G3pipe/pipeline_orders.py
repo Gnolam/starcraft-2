@@ -22,8 +22,8 @@ class poBuildSupplyDepot(PipelineTicketBase):
             2: (69 - 5, 77 - 5),
             3: (69 - 5, 77 - 7)
         }
-        scv_tag, building_xy = self.build_with_scv_xy(obs, xy_options,
-                                                      self.len_supply_depots)
+        scv_tag, building_xy = self.build_with_scv_xy(
+            obs, xy_options, self.len_supply_depots_100)
         return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
             "now", scv_tag, building_xy)
 
@@ -32,16 +32,16 @@ class poBuildSupplyDepot(PipelineTicketBase):
 
         self.get_len(obs)
 
-        self.logger.debug(f"  > supply_depots={self.len_supply_depots} " +
+        self.logger.debug(f"  > supply_depots={self.len_supply_depots_100} " +
                           f"minerals={obs.observation.player.minerals} " +
                           f"scvs={self.len_scvs}")
 
-        if (self.len_supply_depots >= 4):
+        if (self.len_supply_depots_100 >= 4):
             self.logger.warn("Too many supply depos!")
             return False, None  # False - this order must be deleted
 
         # All conditions are met, generate an order and finish
-        if (self.len_supply_depots < 4
+        if (self.len_supply_depots_100 < 4
                 and obs.observation.player.minerals >= 100
                 and self.len_scvs > 0):
             self.mark_complete()
@@ -77,7 +77,7 @@ class poBuildBarracks(PipelineTicketBase):
 
     def run_init(self, obs):
         self.get_len(obs)
-        if self.len_supply_depots == 0:
+        if self.len_supply_depots_100 == 0:
             self.parent_pipelene.add_order(poBuildSupplyDepot(),
                                            blocks_whom_id=self.ID)
 
@@ -93,7 +93,7 @@ class poBuildBarracks(PipelineTicketBase):
             return False, None  # False - this order must be deleted
 
         # All conditions are met, generate an order and finish
-        if (self.len_supply_depots > 0 and self.len_barrackses < 5
+        if (self.len_supply_depots_100 > 0 and self.len_barrackses < 5
                 and obs.observation.player.minerals >= 150
                 and self.len_scvs > 0):
             self.mark_complete()
@@ -134,7 +134,7 @@ class poTrainMarine(PipelineTicketBase):
         if self.free_supply == 0:
             self.parent_pipelene.add_order(poBuildSupplyDepot(),
                                            blocks_whom_id=self.ID)
-        if self.len_barrackses > 0:
+        if self.len_barrackses_100 > 0:
             best_barrack = self.get_best_barrack(obs)
             if best_barrack.order_length > 3 and self.len_barrackses < 5:
                 self.parent_pipelene.add_order(poBuildBarracks(),
@@ -149,7 +149,7 @@ class poTrainMarine(PipelineTicketBase):
             raise Exception(f"{self.__class__.__name__}::run(): {err_msg}")
 
         self.get_len(obs)
-        self.logger.debug(f"  > barracks={self.len_barrackses} " +
+        self.logger.debug(f"  > barracks_100={self.len_barrackses_100} " +
                           f"minerals={obs.observation.player.minerals} " +
                           f"free_supply={self.free_supply}")
 
@@ -159,7 +159,8 @@ class poTrainMarine(PipelineTicketBase):
                                            blocks_whom_id=self.ID)
 
         # All conditions are met, generate an order and finish
-        if (self.len_barrackses > 0 and obs.observation.player.minerals >= 50
+        if (self.len_barrackses_100 > 0
+                and obs.observation.player.minerals >= 50
                 and self.free_supply > 0):
 
             best_barrack = self.get_best_barrack(obs)
