@@ -18,6 +18,8 @@ class TicketStatus(PipelineConventions):
         INVALID: "INVALID"
     }
 
+    # Variables
+    ID: int = None
     current_status: int = None
 
     def __init__(self):
@@ -50,3 +52,6 @@ class TicketStatus(PipelineConventions):
     def get_status(self):
         self.check_if_valid()
         return self.current_status
+
+    def status_is_active(self):
+        return self.get_status() in [self.ACTIVE, self.INIT]

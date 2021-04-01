@@ -2,7 +2,15 @@
 
 ## Current ToDo's
 
+Pending bugs:
+- multiple 'simultaneous' instances are requested
+- statuses are always complete and never invalid
+- too many SDs are requested?
+
+Fixed: 
 - `get_shortest_queue_building()` fails when trying to train a marine
+- multiple `poBuildSupplyDepot` instances created in the process
+
 
 ## Current focus
 

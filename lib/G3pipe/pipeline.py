@@ -38,11 +38,12 @@ class Pipeline(PipelineBase):
 
     def is_empty(self) -> bool:
         """ Returns True if current pipeline has no active orders """
-        self.logger.debug(str(self))
-        return len([
+        pipeline_is_empty = len([
             ticket.ID for ticket in self.book
             if ticket.get_status() in [TicketStatus.ACTIVE, TicketStatus.INIT]
         ]) == 0
+        self.logger.debug(str(pipeline_is_empty) + str(self))
+        return pipeline_is_empty
 
     def who_is(self, ticket_id: int) -> str:
         ''' Get simple representation of the ticket'''

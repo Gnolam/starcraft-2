@@ -10,7 +10,6 @@ class PipelineTicketBase(TicketStatus, ObsAPI):
     Contains the place holders for downstream classes
     '''
 
-    ID: int = None
     # status: int = None
     depends_on_list = None
     blocks_whom_id: int = None

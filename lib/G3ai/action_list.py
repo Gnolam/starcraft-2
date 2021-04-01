@@ -18,14 +18,14 @@ class BuildTicketsEcon(BuildTicketsBase):
     def __init__(self, cfg=None):
         super().__init__()
 
+    def pt_train_marines_2(self):
+        return poTrainMarine(4)
+
     def pt_train_marines_4(self):
         return poTrainMarine(4)
 
-    def pt_train_marines_8(self):
-        return poTrainMarine(8)
+    # def pt_train_marines_12(self):
+    #     return poTrainMarine(12)
 
-    def pt_train_marines_12(self):
-        return poTrainMarine(12)
-
-    def pt_train_marines_16(self):
-        return poTrainMarine(16)
+    # def pt_train_marines_16(self):
+    #     return poTrainMarine(16)
