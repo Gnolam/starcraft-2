@@ -1,5 +1,103 @@
-from lib.G3pipe.ticket_base import BasePipelineBuildTicket
+from lib.G3pipe.ticket_base import BasePipelineTicket
 from pysc2.lib import actions, units
+# ----------------------------------------------------------------------------
+
+
+class BasePipelineBuildTicket(BasePipelineTicket):
+    def __init__(self):
+        super().__init__()
+
+    sc2_building_ID = None
+
+    new_building_metadata = {
+        "Barrack": {
+            "is_building_promised_tag": "is_barrack_promised",
+            "class_name": "poBuildBarracks",
+            "max_building": 5
+        },
+        "SupplyDepot": {
+            "is_building_promised_tag": "is_supply_depo_promised",
+            "class_name": "poBuildSupplyDepot",
+            "max_building": 4
+        },
+    }
+
+    def new_building_should_build(self, obs) -> tuple:
+        if 1 >= 1:
+            self.report_invalid_method()
+        return True, "Fake msg"
+
+    def new_building_request_if_needed(self, obs, metadata_key) -> bool:
+        """ Generalised function for constructing buildings """
+        self.get_len(obs)
+
+        build_class_name = self.new_building_metadata[metadata_key][
+            "class_name"]
+        sc2_building_ID = eval(f"{build_class_name}.sc2_building_ID")
+        is_building_promised = self.get_new_building_promise(metadata_key)
+
+        len_building_all = len(self.get_my_units_by_type(obs, sc2_building_ID))
+        len_building_100 = len(
+            self.get_my_completed_units_by_type(obs, sc2_building_ID))
+        is_building_in_progress = (len_building_all != len_building_100)
+
+        if is_building_promised:
+            if is_building_in_progress:
+                # promise was fulfilled, invalidate promise
+                self.logger.debug(
+                    f"Promise was fulfilled for '{metadata_key}'")
+                self.set_new_building_promise(metadata_key, False)
+            else:
+                self.logger.debug(f"'{metadata_key}' was already promised." +
+                                  "Construction has not started yet")
+                return
+
+        # No ready building atm
+        if len_building_100 == 0:
+            # Yes, it was already promised
+            # No ready buildings and no promised, we need to do something about it
+            self.logger.debug(f"Requesting first {metadata_key}: " +
+                              f"(len_building_100 = {len_building_100}")
+            self.set_new_building_promise(metadata_key, True)
+            self.parent_pipelene.add_order(eval(f"{build_class_name}()"))
+            return
+
+        should_build, should_build_msg = self.new_building_should_build(obs)
+
+        if should_build:
+            self.logger.debug(f"Requesting new {metadata_key}: " +
+                              f"({should_build_msg})")
+            self.set_new_building_promise(metadata_key, True)
+            self.parent_pipelene.add_order(eval(f"{build_class_name}()"))
+        else:
+            self.logger.debug(f"No need to build the {metadata_key}: " +
+                              f"({should_build_msg})")
+
+    def set_new_building_promise(self, metadata_key: str,
+                                 new_value: bool) -> None:
+        promise_var = self.new_building_metadata[metadata_key][
+            "is_building_promised_tag"]
+        self.logger.debug(
+            "Set promise for " +
+            f"'{metadata_key}'('{promise_var}') -> {str(new_value)}")
+        promise_var = self.new_building_metadata[metadata_key][
+            "is_building_promised_tag"]
+        self.parent_pipelene.new_building_metadata[promise_var] = new_value
+
+    def get_new_building_promise(self, metadata_key: str) -> bool:
+        promise_var = self.new_building_metadata[metadata_key][
+            "is_building_promised_tag"]
+        if promise_var not in self.parent_pipelene.new_building_metadata:
+            # Create new record
+            self.parent_pipelene.new_building_metadata[promise_var] = False
+            self.logger.debug("Init promise for " +
+                              f"'{metadata_key}'('{promise_var}') -> False")
+            return False
+        else:
+            # Previous record located
+            return self.parent_pipelene.new_building_metadata[promise_var]
+
+
 # ----------------------------------------------------------------------------
 
 
@@ -123,7 +221,7 @@ class poBuildBarracks(BasePipelineBuildTicket):
 # ----------------------------------------------------------------------------
 
 
-class poTrainMarine(BasePipelineTicket):
+class poTrainMarine(BasePipelineBuildTicket):
     number_of_mariners_to_build: int = None
     number_of_mariners_to_build_remaining: int = None
     number_of_barracks_requested: int = None
