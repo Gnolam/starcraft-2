@@ -3,11 +3,9 @@ import logging
 from pysc2.lib.actions import build_queue
 from lib.G3pipe.ticket_status import TicketStatus
 from lib.G3pipe.pipeline_base import PipelineBase
-from lib.c01_obs_api import ObsAPI
 
 
-
-class BasePipelineTicket(TicketStatus, ObsAPI):
+class BasePipelineTicket(TicketStatus):
     '''
     Class to manage the execution of a single `PipelineTicket`'
     Contains the place holders for downstream classes

@@ -77,6 +77,12 @@ class Pipeline(PipelineBase):
         for ticket_ID in active_ticket_IDs:
             self.logger.debug(f"  {ticket_ID}. " + self.who_is(ticket_ID))
 
+        self.get_len(obs)
+        self.logger.debug(
+            "  Status: " + f"Spc:({self.free_supply})" +
+            f", SDs:({str(self.len_supply_depots_100)}/{str(self.len_supply_depots)})"
+            + f", Bks:({str(self.len_barracks_100)}/{str(self.len_barracks)})")
+
         should_iterate = True
 
         # Verify that list of active did not change between runs
@@ -134,4 +140,5 @@ class Pipeline(PipelineBase):
         ret = "\n  Current content of the pipeline gross book:\n    " + "-" * 40
         for ticket in self.book:
             ret += f"\n    ID:{ticket.ID}, {str(ticket)}"
+        ret += f"\n  * Promises = {str(self.new_building_metadata)}"
         return ret

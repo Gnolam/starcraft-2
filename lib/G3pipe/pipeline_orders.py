@@ -13,19 +13,29 @@ class BasePipelineBuildTicket(BasePipelineTicket):
         "Barrack": {
             "is_building_promised_tag": "is_barrack_promised",
             "class_name": "poBuildBarracks",
+            "should_build_function": "should_build_barrack",
             "max_building": 5
         },
         "SupplyDepot": {
-            "is_building_promised_tag": "is_supply_depo_promised",
+            "is_building_promised_tag": "is_supply_depot_promised",
             "class_name": "poBuildSupplyDepot",
+            "should_build_function": "should_build_supply_depot",
             "max_building": 4
         },
     }
 
-    def new_building_should_build(self, obs) -> tuple:
-        if 1 >= 1:
-            self.report_invalid_method()
-        return True, "Fake msg"
+    def should_build_barrack(self, obs) -> bool:
+        self.get_len(obs)
+        if self.len_barracks < 1:
+            return True, "No barracks at all"
+        order_length = self.get_best_barrack(obs).order_length
+        return order_length > 3, f"order_length ({order_length}) > 3"
+
+    def should_build_supply_depot(self, obs) -> bool:
+        self.get_len(obs)
+        if self.len_supply_depots < 1:
+            return True, "No Supply Depots at all"
+        return self.free_supply < 5, f"free_supply ({self.free_supply}) < 5"
 
     def new_building_request_if_needed(self, obs, metadata_key) -> bool:
         """ Generalised function for constructing buildings """
@@ -33,6 +43,9 @@ class BasePipelineBuildTicket(BasePipelineTicket):
 
         build_class_name = self.new_building_metadata[metadata_key][
             "class_name"]
+        should_build_function = self.new_building_metadata[metadata_key][
+            "should_build_function"]
+
         sc2_building_ID = eval(f"{build_class_name}.sc2_building_ID")
         is_building_promised = self.get_new_building_promise(metadata_key)
 
@@ -48,21 +61,22 @@ class BasePipelineBuildTicket(BasePipelineTicket):
                     f"Promise was fulfilled for '{metadata_key}'")
                 self.set_new_building_promise(metadata_key, False)
             else:
+                # Yes, it was already promised
                 self.logger.debug(f"'{metadata_key}' was already promised." +
                                   "Construction has not started yet")
                 return
 
         # No ready building atm
-        if len_building_100 == 0:
-            # Yes, it was already promised
-            # No ready buildings and no promised, we need to do something about it
+        if len_building_all == 0:
+            # No ready/in progress buildings and no promised, we need to do something about it
             self.logger.debug(f"Requesting first {metadata_key}: " +
-                              f"(len_building_100 = {len_building_100}")
+                              f"(len_building_all = {len_building_all})")
             self.set_new_building_promise(metadata_key, True)
             self.parent_pipelene.add_order(eval(f"{build_class_name}()"))
             return
 
-        should_build, should_build_msg = self.new_building_should_build(obs)
+        should_build, should_build_msg = getattr(self,
+                                                 should_build_function)(obs)
 
         if should_build:
             self.logger.debug(f"Requesting new {metadata_key}: " +
@@ -108,12 +122,6 @@ class poBuildSupplyDepot(BasePipelineBuildTicket):
 
     def __init__(self):
         super().__init__()
-
-    def new_building_should_build(self, obs) -> bool:
-        self.get_len(obs)
-        if self.len_supply_depots_100 < 1:
-            return True, "No complete Supply Depots"
-        return self.free_supply < 5, f"free_supply ({self.free_supply}) < 5"
 
     def generate_sc2_order(self, obs):
         # ToDo: should be loaded via map config
@@ -165,13 +173,6 @@ class poBuildBarracks(BasePipelineBuildTicket):
 
     def __init__(self):
         super().__init__()
-
-    def new_building_should_build(self, obs) -> bool:
-        self.get_len(obs)
-        if self.len_barracks_100 < 1:
-            return True, "No complete barracks"
-        order_length = self.get_best_barrack(obs).order_length
-        return order_length > 3, f"order_length ({order_length}) > 3"
 
     def generate_sc2_order(self, obs):
         # ToDo: should be loaded via map config
@@ -246,13 +247,14 @@ class poTrainMarine(BasePipelineBuildTicket):
             "now", best_barrack_tag)
 
     def run_init(self, obs):
-        self.get_len(obs)
+        # self.get_len(obs)
+        self.new_building_request_if_needed(obs, "Barrack")
 
         # Only the 1st Barrack should be auto-constructed
-        if self.len_barracks == 0:
-            self.number_of_barracks_requested += 1
-            self.parent_pipelene.add_order(poBuildBarracks(),
-                                           blocks_whom_id=self.ID)
+        # if self.len_barracks == 0:
+        #     self.number_of_barracks_requested += 1
+        #     self.parent_pipelene.add_order(poBuildBarracks(),
+        #                                    blocks_whom_id=self.ID)
 
     def run(self, obs):
         if self.number_of_mariners_to_build_remaining <= 0:

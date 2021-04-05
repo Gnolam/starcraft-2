@@ -2,7 +2,7 @@ import logging
 from lib.c01_obs_api import ObsAPI
 
 
-class PipelineConventions(object):
+class PipelineConventions(ObsAPI):
     """ Joint class parent for Pipeline and Orders """
     def __init__(self):
         super().__init__()
