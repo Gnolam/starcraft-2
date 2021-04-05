@@ -1,10 +1,13 @@
 import logging
+
+from pysc2.lib.actions import build_queue
 from lib.G3pipe.ticket_status import TicketStatus
 from lib.G3pipe.pipeline_base import PipelineBase
+from lib.G3pipe.pipeline_orders import poBuildBarracks, poBuildSupplyDepot
 from lib.c01_obs_api import ObsAPI
 
 
-class PipelineTicketBase(TicketStatus, ObsAPI):
+class BasePipelineTicket(TicketStatus, ObsAPI):
     '''
     Class to manage the execution of a single `PipelineTicket`'
     Contains the place holders for downstream classes
@@ -171,3 +174,91 @@ class PipelineTicketBase(TicketStatus, ObsAPI):
         '''
 
         self.report_invalid_method()
+
+
+class BasePipelineBuildTicket(BasePipelineTicket):
+    def __init__(self):
+        super().__init__()
+
+    sc2_building_ID = None
+
+    new_building_metadata = {
+        "Barrack": {
+            "is_building_promised_tag": "is_barrack_promised",
+            "class_name": "poBuildBarracks",
+            "max_building": 5
+        },
+        "SupplyDepot": {
+            "is_building_promised_tag": "is_supply_depo_promised",
+            "class_name": "poBuildSupplyDepot",
+            "max_building": 4
+        },
+    }
+
+    def new_building_should_build(self, obs) -> tuple:
+        if 1 >= 1:
+            self.report_invalid_method()
+        return True, "Fake msg"
+
+    def new_building_request_if_needed(self, obs, metadata_key) -> bool:
+        """ Generalised function for constructing buildings """
+        self.get_len(obs)
+
+        build_class_name = self.new_building_metadata[metadata_key][
+            "class_name"]
+        sc2_building_ID = eval(f"{build_class_name}.sc2_building_ID")
+        is_building_promised = self.get_new_building_promise(metadata_key)
+
+        len_building_all = len(self.get_my_units_by_type(obs, sc2_building_ID))
+        len_building_100 = len(
+            self.get_my_completed_units_by_type(obs, sc2_building_ID))
+        is_building_in_progress = (len_building_all != len_building_100)
+
+        if is_building_promised:
+            if is_building_in_progress:
+                # promise was fulfilled, invalidate promise
+                self.logger.debug(
+                    f"Promise was fulfilled for '{metadata_key}'")
+                self.set_new_building_promise(metadata_key, False)
+            else:
+                self.logger.debug(f"'{metadata_key}' was already promised." +
+                                  "Construction has not started yet")
+                return
+
+        # No ready building atm
+        if len_building_100 == 0:
+            # Yes, it was already promised
+            # No ready buildings and no promised, we need to do something about it
+            self.logger.debug(f"Requesting first {metadata_key}: " +
+                              f"(len_building_100 = {len_building_100}")
+            self.set_new_building_promise(metadata_key, True)
+            self.parent_pipelene.add_order(eval(f"{build_class_name}()"))
+            return
+
+        should_build, should_build_msg = self.new_building_should_build(obs)
+
+        if should_build:
+            self.logger.debug(f"Requesting new {metadata_key}: " +
+                              f"({should_build_msg})")
+            self.set_new_building_promise(metadata_key, True)
+            self.parent_pipelene.add_order(eval(f"{build_class_name}()"))
+        else:
+            self.logger.debug(f"No need to build the {metadata_key}: " +
+                              f"({should_build_msg})")
+
+    def set_new_building_promise(self, metadata_key: str,
+                                 new_value: bool) -> None:
+        self.logger.debug(
+            f"Set promise for '{metadata_key}' -> {str(new_value)}")
+        metadata = self.new_building_metadata[metadata_key]
+        is_building_promised_var = self.parent_pipelene.new_building_metadata[
+            metadata["is_building_promised_tag"]]
+        self.parent_pipelene.new_building_metadata[
+            is_building_promised_var] = new_value
+
+    def get_new_building_promise(self, metadata_key: str) -> bool:
+        metadata = self.new_building_metadata[metadata_key]
+        is_building_promised_var = self.parent_pipelene.new_building_metadata[
+            metadata["is_building_promised_tag"]]
+        return self.parent_pipelene.new_building_metadata[
+            is_building_promised_var]

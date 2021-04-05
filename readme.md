@@ -2,6 +2,17 @@
 
 ## Current ToDo's
 
+To Test:
+- Generalised Build (SupplyDepot, Barracks) tickets into
+  - new class: `BasePipelineTicket` -> `BasePipelineBuildTicket`
+    - `new_building_request_if_needed()`
+    - `new_building_metadata`
+    - **ToDo**: `new_building_metadata` to be moved to `.yaml`
+  - Train tickets:
+    - should use now `self.new_building_request_if_needed(obs, "SupplyDepot")`
+    - ??? Train class is currently derived from Build class
+- **ToDo**: generalize Train class, separate from Build class?
+
 Pending bugs:
 - multiple 'simultaneous' instances are requested
 - statuses are always complete and never invalid

@@ -19,9 +19,9 @@ class aiBuilder(aiBase, BuildTicketsEcon):
         #   and enemy military potential
         completed_supply_depots = self.get_my_completed_units_by_type(
             obs, units.Terran.SupplyDepot)
-        completed_barrackses = self.get_my_completed_units_by_type(
+        completed_barracks = self.get_my_completed_units_by_type(
             obs, units.Terran.Barracks)
         marines = self.get_my_units_by_type(obs, units.Terran.Marine)
 
-        return (len(completed_supply_depots), len(completed_barrackses),
+        return (len(completed_supply_depots), len(completed_barracks),
                 len(marines))

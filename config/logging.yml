@@ -81,6 +81,25 @@ handlers:
         level: INFO
         filename : logs/pipeline.log
 
+    file_poBuildSupplyDepot:
+        class: logging.FileHandler
+        formatter: reduced
+        level: DEBUG
+        filename : logs/poBuildSupplyDepot.log
+
+    file_poBuildBarracks:
+        class: logging.FileHandler
+        formatter: reduced
+        level: DEBUG
+        filename : logs/poBuildBarracks.log
+
+    file_poTrainMarine:
+        class: logging.FileHandler
+        formatter: reduced
+        level: DEBUG
+        filename : logs/poTrainMarine.log
+
+
 
 loggers:
 
@@ -126,16 +145,16 @@ loggers:
 
     poBuildSupplyDepot:
         level: DEBUG
-        handlers: [file_pipeline_orders, file_pipeline_orders_debug]
+        handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poBuildSupplyDepot]
         propagate: false
 
     poBuildBarracks:
         level: DEBUG
-        handlers: [file_pipeline_orders, file_pipeline_orders_debug]
+        handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poBuildBarracks]
         propagate: false
 
     poTrainMarine:
         level: DEBUG
-        handlers: [file_pipeline_orders, file_pipeline_orders_debug]
+        handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poTrainMarine]
         propagate: false
 

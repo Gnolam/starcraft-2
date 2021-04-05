@@ -1,6 +1,6 @@
 from lib.G3pipe.ticket_status import TicketStatus
 from lib.G3pipe.pipeline_base import PipelineBase
-from lib.G3pipe.ticket_base import PipelineTicketBase
+from lib.G3pipe.ticket_base import BasePipelineTicket
 
 
 class Pipeline(PipelineBase):
@@ -16,9 +16,10 @@ class Pipeline(PipelineBase):
         super().__init__()
         self.order_counter = 0
         self.book = []
+        self.new_building_metadata = {}
 
     def add_order(self,
-                  new_ticket: PipelineTicketBase,
+                  new_ticket: BasePipelineTicket,
                   blocks_whom_id: int = None) -> int:
         """ Adds order to the pipeline and assigns it an order ID """
         self.logger.info(

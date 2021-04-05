@@ -7,7 +7,9 @@ class ObsAPI(object):
     """ Main class for API wrappers """
 
     # To be populated by get_len()
-    len_barrackses: int = None
+    len_barracks: int = None
+    len_barracks_100: int = None
+    len_supply_depots: int = None
     len_supply_depots_100: int = None
     len_scvs: int = None
     free_supply: int = None
@@ -63,9 +65,10 @@ class ObsAPI(object):
         return scv.tag, building_xy
 
     def get_len(self, obs):
-        self.len_barrackses = len(
+        """ Calculate all basic state variables for decision making """
+        self.len_barracks = len(
             self.get_my_units_by_type(obs, units.Terran.Barracks))
-        self.len_barrackses_100 = len(
+        self.len_barracks_100 = len(
             self.get_my_completed_units_by_type(obs, units.Terran.Barracks))
 
         self.len_supply_depots = len(
@@ -80,25 +83,9 @@ class ObsAPI(object):
     def get_shortest_queue(self, building_list):
         return building_list[np.argmin(
             [building.order_length for building in building_list])]
-        # all_order_length = []
-        # if len(building_list) == 0:
-        #     raise Exception(f"Empty building list")
-        # for building in building_list:
-        #     all_order_length.append(building.order_length)
-        # self.logger.debug(
-        #     f"{len(all_order_length)} buildings in order list = {all_order_length}"
-        # )
-        # res1 = np.argmin(all_order_length)
-        # res2 = np.argmin([building.order_length for building in building_list])
-        # if int(res1) == int(res2):
-        #     self.logger.debug("OK to use short form")
-        # else:
-        #     self.logger.warn("Cannot use short form, " +
-        #                      f"res1={res1} while res2={res2}")
-        # return building_list[res1]
 
     def get_best_barrack(self, obs):
-        if self.len_barrackses_100 < 1:
+        if self.len_barracks_100 < 1:
             raise Exception(f"No barracks to choose from")
         return self.get_shortest_queue(
             self.get_my_completed_units_by_type(obs, units.Terran.Barracks))

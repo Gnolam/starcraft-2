@@ -15,10 +15,12 @@ class PipelineConventions(object):
 
 class PipelineBase(PipelineConventions):
     """
-    Promise' class definition. Must not be called directly.
+    Promise class definition. Must not be called directly.
     Parent class for `Pipeline`
     """
-    book = []  # Tickets
+    book: list = None  # Tickets
+    new_building_metadata: dict = None
+    promise_supply_depot: bool = False
 
     def add_order(self, new_ticket, blocks_whom_id: int = None):
         pass
