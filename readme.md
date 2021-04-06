@@ -3,30 +3,9 @@
 ## Current ToDo's
 
 Main bug:
-- Invalidate promise happens same turn, as new request. As a result infinite loop for new requests as the promise is immediately invalidated
-
-Pending bugs (to be tested):
-- multiple 'simultaneous' instances are requested
-- statuses are always complete and never invalid
-- too many SDs are requested?
+- new barracks and SDs are NOT requested
 
 
-
-To Test:
-- Generalised Build (SupplyDepot, Barracks) tickets into
-  - new class: `BasePipelineTicket` -> `BasePipelineBuildTicket`
-    - `new_building_request_if_needed()`
-    - `new_building_metadata`
-    - **ToDo**: `new_building_metadata` to be moved to `.yaml`
-  - Train tickets:
-    - should use now `self.new_building_request_if_needed(obs, "SupplyDepot")`
-    - ??? Train class is currently derived from Build class
-- **ToDo**: generalize Train class, separate from Build class?
-
-
-Fixed: 
-- `get_shortest_queue_building()` fails when trying to train a marine
-- multiple `poBuildSupplyDepot` instances created in the process
 
 
 ## Current focus
