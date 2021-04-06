@@ -3,7 +3,6 @@ from lib.G3pipe.pipeline_base import PipelineConventions
 
 class TicketStatus(PipelineConventions):
     # Constants
-    INIT = 1
     ACTIVE = 2
     COMPLETE = 100
     BLOCKED = 200
@@ -11,7 +10,6 @@ class TicketStatus(PipelineConventions):
 
     status_dict = {
         None: "N/A",
-        INIT: "INIT",
         ACTIVE: "ACTIVE",
         COMPLETE: "COMPLETE",
         BLOCKED: "BLOCKED",
@@ -39,8 +37,7 @@ class TicketStatus(PipelineConventions):
         if new_status is None:
             raise Exception(f"Cannot assign None status")
         if new_status not in [
-                self.INIT, self.ACTIVE, self.COMPLETE, self.BLOCKED,
-                self.INVALID
+                self.ACTIVE, self.COMPLETE, self.BLOCKED, self.INVALID
         ]:
             raise Exception(f"Unknown new status: {new_status}")
         self.logger.debug(f"'{self.ID}_{self.__class__.__name__}': " +
@@ -54,4 +51,4 @@ class TicketStatus(PipelineConventions):
         return self.current_status
 
     def status_is_active(self):
-        return self.get_status() in [self.ACTIVE, self.INIT]
+        return self.get_status() == self.ACTIVE

@@ -7,16 +7,8 @@ class Pipeline(PipelineBase):
     '''
     Class to manage the set of current `PipelineTicket`'s
     '''
-    order_counter: int = None
-
-    # ToDO: should be added by lifecycle, when setting up the new game
-    base_top_left: bool = None
-
     def __init__(self):
         super().__init__()
-        self.order_counter = 0
-        self.book = []
-        self.new_building_metadata = {}
 
     def add_order(self,
                   new_ticket: BasePipelineTicket,
@@ -28,7 +20,7 @@ class Pipeline(PipelineBase):
         self.book.append(new_ticket)
         new_ticket.link_to_pipeline(parent_pipeline=self,
                                     ticket_id=self.order_counter)
-        new_ticket.set_status(TicketStatus.INIT)
+        new_ticket.set_status(TicketStatus.ACTIVE)
         new_ticket.base_top_left = self.base_top_left
 
         if blocks_whom_id is not None:
@@ -41,7 +33,7 @@ class Pipeline(PipelineBase):
         """ Returns True if current pipeline has no active orders """
         pipeline_is_empty = len([
             ticket.ID for ticket in self.book
-            if ticket.get_status() in [TicketStatus.ACTIVE, TicketStatus.INIT]
+            if ticket.get_status() == TicketStatus.ACTIVE
         ]) == 0
         self.logger.debug(str(pipeline_is_empty) + str(self))
         return pipeline_is_empty
@@ -69,8 +61,17 @@ class Pipeline(PipelineBase):
 
         active_ticket_IDs = [
             ticket.ID for ticket in self.book
-            if ticket.get_status() in [TicketStatus.ACTIVE, TicketStatus.INIT]
+            if ticket.get_status() == TicketStatus.ACTIVE
         ]
+
+        self.logger.debug(f"Fullfiled promised:")
+        for promise_var in [
+                promise_var for promise_var in self.new_building_done_promises
+                if self.new_building_done_promises[promise_var] == True
+        ]:
+            self.new_building_made_promises[promise_var] = False
+            self.new_building_done_promises[promise_var] = False
+            self.logger.debug(f"  Invalidating promise: {promise_var}")
 
         # Debug display status
         self.logger.debug("Tickets in the book for run():")
@@ -94,16 +95,6 @@ class Pipeline(PipelineBase):
         ]
 
         while should_iterate:
-            # run_init() for all INIT tickets
-            # transfer status INIT -> ACTIVE
-            for ticket in [
-                    ticket for ticket in self.book
-                    if ticket.get_status() == TicketStatus.INIT
-            ]:
-                self.logger.debug(f"run_init({self.who_is(ticket.ID)})")
-                ticket.set_status(TicketStatus.ACTIVE)
-                ticket.run_init(obs)
-
             # Run all tickets with ACTIVE status
             for ticket in [
                     ticket for ticket in self.book
@@ -119,8 +110,8 @@ class Pipeline(PipelineBase):
 
             # Current list of tickets
             current_ticket_IDs = [
-                ticket.ID for ticket in self.book if ticket.get_status() in
-                [TicketStatus.INIT, TicketStatus.ACTIVE]
+                ticket.ID for ticket in self.book
+                if ticket.get_status() == TicketStatus.ACTIVE
             ]
 
             # Should iterate if the list of tickets have changed.

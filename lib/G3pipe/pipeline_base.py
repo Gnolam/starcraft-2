@@ -20,7 +20,18 @@ class PipelineBase(PipelineConventions):
     """
     book: list = None  # Tickets
     new_building_metadata: dict = None
-    promise_supply_depot: bool = False
+    new_building_made_promises: dict = None
+    new_building_done_promises: dict = None
+    order_counter: int = None
+    base_top_left: bool = None
+
+    def __init__(self):
+        super().__init__()
+        self.order_counter = 0
+        self.book = []
+        self.new_building_metadata = {}
+        self.new_building_made_promises = {}
+        self.new_building_done_promises = {}
 
     def add_order(self, new_ticket, blocks_whom_id: int = None):
         pass
