@@ -3,7 +3,19 @@
 ## Current ToDo's
 
 Main bug:
-- new barracks and SDs are NOT requested
+- N/A
+
+ToDo's:
+- bring back the attack Reserve/TF
+- Sgt attacks with TF
+- idle SCVs -> back to work
+
+
+Works: Builds
+- marines
+- SDs
+- BKs
+
 
 
 
