@@ -10,6 +10,8 @@ ToDo's:
 - Sgt attacks with TF
 - idle SCVs -> back to work
 
+???
+'All barracks are full at the moment' is often at the beginning
 
 Works: Builds
 - marines
