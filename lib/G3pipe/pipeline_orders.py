@@ -11,13 +11,11 @@ class BasePipelineBuildTicket(BasePipelineTicket):
 
     new_building_metadata = {
         "Barrack": {
-            "is_building_promised_tag": "is_barrack_promised",
             "class_name": "poBuildBarracks",
             "should_build_function": "should_build_barrack",
             "max_building": 5
         },
         "SupplyDepot": {
-            "is_building_promised_tag": "is_supply_depot_promised",
             "class_name": "poBuildSupplyDepot",
             "should_build_function": "should_build_supply_depot",
             "max_building": 4
@@ -26,7 +24,7 @@ class BasePipelineBuildTicket(BasePipelineTicket):
 
     def should_build_barrack(self, obs) -> bool:
         self.get_len(obs)
-        if self.len_barracks < 1:
+        if self.len_barracks_100 < 1:
             return True, "No barracks at all"
         order_length = self.get_best_barrack(obs).order_length
         return order_length > 3, f"order_length ({order_length}) > 3"
@@ -45,11 +43,9 @@ class BasePipelineBuildTicket(BasePipelineTicket):
             "class_name"]
         should_build_function = self.new_building_metadata[metadata_key][
             "should_build_function"]
-        promise_var = self.new_building_metadata[metadata_key][
-            "is_building_promised_tag"]
 
         sc2_building_ID = eval(f"{build_class_name}.sc2_building_ID")
-        is_building_promised = self.building_check_promise(promise_var)
+        is_building_promised = self.pipelene.promise_check(metadata_key)
 
         len_building_all = len(self.get_my_units_by_type(obs, sc2_building_ID))
         len_building_100 = len(
@@ -61,11 +57,14 @@ class BasePipelineBuildTicket(BasePipelineTicket):
         if is_building_promised:
             if is_building_in_progress:
                 # promise was fulfilled, invalidate promise
-                self.building_tick_promise(metadata_key)
+                self.pipelene.promise_resolve(metadata_key)
             else:
                 # Yes, it was already promised
-                self.logger.debug(f"'{metadata_key}' was already promised." +
-                                  "Construction has not started yet")
+                self.logger.debug(f"  {metadata_key} was already promised")
+            return
+
+        if is_building_in_progress:
+            self.logger.debug(f"  {metadata_key} is already in progress")
             return
 
         # No ready building atm
@@ -73,8 +72,8 @@ class BasePipelineBuildTicket(BasePipelineTicket):
             # No ready/in progress buildings and no promised, we need to do something about it
             self.logger.debug(f"Requesting first {metadata_key}: " +
                               f"(len_building_all = {len_building_all})")
-            self.building_make_promise(promise_var)
-            self.parent_pipelene.add_order(eval(f"{build_class_name}()"))
+            self.pipelene.promise_make(metadata_key)
+            self.pipelene.add_order(eval(f"{build_class_name}()"))
             return
 
         should_build, should_build_msg = getattr(self,
@@ -83,35 +82,11 @@ class BasePipelineBuildTicket(BasePipelineTicket):
         if should_build:
             self.logger.debug(f"Requesting new {metadata_key}: " +
                               f"({should_build_msg})")
-            self.building_make_promise(promise_var)
-            self.parent_pipelene.add_order(eval(f"{build_class_name}()"))
+            self.pipelene.promise_make(metadata_key)
+            self.pipelene.add_order(eval(f"{build_class_name}()"))
         else:
-            self.logger.debug(f"No need to build the {metadata_key}: " +
+            self.logger.debug(f"  No need to build the {metadata_key}: " +
                               f"({should_build_msg})")
-
-    def building_make_promise(self, promise_var: str) -> None:
-        self.logger.debug(f"'{promise_var}' -> True")
-        self.parent_pipelene.new_building_made_promises[promise_var] = True
-
-    def building_tick_promise(self, promise_var: str) -> None:
-        # It was already True
-        if promise_var in self.parent_pipelene.new_building_done_promises:
-            if self.parent_pipelene.new_building_done_promises[promise_var]:
-                return
-        # Recently ticked promise
-        self.logger.debug(f"'{promise_var}' -> Done")
-        self.parent_pipelene.new_building_done_promises[promise_var] = True
-
-    def building_check_promise(self, promise_var: str) -> bool:
-        if promise_var not in self.parent_pipelene.new_building_made_promises:
-            # Create new record
-            self.parent_pipelene.new_building_made_promises[
-                promise_var] = False
-            self.logger.debug(f"Init '{promise_var}' -> False")
-            return False
-        else:
-            # Previous record located
-            return self.parent_pipelene.new_building_made_promises[promise_var]
 
 
 # ----------------------------------------------------------------------------
@@ -138,7 +113,7 @@ class poBuildSupplyDepot(BasePipelineBuildTicket):
             2: (69 - 5, 77 - 5),
             3: (69 - 5, 77 - 7)
         }
-        self.logger.info("SC2: Build 'Supply Depo'")
+        self.logger.info("SC2: Build 'Supply Depot'")
         scv_tag, building_xy = self.build_with_scv_xy(
             obs, xy_options, self.len_supply_depots_100)
         return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
@@ -148,9 +123,6 @@ class poBuildSupplyDepot(BasePipelineBuildTicket):
         # This class does not have any downstream dependencies
 
         self.get_len(obs)
-
-        self.logger.debug(f"  > minerals={obs.observation.player.minerals} " +
-                          f"scvs={self.len_scvs}")
 
         # Invalidate order
         if (self.len_supply_depots >= 4):
@@ -199,10 +171,6 @@ class poBuildBarracks(BasePipelineBuildTicket):
 
     def run(self, obs):
         self.get_len(obs)
-
-        self.logger.debug(f"  > barracks={self.len_barracks} " +
-                          f"minerals={obs.observation.player.minerals} " +
-                          f"scvs={self.len_scvs}")
 
         if (self.len_barracks >= 5):
             self.logger.warn("Too many barracks!" +
@@ -257,10 +225,6 @@ class poTrainMarine(BasePipelineBuildTicket):
 
         self.build_dependency(obs, "SupplyDepot")
         self.build_dependency(obs, "Barrack")
-
-        self.logger.debug(f"  > barracks_100={self.len_barracks_100} " +
-                          f"minerals={obs.observation.player.minerals} " +
-                          f"free_supply={self.free_supply} ")
 
         # All conditions are met, generate an order and finish
         if (self.len_barracks_100 > 0 and obs.observation.player.minerals >= 50

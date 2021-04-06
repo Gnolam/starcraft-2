@@ -40,10 +40,10 @@ class TicketStatus(PipelineConventions):
                 self.ACTIVE, self.COMPLETE, self.BLOCKED, self.INVALID
         ]:
             raise Exception(f"Unknown new status: {new_status}")
-        self.logger.debug(f"'{self.ID}_{self.__class__.__name__}': " +
-                          "Changing status '" +
-                          self.status_dict[self.current_status] + "' -> '" +
-                          self.status_dict[new_status] + "'")
+        self.logger.debug(
+            f"  Status for '{self.ID}_{self.__class__.__name__}': " +
+            f"'{self.status_dict[self.current_status]}' -> " +
+            f"'{self.status_dict[new_status]}'")
         self.current_status = new_status
 
     def get_status(self):

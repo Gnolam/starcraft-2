@@ -64,24 +64,30 @@ class Pipeline(PipelineBase):
             if ticket.get_status() == TicketStatus.ACTIVE
         ]
 
-        self.logger.debug(f"Fullfiled promised:")
-        for promise_var in [
-                promise_var for promise_var in self.new_building_done_promises
-                if self.new_building_done_promises[promise_var] == True
-        ]:
-            self.new_building_made_promises[promise_var] = False
-            self.new_building_done_promises[promise_var] = False
-            self.logger.debug(f"  Invalidating promise: {promise_var}")
+        fulfilled_list = [
+            promise_var for promise_var in self.new_building_done_promises
+            if self.new_building_done_promises[promise_var] is True
+        ]
+        if len(fulfilled_list) > 0:
+            self.logger.debug(f"Fulfilled promises:")
+            for promise_var in fulfilled_list:
+                self.new_building_made_promises[promise_var] = False
+                self.new_building_done_promises[promise_var] = False
+                self.logger.debug(f"  Invalidating promise: '{promise_var}'")
 
         # Debug display status
-        self.logger.debug("Tickets in the book for run():")
+        self.logger.debug("List of active tickets:")
         for ticket_ID in active_ticket_IDs:
-            self.logger.debug(f"  {ticket_ID}. " + self.who_is(ticket_ID))
+            self.logger.debug(" " * 4 + self.who_is(ticket_ID))
 
         self.get_len(obs)
+        self.logger.debug("Stat: ")
+        self.logger.debug(f"  Mins:{obs.observation.player.minerals}" +
+                          f", SCVs:{self.len_scvs}" +
+                          f", Free:{self.free_supply}")
+
         self.logger.debug(
-            "  Status: " + f"Spc:({self.free_supply})" +
-            f", SDs:({str(self.len_supply_depots_100)}/{str(self.len_supply_depots)})"
+            f"  SDs:({str(self.len_supply_depots_100)}/{str(self.len_supply_depots)})"
             + f", Bks:({str(self.len_barracks_100)}/{str(self.len_barracks)})")
 
         should_iterate = True
@@ -100,12 +106,14 @@ class Pipeline(PipelineBase):
                     ticket for ticket in self.book
                     if ticket.get_status() == TicketStatus.ACTIVE
             ]:
-                self.logger.debug(f"ticket={str(ticket)}")
+                self.logger.debug(f"~> {self.who_is(ticket.ID)}")
                 is_valid, sc2_order = ticket.run(obs)
                 if not is_valid:
                     ticket.set_status(TicketStatus.INVALID)
                 elif sc2_order is not None:
                     # The SC2 was issued, ignore the rest of the tickets
+                    # ToDo: should INFO order was issued
+                    # ToDo: should mark tiket complete
                     return sc2_order
 
             # Current list of tickets
@@ -121,8 +129,10 @@ class Pipeline(PipelineBase):
             count_gone_IDs = len(
                 set(last_iteration_ticket_IDs) - set(current_ticket_IDs))
             should_iterate = count_new_IDs + count_gone_IDs > 0
-            self.logger.debug(
-                f"new IDs: {count_new_IDs}, gone IDs: {count_gone_IDs}")
+            self.logger.debug("End of loop results:")
+
+            self.logger.debug(f"  new:  {count_new_IDs}")
+            self.logger.debug(f"  gone: {count_gone_IDs}")
             last_iteration_ticket_IDs = current_ticket_IDs
 
         return None  # or SC2 order, if inything was resolved
@@ -131,5 +141,6 @@ class Pipeline(PipelineBase):
         ret = "\n  Current content of the pipeline gross book:\n    " + "-" * 40
         for ticket in self.book:
             ret += f"\n    ID:{ticket.ID}, {str(ticket)}"
-        ret += f"\n  * Promises = {str(self.new_building_metadata)}"
+        ret += f"\n  * Promises current  = {str(self.new_building_made_promises)}"
+        ret += f"\n  * Promises resolved = {str(self.new_building_done_promises)}"
         return ret
