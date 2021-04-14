@@ -140,7 +140,10 @@ class Pipeline(PipelineBase):
     def __str__(self):
         ret = "\n  Current content of the pipeline gross book:\n    " + "-" * 40
         for ticket in self.book:
-            ret += f"\n    ID:{ticket.ID}, {str(ticket)}"
+            ticket_str = str(ticket)
+            if ticket.get_status() != TicketStatus.ACTIVE:
+                ticket_str = ticket_str.replace("'", " ")
+            ret += f"\n     {ticket_str}"
         ret += f"\n  * Promises current  = {str(self.new_building_made_promises)}"
         ret += f"\n  * Promises resolved = {str(self.new_building_done_promises)}"
         return ret
