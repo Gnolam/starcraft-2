@@ -4,13 +4,13 @@ from lib.G3ai.action_list import BuildTicketsEcon
 from pysc2.lib import units
 
 
-class aiBuilder(aiBase, BuildTicketsEcon):
+class aiGeneral(aiBase, BuildTicketsEcon):
 
-    agent_name = "aiBuilder"
+    agent_name = "aiGeneral"
 
     def __init__(self, cfg):
         super().__init__(cfg)
-        self.logger.debug("aiBuilder::init()")
+        self.logger.debug("aiGeneral::init()")
 
     def get_state(self, obs):
         # State vector should be revised to take into account both ours
