@@ -2,6 +2,12 @@
 
 ## Current ToDo's
 
+Qs:
+- who decides what builder should build next? Bob has its own DQN... Should it decide itself?
+- Gen has its own, completely independent DQN? Looks like i does NOT assign tickets to Bob? The only set of actions is attack/wait/retreat?
+  - Gen also have pipilene (only current vision): 
+
+
 Main bug:
 - N/A
 

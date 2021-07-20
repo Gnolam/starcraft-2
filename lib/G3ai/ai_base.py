@@ -132,7 +132,7 @@ class aiBase(ObsAPI):
         1. updates pipeline with new tickets if empty
         2. tries to resolve pipeline tickets
 
-        Returns
+        Returns: tuple (order, )
             * SC2 order: issued by ticket in pipeline
             * None: if still waiting
         """
@@ -142,16 +142,18 @@ class aiBase(ObsAPI):
             self.pipeline.base_top_left = (command_centres[0].x < 32)
 
         # Pipeline is still _not_ finished, not a good time for the new action
+        got_new_order = False
         if self.pipeline.is_empty():
             # Great, pipeline _is_ empty. What would be the next step?
             self.choose_next_action(obs)
+            got_new_order = True
 
         if obs.last():  # and self.agent_name == 'bob':
             logging.getLogger("res").info(
                 f"Game: {self.game_num}. Outcome: {obs.reward}")
 
         # Returns None if still waiting or SC2 order
-        return self.pipeline.run(obs)
+        return self.pipeline.run(obs), got_new_order
 
     def finalise_game(self):
         # self.dump_decisions_hist()

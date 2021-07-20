@@ -29,7 +29,7 @@ class SmartAgentG3(base_agent.BaseAgent):
         self.aiGen.load_DQN()
 
         # Gen is called for action every time Bob's order is fulfilled
-        self.aiBob.link_gen(self.aiGen)
+        # self.aiBob.link_genneral(self.aiGen)
 
     def reset(self):
         super(SmartAgentG3, self).reset()
@@ -40,10 +40,19 @@ class SmartAgentG3(base_agent.BaseAgent):
         super(SmartAgentG3, self).step(obs)
 
         # Econ (AKA 'Bob, the builder') has the precedence over War (AKA Sargent Pepper)
-        res = self.aiBob.step(obs)
-        if res is None or obs.last():  # obs.last() is a time for learning!!!
-            pass
+        res, builder_got_new_orders = self.aiBob.step(obs)
+
+        # General does not take actions,
+        # just decides on reserve -> task force reallocation
+        if builder_got_new_orders:
+            _, _ = self.aiGen.step(obs)
+
+        if res is None:
             # ToDo: this is the placeholder for Sgt logic
+
+            # if Sgt is lazy as well...
+            res = actions.RAW_FUNCTIONS.no_op()
+            pass
             # self.aiGen.step(obs)
             #     obs)  # General is kind of always ready to give orders
             # if self.agent_Peps.war_attack(obs,
@@ -52,17 +61,10 @@ class SmartAgentG3(base_agent.BaseAgent):
             #     res = self.agent_Peps.war_attack(
             #         obs, check_action_availability_only=False)
 
-        # .war_attack() results into no_op() itself but just in case...
-        if res is None:
-            # Potentially analyze the situation, while the system is 'idle'
-            res = actions.RAW_FUNCTIONS.no_op()
-
         if obs.last():
             self.aiBob.finalise_game()
-            # self.aiGen.finalise_game()
+            self.aiGen.finalise_game()
             # self.agent_Peps.finalise_game()
-            self.aiBob.save_global_state()
-
-        # self.AI_Grievous.debug(obs)
+            self.aiBob.save_global_state()  # ToDo: ??? describe this ???
 
         return res
