@@ -243,3 +243,35 @@ class poTrainMarine(BasePipelineBuildTicket):
                 self.logger.info("All barracks are full at the moment")
                 return True, None
         return True, None
+
+
+class poGenProceed(BasePipelineBuildTicket):
+    def __init__(self):
+        super().__init__()
+
+    def __str__(self):
+        s = super().__str__()
+
+        if self.status_is_active():
+            s += "Proceed"
+        return s
+
+    def run(self, obs):
+        self.mark_complete()
+        return True, None
+
+
+class poGenTransferReserve(BasePipelineBuildTicket):
+    def __init__(self):
+        super().__init__()
+
+    def __str__(self):
+        s = super().__str__()
+
+        if self.status_is_active():
+            s += "Transfer"
+        return s
+
+    def run(self, obs):
+        self.mark_complete()
+        return True, None

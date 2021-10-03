@@ -1,10 +1,10 @@
 from lib.G3ai.ai_base import aiBase
-from lib.G3ai.action_list import BuildTicketsEcon
+from lib.G3ai.action_list import BuildTicketsWar
 
 from pysc2.lib import units
 
 
-class aiGeneral(aiBase, BuildTicketsEcon):
+class aiGeneral(aiBase, BuildTicketsWar):
 
     agent_name = "aiGeneral"
 
@@ -19,7 +19,8 @@ class aiGeneral(aiBase, BuildTicketsEcon):
             obs, units.Terran.SupplyDepot)
         completed_barracks = self.get_my_completed_units_by_type(
             obs, units.Terran.Barracks)
-        marines = self.get_my_units_by_type(obs, units.Terran.Marine)
+        my_marines = self.get_my_units_by_type(obs, units.Terran.Marine)
+        enemy_marines = self.get_enemy_units_by_type(obs, units.Terran.Marine)
 
         return (len(completed_supply_depots), len(completed_barracks),
-                len(marines))
+                len(my_marines), len(enemy_marines))

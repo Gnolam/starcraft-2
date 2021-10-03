@@ -1,4 +1,4 @@
-from lib.G3pipe.pipeline_orders import poTrainMarine
+from lib.G3pipe.pipeline_orders import poTrainMarine, poGenProceed, poGenTransferReserve
 
 
 class ActionListBase(object):
@@ -15,6 +15,7 @@ class ActionListBase(object):
 
 
 class BuildTicketsEcon(ActionListBase):
+    """ a class containing the list of orders for the builder AI """
     def __init__(self, cfg=None):
         super().__init__()
 
@@ -29,3 +30,15 @@ class BuildTicketsEcon(ActionListBase):
 
     # def pt_train_marines_16(self):
     #     return poTrainMarine(16)
+
+
+class BuildTicketsWar(ActionListBase):
+    """ a class containing the list of orders for the General AI """
+    def __init__(self, cfg=None):
+        super().__init__()
+
+    def pt_Gen_proceed_as_is(self):
+        return poGenProceed()
+
+    def pt_Gen_transfer_reserve(self):
+        return poGenTransferReserve()
