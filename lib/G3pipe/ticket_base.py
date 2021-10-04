@@ -38,7 +38,7 @@ class BasePipelineTicket(TicketStatus):
             extra_info += (", blocks " +
                            f"'{self.pipelene.who_is(self.blocks_whom_id)}'")
         return (
-            f"'{self.ID}_{self.__class__.__name__}', status: {self.str_status()}"
+            f"{self.ID}_{self.__class__.__name__}, status: {self.str_status()}"
             + extra_info)
 
     def link_to_pipeline(self, parent_pipeline: PipelineBase,

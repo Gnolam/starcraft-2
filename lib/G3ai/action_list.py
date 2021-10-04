@@ -1,4 +1,4 @@
-from lib.G3pipe.pipeline_orders import poTrainMarine, poGenProceed, poGenTransferReserve
+from lib.G3pipe.pipeline_orders import poTrainMarine, poAccumulateReserve, poGenTransferReserve
 
 
 class ActionListBase(object):
@@ -25,20 +25,22 @@ class BuildTicketsEcon(ActionListBase):
     def pt_train_marines_4(self):
         return poTrainMarine(4)
 
-    # def pt_train_marines_12(self):
-    #     return poTrainMarine(12)
-
-    # def pt_train_marines_16(self):
-    #     return poTrainMarine(16)
-
 
 class BuildTicketsWar(ActionListBase):
+
+    fn_transfer_to_TF1 = None
     """ a class containing the list of orders for the General AI """
     def __init__(self, cfg=None):
         super().__init__()
 
-    def pt_Gen_proceed_as_is(self):
-        return poGenProceed()
+    def pt_Gen_accumulate_reserve(self):
+        return poAccumulateReserve()
 
     def pt_Gen_transfer_reserve(self):
-        return poGenTransferReserve()
+        if self.fn_transfer_to_TF1 is None:
+            raise Exception("fn_transfer_to_TF1 is not defined")
+        return poGenTransferReserve(self.fn_transfer_to_TF1)
+
+    def test_fn_transfer_to_TF1(self):
+        if self.fn_transfer_to_TF1 is None:
+            raise Exception("test: fn_transfer_to_TF1 is not defined")

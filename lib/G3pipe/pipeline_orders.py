@@ -245,7 +245,8 @@ class poTrainMarine(BasePipelineBuildTicket):
         return True, None
 
 
-class poGenProceed(BasePipelineBuildTicket):
+class poAccumulateReserve(BasePipelineBuildTicket):
+    """ Add the new units to reserve """
     def __init__(self):
         super().__init__()
 
@@ -253,17 +254,23 @@ class poGenProceed(BasePipelineBuildTicket):
         s = super().__str__()
 
         if self.status_is_active():
-            s += "Proceed"
+            s += "Accumulate"
         return s
 
     def run(self, obs):
+        self.logger.debug("Do nothing atm")
+
         self.mark_complete()
         return True, None
 
 
 class poGenTransferReserve(BasePipelineBuildTicket):
-    def __init__(self):
+    # Belongs to Sgt Peps
+    fn_transfer_to_TF1 = None
+
+    def __init__(self, fn_transfer_to_TF1):
         super().__init__()
+        self.fn_transfer_to_TF1 = fn_transfer_to_TF1
 
     def __str__(self):
         s = super().__str__()
@@ -273,5 +280,8 @@ class poGenTransferReserve(BasePipelineBuildTicket):
         return s
 
     def run(self, obs):
+        self.logger.debug("Reinforce TF1")
+        self.fn_transfer_to_TF1(obs)
+
         self.mark_complete()
         return True, None

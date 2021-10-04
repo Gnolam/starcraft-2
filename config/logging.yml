@@ -40,18 +40,6 @@ handlers:
         formatter: complex
         filename : logs/bob.log
 
-    file_peps:
-        class: logging.FileHandler
-        level: DEBUG
-        formatter: complex
-        filename : logs/peps.log
-
-    file_grievous:
-        class: logging.FileHandler
-        level: DEBUG
-        formatter: complex
-        filename : logs/grievous.log
-
     file_result:
         class: logging.FileHandler
         formatter: raw
@@ -99,7 +87,18 @@ handlers:
         level: DEBUG
         filename : logs/poTrainMarine.log
 
+    file_WarInfo:
+        class: logging.FileHandler
+        formatter: raw
+        level: INFO
+        filename : logs/WarInfo.log
 
+    file_WarDebug:
+        class: logging.FileHandler
+        formatter: complex
+        level: DEBUG
+        filename : logs/WarDebug.log
+        
 
 loggers:
 
@@ -118,19 +117,19 @@ loggers:
         handlers: [file_bob, file_main]
         propagate: false
 
-    aBAU: 
+    aSgt: 
         level: DEBUG
-        handlers: [file_peps, file_main]
+        handlers: [file_main, file_WarInfo, file_WarDebug]
         propagate: false
 
     aiWarPlanner: 
         level: DEBUG
-        handlers: [file_grievous, file_main]
+        handlers: [file_main, file_WarInfo, file_WarDebug]
         propagate: false            
 
     L1:
         level: DEBUG
-        handlers: [file_bob]
+        handlers: [file_all]
         propagate: false
 
     res:
@@ -158,3 +157,12 @@ loggers:
         handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poTrainMarine]
         propagate: false
 
+    poAccumulateReserve:
+        level: DEBUG
+        handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_WarInfo, file_WarDebug]
+        propagate: false
+
+    poGenTransferReserve:
+        level: DEBUG
+        handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_WarInfo, file_WarDebug]
+        propagate: false

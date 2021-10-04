@@ -4,14 +4,23 @@
 
 Qs:
 - who decides what builder should build next? Bob has its own DQN... Should it decide itself?
-- Gen has its own, completely independent DQN? Looks like i does NOT assign tickets to Bob? The only set of actions is attack/wait/retreat?
+- Gen has its own, completely independent DQN? Looks like it does NOT assign tickets to Bob? The only set of actions is attack/wait/retreat?
   - Gen also have pipilene (only current vision): 
 
 
-Main bug:
-- N/A
+Short Run ToDo's (2021-10-04):
+- apply old logic for Serg to apply always attack with TF
+- where TF is defined / maintained?
+  - define Srgnt logic
+    - copy from old
+    - decide on the place to store logic (inside Gen)
+  - implement classes 
+    - `poAccumulateReserve::run()` and `poGenTransferReserve::run()`
 
-ToDo's:
+Main bug:
+- No orders for the 2nd+ game
+
+Long Run ToDo's:
 - bring back the attack Reserve/TF
 - Sgt attacks with TF
 - idle SCVs -> back to work

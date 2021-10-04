@@ -1,17 +1,13 @@
 from pysc2.agents import base_agent
-from pysc2.lib import actions, features
+from pysc2.lib import actions
 import logging
 
 from lib.G3ai.ai_general import aiGeneral
 from lib.G3ai.ai_builder import aiBuilder
 
-# from lib.E2_agent import AgentBob
-# from lib.l2_war_sgt import L2AgentPeps
-# from lib.l2_war_gen import L2AgentGrievous
-
 
 class SmartAgentG3(base_agent.BaseAgent):
-    agent_name = "SmartAgent Gen3"
+    agent_name = "Generation 3: learning to wait"
 
     def __init__(self, cfg):
         super(SmartAgentG3, self).__init__()
@@ -27,9 +23,6 @@ class SmartAgentG3(base_agent.BaseAgent):
 
         self.aiBob.load_DQN()
         self.aiGen.load_DQN()
-
-        # Gen is called for action every time Bob's order is fulfilled
-        # self.aiBob.link_genneral(self.aiGen)
 
     def reset(self):
         super(SmartAgentG3, self).reset()
@@ -48,23 +41,19 @@ class SmartAgentG3(base_agent.BaseAgent):
             _, _ = self.aiGen.step(obs)
 
         if res is None:
-            # ToDo: this is the placeholder for Sgt logic
-
-            # if Sgt is lazy as well...
-            res = actions.RAW_FUNCTIONS.no_op()
-            pass
-            # self.aiGen.step(obs)
-            #     obs)  # General is kind of always ready to give orders
-            # if self.agent_Peps.war_attack(obs,
-            #                               check_action_availability_only=True):
-            #     # Sgt should always attack if he has TF1
-            #     res = self.agent_Peps.war_attack(
-            #         obs, check_action_availability_only=False)
+            if self.aiGen.peps is None:
+                logging.getLogger("main").warn(
+                    "Sgt object 'peps' is not defined")
+                res = actions.RAW_FUNCTIONS.no_op()
+            else:
+                res = self.aiGen.peps.war_attack(obs)
 
         if obs.last():
             self.aiBob.finalise_game()
             self.aiGen.finalise_game()
             # self.agent_Peps.finalise_game()
-            self.aiBob.save_global_state()  # ToDo: ??? describe this ???
+            # ToDo: ??? describe this ???
+            # ToDo: should be the function of the config object
+            self.aiBob.save_global_state()
 
         return res
