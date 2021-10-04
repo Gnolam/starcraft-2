@@ -1,168 +1,184 @@
 version: 1
 
 formatters:
-    simple:
-        format: "%(levelname)-8s %(message)s"
-        datefmt: '%Y-%m-%d %H:%M:%S'
+  simple:
+    format: "%(levelname)-8s %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
 
-    reduced:
-        format: "%(asctime)s %(levelname)-8s %(name)-16s %(message)s"
-        datefmt: '%Y-%m-%d %H:%M:%S'
+  reduced:
+    format: "%(asctime)s %(levelname)-8s %(name)-16s %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
 
-    complex:
-        format: "%(asctime)s %(levelname)-8s %(name)-18s %(module)-26s %(lineno)-4d %(funcName)-24s %(message)s"
-        datefmt: '%Y-%m-%d %H:%M:%S'
+  complex:
+    format: "%(asctime)s %(levelname)-8s %(name)-18s %(module)-26s %(lineno)-4d %(funcName)-24s %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
 
-    complex2:
-        format: "%(asctime)s %(levelname)-8s %(name)-16s %(funcName)-20s %(message)s"
-        datefmt: '%Y-%m-%d %H:%M:%S'
+  complex2:
+    format: "%(asctime)s %(levelname)-8s %(name)-16s %(funcName)-20s %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
 
-    raw:
-        format: "%(asctime)s %(message)s"
-        datefmt: '%Y-%m-%d %H:%M:%S'
-
+  raw:
+    format: "%(asctime)s %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
 
 handlers:
-    console:
-        class: logging.StreamHandler
-        level: INFO
-        formatter: simple
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: simple
 
-    file_main:
-        class: logging.FileHandler # logging.handlers.TimedRotatingFileHandler
-        level: INFO
-        formatter: reduced
-        filename : logs/main.log
+  file_main:
+    class: logging.FileHandler # logging.handlers.TimedRotatingFileHandler
+    level: INFO
+    formatter: reduced
+    filename: logs/main.log
 
-    file_bob:
-        class: logging.FileHandler
-        level: DEBUG
-        formatter: complex
-        filename : logs/bob.log
+  file_bob:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: complex
+    filename: logs/bob.log
 
-    file_result:
-        class: logging.FileHandler
-        formatter: raw
-        filename : logs/result.log
+  file_result:
+    class: logging.FileHandler
+    formatter: raw
+    filename: logs/result.log
 
-    file_all:
-        class: logging.FileHandler
-        level: DEBUG
-        formatter: complex
-        filename : logs/z_all.log
+  file_all:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: complex
+    filename: logs/z_all.log
 
-    file_pipeline_orders:
-        class: logging.FileHandler
-        formatter: complex2
-        level: INFO
-        filename : logs/pipeline_orders.log
+  file_pipeline_orders:
+    class: logging.FileHandler
+    formatter: complex2
+    level: INFO
+    filename: logs/pipeline_orders.log
 
-    file_pipeline_orders_debug:
-        class: logging.FileHandler
-        formatter: complex
-        level: DEBUG
-        filename : logs/pipeline_orders_debug.log
+  file_pipeline_orders_debug:
+    class: logging.FileHandler
+    formatter: complex
+    level: DEBUG
+    filename: logs/pipeline_orders_debug.log
 
-    file_pipeline:
-        class: logging.FileHandler
-        formatter: raw
-        level: INFO
-        filename : logs/pipeline.log
+  file_pipeline:
+    class: logging.FileHandler
+    formatter: raw
+    level: INFO
+    filename: logs/pipeline.log
 
-    file_poBuildSupplyDepot:
-        class: logging.FileHandler
-        formatter: reduced
-        level: DEBUG
-        filename : logs/poBuildSupplyDepot.log
+  file_poBuildSupplyDepot:
+    class: logging.FileHandler
+    formatter: reduced
+    level: DEBUG
+    filename: logs/poBuildSupplyDepot.log
 
-    file_poBuildBarracks:
-        class: logging.FileHandler
-        formatter: reduced
-        level: DEBUG
-        filename : logs/poBuildBarracks.log
+  file_poBuildBarracks:
+    class: logging.FileHandler
+    formatter: reduced
+    level: DEBUG
+    filename: logs/poBuildBarracks.log
 
-    file_poTrainMarine:
-        class: logging.FileHandler
-        formatter: reduced
-        level: DEBUG
-        filename : logs/poTrainMarine.log
+  file_poTrainMarine:
+    class: logging.FileHandler
+    formatter: reduced
+    level: DEBUG
+    filename: logs/poTrainMarine.log
 
-    file_WarInfo:
-        class: logging.FileHandler
-        formatter: raw
-        level: INFO
-        filename : logs/WarInfo.log
+  file_WarInfo:
+    class: logging.FileHandler
+    formatter: raw
+    level: INFO
+    filename: logs/WarInfo.log
 
-    file_WarDebug:
-        class: logging.FileHandler
-        formatter: complex
-        level: DEBUG
-        filename : logs/WarDebug.log
-        
+  file_WarDebug:
+    class: logging.FileHandler
+    formatter: complex
+    level: DEBUG
+    filename: logs/WarDebug.log
 
 loggers:
+  main:
+    level: INFO
+    handlers: [console, file_main]
+    propagate: yes
 
-    main: 
-        level: INFO
-        handlers: [console,file_main]
-        propagate: yes
+  GameAgent:
+    level: INFO
+    handlers: [file_main]
+    propagate: yes
 
-    GameAgent:
-        level: INFO
-        handlers: [file_main]
-        propagate: yes
+  aiBuilder:
+    level: DEBUG
+    handlers: [file_bob, file_main]
+    propagate: false
 
-    aiBuilder: 
-        level: DEBUG
-        handlers: [file_bob, file_main]
-        propagate: false
+  aSgt:
+    level: DEBUG
+    handlers: [file_main, file_WarInfo, file_WarDebug]
+    propagate: false
 
-    aSgt: 
-        level: DEBUG
-        handlers: [file_main, file_WarInfo, file_WarDebug]
-        propagate: false
+  aiWarPlanner:
+    level: DEBUG
+    handlers: [file_main, file_WarInfo, file_WarDebug]
+    propagate: false
 
-    aiWarPlanner: 
-        level: DEBUG
-        handlers: [file_main, file_WarInfo, file_WarDebug]
-        propagate: false            
+  L1:
+    level: DEBUG
+    handlers: [file_all]
+    propagate: false
 
-    L1:
-        level: DEBUG
-        handlers: [file_all]
-        propagate: false
+  res:
+    level: INFO
+    handlers: [file_result, file_main, console]
+    propagate: false
 
-    res:
-        level: INFO
-        handlers: [file_result, file_main, console]
-        propagate: false
+  Pipeline:
+    level: DEBUG
+    handlers: [file_pipeline, file_pipeline_orders, file_pipeline_orders_debug]
+    propagate: false
 
-    Pipeline:
-        level: DEBUG
-        handlers: [file_pipeline, file_pipeline_orders, file_pipeline_orders_debug, console]
-        propagate: false
+  poBuildSupplyDepot:
+    level: DEBUG
+    handlers:
+      [
+        file_pipeline_orders,
+        file_pipeline_orders_debug,
+        file_poBuildSupplyDepot,
+      ]
+    propagate: false
 
-    poBuildSupplyDepot:
-        level: DEBUG
-        handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poBuildSupplyDepot]
-        propagate: false
+  poBuildBarracks:
+    level: DEBUG
+    handlers:
+      [file_pipeline_orders, file_pipeline_orders_debug, file_poBuildBarracks]
+    propagate: false
 
-    poBuildBarracks:
-        level: DEBUG
-        handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poBuildBarracks]
-        propagate: false
+  poTrainMarine:
+    level: DEBUG
+    handlers:
+      [file_pipeline_orders, file_pipeline_orders_debug, file_poTrainMarine]
+    propagate: false
 
-    poTrainMarine:
-        level: DEBUG
-        handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poTrainMarine]
-        propagate: false
+  poAccumulateReserve:
+    level: DEBUG
+    handlers:
+      [
+        file_pipeline_orders,
+        file_pipeline_orders_debug,
+        file_WarInfo,
+        file_WarDebug,
+      ]
+    propagate: false
 
-    poAccumulateReserve:
-        level: DEBUG
-        handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_WarInfo, file_WarDebug]
-        propagate: false
-
-    poGenTransferReserve:
-        level: DEBUG
-        handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_WarInfo, file_WarDebug]
-        propagate: false
+  poGenTransferReserve:
+    level: DEBUG
+    handlers:
+      [
+        file_pipeline_orders,
+        file_pipeline_orders_debug,
+        file_WarInfo,
+        file_WarDebug,
+      ]
+    propagate: false

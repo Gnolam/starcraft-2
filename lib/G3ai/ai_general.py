@@ -126,7 +126,7 @@ class Sergant(aiBase):
             else:
                 transfer_marine_IDs = list(
                     set(all_my_marine_IDs).difference(self.TF1))
-            self.logger.info(
+            self.logger.debug(
                 f"Reinforcement has arrived: Transferring {len(transfer_marine_IDs)} marines to TF1"
             )
 
