@@ -146,6 +146,7 @@ class aiGeneral(aiBase, BuildTicketsWar):
     peps = None
     fn_transfer_to_TF1 = None
     agent_name = "aiWarPlanner"
+    DQN_log_suffix = "War"
 
     def __init__(self, cfg):
         super().__init__(cfg)

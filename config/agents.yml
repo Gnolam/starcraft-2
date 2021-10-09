@@ -1,16 +1,12 @@
 version: 1
 
-run_id: g3-med
+run_id: g3-med-hard-waiter
 
-bob: 
-    consistent: true
+bob:
+  consistent: true
 
 peps:
-    consistent: true
+  consistent: true
 
 grievous:
-    consistent: true
-    allowed_orders:
-        - Use4
-        - Use8
-        - Use12
+  consistent: true

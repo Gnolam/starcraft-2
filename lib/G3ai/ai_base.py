@@ -23,6 +23,7 @@ class aiBase(ObsAPI):
     step_counter = 0
     game_num = None
     current_action = None
+    DQN_log_suffix = None
 
     pipeline: Pipeline = None
 
@@ -32,10 +33,8 @@ class aiBase(ObsAPI):
         self.logger.info(f"L1.init({self.agent_name})")
 
         self.cfg = cfg
-        self.qtable = QLearningTable(self.action_list)
-
-        # Creating generic pipeline
-        self.pipeline = Pipeline()
+        self.qtable = QLearningTable(actions=self.action_list,
+                                     log_suffix=self.DQN_log_suffix)
 
         self.DQN_filename,\
             self.fh_decisions,\
@@ -51,6 +50,7 @@ class aiBase(ObsAPI):
         self.logger.debug(f"Run number: {self.game_num}")
 
     def reset(self):
+        self.logger.debug(f"reset()")
         self.new_game()
 
     def read_global_state(self):
@@ -69,8 +69,12 @@ class aiBase(ObsAPI):
             raise Exception('Incorrect function was called: L1::get_state()')
 
     def new_game(self):
+        self.logger.debug(f"new_game()")
         self.previous_state = None
         self.previous_action = None
+
+        # Creating generic pipeline
+        self.pipeline = Pipeline()
 
         # History of decisions for future discounting
         self.decisions_hist = {}
@@ -78,6 +82,7 @@ class aiBase(ObsAPI):
         self.game_num += 1
 
     def save_DQN(self):
+        self.logger.debug(f"save_DQN()")
         self.logger.debug('Record current learnings (%s): %s' %
                           (self.agent_name, self.DQN_filename))
         self.qtable.q_table.to_pickle(self.DQN_filename, 'gzip')
@@ -109,17 +114,20 @@ class aiBase(ObsAPI):
         # 'LEARN' should be across the WHOLE history
         # Q-Table should be updated to consume 'batch' history
         # Record decision for later 'batch' learning
-        # ToDo: add Q-Table coef here instead of reward
         if self.previous_action is not None:
             self.decisions_hist[self.step_counter] = {
                 'previous_state': self.previous_state,
                 'previous_action': self.previous_action,
-                'reward': obs.reward,
                 'next_state': next_state
             }
+
         self.step_counter += 1
         self.previous_state = state
         self.previous_action = action
+
+        self.logger.debug(
+            f"step counter: {self.step_counter}, size of history: {len(self.decisions_hist)}"
+        )
 
         if not obs.last():
             # Convert action:str -> new_ticket:PipelineTicket
@@ -136,7 +144,11 @@ class aiBase(ObsAPI):
             * SC2 order: issued by ticket in pipeline
             * None: if still waiting
         """
+
+        self.logger.debug(f"{self.agent_name}: step()")
+
         if obs.first():
+            self.logger.debug(f"SCP100: first observation")
             command_centres = self.get_my_units_by_type(
                 obs, units.Terran.CommandCenter)
             self.pipeline.base_top_left = (command_centres[0].x < 32)
@@ -144,47 +156,42 @@ class aiBase(ObsAPI):
         # Pipeline is still _not_ finished, not a good time for the new action
         got_new_order = False
         if self.pipeline.is_empty():
+            self.logger.debug(f"SCP101: pipeline IS empty")
             # Great, pipeline _is_ empty. What would be the next step?
             self.choose_next_action(obs)
             got_new_order = True
+        else:
+            self.logger.debug(f"SCP102: pipeline is NOT empty")
 
         if obs.last():  # and self.agent_name == 'bob':
+            self.logger.debug(f"SCP103: last observation detected")
             logging.getLogger("res").info(
                 f"Game: {self.game_num}. Outcome: {obs.reward}")
 
         # Returns None if still waiting or SC2 order
         return self.pipeline.run(obs), got_new_order
 
-    def finalise_game(self):
+    def finalise_game(self, reward):
         # self.dump_decisions_hist()
-        self.learn_from_game()
+        self.logger.debug(f"finalise_game")
+        self.learn_from_game(reward)
         self.save_DQN()
 
-    def learn_from_game(self):
-        reward = None
+    def learn_from_game(self, reward):
         reward_decay = .9
+
+        self.logger.debug(
+            f"{self.agent_name}: learn_from_game({self.decisions_hist})")
 
         for i in sorted(self.decisions_hist.keys(), reverse=True):
             previous_state = self.decisions_hist[i]['previous_state']
             previous_action = self.decisions_hist[i]['previous_action']
 
-            # Only the final reward (-1 or +1) should be taken into account
-            if reward is None:
-                reward = self.decisions_hist[i]['reward']
             next_state = self.decisions_hist[i]['next_state']
 
-            fh = open(self.fn_global_debug, "a+")
-            fh.write('[%s]: Apply learning for step %s with reward %s\n " + \
-                " Action: %s\n  States (%s -> %s)\n' %
-                     (self.agent_name, i, reward, previous_action,
-                      previous_state, next_state))
-            fh.close()
-
-            self.qtable.learn(previous_state,
-                              previous_action,
-                              reward,
-                              next_state,
-                              fn=self.fn_global_debug)
+            self.qtable.learn(previous_state, previous_action, reward,
+                              next_state)
 
             reward *= reward_decay
+
         return

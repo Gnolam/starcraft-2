@@ -24,7 +24,8 @@ def main(unused_argv):
             #   sc2_env.Agent(sc2_env.Race.terran)],
             players=[
                 sc2_env.Agent(sc2_env.Race.terran),
-                sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.hard)
+                sc2_env.Bot(sc2_env.Race.terran,
+                            sc2_env.Difficulty.medium_hard)
             ],
             # players=[
             #   sc2_env.Agent(sc2_env.Race.terran),
@@ -43,7 +44,7 @@ def main(unused_argv):
             step_mul=48,
             disable_fog=True,
     ) as env:
-        run_loop.run_loop([agentSmart1], env, max_episodes=10000)
+        run_loop.run_loop([agentSmart1], env, max_episodes=10)
         # run_loop.run_loop([agentSmart1, agentRandom], env, max_episodes=10000)
         # run_loop.run_loop([agentSmart1, agentSmart2], env, max_episodes=1000)
     try:

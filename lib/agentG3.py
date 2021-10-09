@@ -32,28 +32,41 @@ class SmartAgentG3(base_agent.BaseAgent):
     def step(self, obs):
         super(SmartAgentG3, self).step(obs)
 
+        logging.getLogger("dbg").debug("CP01: step()")
+
         # Econ (AKA 'Bob, the builder') has the precedence over War (AKA Sargent Pepper)
-        res, builder_got_new_orders = self.aiBob.step(obs)
+        sc2_order, builder_got_new_orders = self.aiBob.step(obs)
 
         # General does not take actions,
         # just decides on reserve -> task force reallocation
         if builder_got_new_orders:
+            logging.getLogger("dbg").debug(
+                f"CP02a: builder got new orders, asking General to make a decision"
+            )
             _, _ = self.aiGen.step(obs)
+        else:
+            logging.getLogger("dbg").debug(
+                f"CP02b: builder got NO new orders, no need to disturb the general"
+            )
 
-        if res is None:
+        if sc2_order is None:
+            logging.getLogger("dbg").debug(f"CP03: assigned sc2_order is None")
             if self.aiGen.peps is None:
-                logging.getLogger("main").warn(
+                logging.getLogger("dbg").debug(f"CP04: peps is missing")
+                logging.getLogger("main").critical(
                     "Sgt object 'peps' is not defined")
-                res = actions.RAW_FUNCTIONS.no_op()
+                sc2_order = actions.RAW_FUNCTIONS.no_op()
             else:
-                res = self.aiGen.peps.war_attack(obs)
+                logging.getLogger("dbg").debug(f"CP05: peps is in place")
+                sc2_order = self.aiGen.peps.war_attack(obs)
 
         if obs.last():
-            self.aiBob.finalise_game()
-            self.aiGen.finalise_game()
+            logging.getLogger("dbg").debug(f"CP06: last obs detected")
+            self.aiBob.finalise_game(obs.reward)
+            self.aiGen.finalise_game(obs.reward)
             # self.agent_Peps.finalise_game()
             # ToDo: ??? describe this ???
             # ToDo: should be the function of the config object
             self.aiBob.save_global_state()
 
-        return res
+        return sc2_order

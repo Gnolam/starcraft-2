@@ -9,16 +9,16 @@ Qs:
 
 
 Short Run ToDo's (2021-10-04):
-- apply old logic for Serg to apply always attack with TF
-- where TF is defined / maintained?
-  - define Srgnt logic
-    - copy from old
-    - decide on the place to store logic (inside Gen)
-  - implement classes 
-    - `poAccumulateReserve::run()` and `poGenTransferReserve::run()`
+- Leave only 1 (joint?) log for the learning
+- Implement Learning via _logger_
+- confirm that DQN matrix is growning
+
 
 Main bug:
-- No orders for the 2nd+ game
+- No orders for the 2nd+ game (seems OK though)
+- Learning is only for the 1st game according to DQN_aiWarPlanner.dbg
+- though DQN file is being updaed
+
 
 Long Run ToDo's:
 - bring back the attack Reserve/TF

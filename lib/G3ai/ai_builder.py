@@ -7,6 +7,7 @@ from pysc2.lib import units
 class aiBuilder(aiBase, BuildTicketsEcon):
 
     agent_name = "aiBuilder"
+    DQN_log_suffix = "Econ"
 
     def __init__(self, cfg):
         super().__init__(cfg)
