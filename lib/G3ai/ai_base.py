@@ -34,7 +34,8 @@ class aiBase(ObsAPI):
 
         self.cfg = cfg
         self.qtable = QLearningTable(actions=self.action_list,
-                                     log_suffix=self.DQN_log_suffix)
+                                     log_suffix=self.DQN_log_suffix,
+                                     learning_rate=0.05)
 
         self.DQN_filename,\
             self.fh_decisions,\
@@ -50,7 +51,7 @@ class aiBase(ObsAPI):
         self.logger.debug(f"Run number: {self.game_num}")
 
     def reset(self):
-        self.logger.debug(f"reset()")
+        self.logger.debug("reset()")
         self.new_game()
 
     def read_global_state(self):
