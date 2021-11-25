@@ -3,7 +3,7 @@ version: 1
 # run_id: g3-med-hard-waiter
 # run_id: g3-med-waiter
 # run_id: g3-med-hard-waiter-explorer
-run_id: g3-med-hard-waiter-learner
+run_id: g3-med-hard-waiter-no-lazy-SCV
 
 bob:
   consistent: true

@@ -34,8 +34,7 @@ class aiBase(ObsAPI):
 
         self.cfg = cfg
         self.qtable = QLearningTable(actions=self.action_list,
-                                     log_suffix=self.DQN_log_suffix,
-                                     learning_rate=0.05)
+                                     log_suffix=self.DQN_log_suffix)
 
         self.DQN_filename,\
             self.fh_decisions,\

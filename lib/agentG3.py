@@ -50,6 +50,9 @@ class SmartAgentG3(base_agent.BaseAgent):
             )
 
         if sc2_order is None:
+            sc2_order = self.aiBob.resume_harvesting(obs)
+
+        if sc2_order is None:
             logging.getLogger("dbg").debug(f"CP03: assigned sc2_order is None")
             if self.aiGen.peps is None:
                 logging.getLogger("dbg").debug(f"CP04: peps is missing")

@@ -13,7 +13,6 @@ Short Run ToDo's (2021-10-04):
 - Implement Learning via _logger_
 - confirm that DQN matrix is growning
 
-
 Main bug:
 - No orders for the 2nd+ game (seems OK though)
 - Learning is only for the 1st game according to DQN_aiWarPlanner.dbg
@@ -23,7 +22,7 @@ Main bug:
 Long Run ToDo's:
 - bring back the attack Reserve/TF
 - Sgt attacks with TF
-- idle SCVs -> back to work
+- idle SCVs -> back to work (done)
 
 ???
 'All barracks are full at the moment' is often at the beginning

@@ -1,5 +1,6 @@
 import numpy as np
-from pysc2.lib import features
+import random
+from pysc2.lib import features, actions
 from pysc2.lib import units
 
 
@@ -89,3 +90,44 @@ class ObsAPI(object):
             raise Exception(f"No barracks to choose from")
         return self.get_shortest_queue(
             self.get_my_completed_units_by_type(obs, units.Terran.Barracks))
+
+    def resume_harvesting(self, obs):
+        """
+        Assigns 'harvest minerals' order if idle workers exist
+        
+        Note: Should be called only if current order is None
+        """
+
+        # Init
+        worker_type = units.Terran.SCV
+
+        idle_workers = [
+            worker for worker in self.get_my_units_by_type(obs, worker_type)
+            if worker.order_length == 0
+        ]
+
+        if len(idle_workers) > 0:
+            mineral_patches = [
+                unit for unit in obs.observation.raw_units
+                if unit.unit_type in [
+                    units.Neutral.BattleStationMineralField,
+                    units.Neutral.BattleStationMineralField750, units.Neutral.
+                    LabMineralField, units.Neutral.LabMineralField750,
+                    units.Neutral.MineralField, units.Neutral.MineralField750,
+                    units.Neutral.PurifierMineralField,
+                    units.Neutral.PurifierMineralField750,
+                    units.Neutral.PurifierRichMineralField,
+                    units.Neutral.PurifierRichMineralField750, units.Neutral.
+                    RichMineralField, units.Neutral.RichMineralField750
+                ]
+            ]
+            random_idle_worker = random.choice(idle_workers)
+            distances = self.get_distances(
+                obs, mineral_patches,
+                (random_idle_worker.x, random_idle_worker.y))
+            closest_mineral_patch = mineral_patches[np.argmin(distances)]
+
+            return actions.RAW_FUNCTIONS.Harvest_Gather_unit(
+                "now", random_idle_worker, closest_mineral_patch.tag)
+        # Allows to take another action
+        return None
