@@ -1,16 +1,15 @@
 version: 1
 
-run_id: grievous-hard
+# run_id: g3-med-hard-waiter
+# run_id: g3-med-waiter
+# run_id: g3-med-hard-waiter-explorer
+run_id: g3-med-hard-05-split-enemy-vector
 
-bob: 
-    consistent: true
+bob:
+  consistent: true
 
 peps:
-    consistent: true
+  consistent: true
 
 grievous:
-    consistent: true
-    allowed_orders:
-        - Use4
-        - Use8
-        - Use12
+  consistent: true

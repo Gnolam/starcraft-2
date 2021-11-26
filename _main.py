@@ -1,12 +1,10 @@
 import logging
 import logging.config
-import yaml
-import os
 from pysc2.env import sc2_env, run_loop
 from pysc2.lib import actions, features
 from absl import app
 from lib.config import Config
-from SmartAgentG2 import SmartAgentG2
+from lib.agentG3 import SmartAgentG3
 
 
 def main(unused_argv):
@@ -16,7 +14,7 @@ def main(unused_argv):
     cfg.init_logging('config/logging.yml')
 
     logging.getLogger("main").info("main() called")
-    agentSmart1 = SmartAgentG2(cfg)
+    agentSmart1 = SmartAgentG3(cfg)
 
     with sc2_env.SC2Env(
             # map_name="Simple64",
@@ -26,7 +24,8 @@ def main(unused_argv):
             #   sc2_env.Agent(sc2_env.Race.terran)],
             players=[
                 sc2_env.Agent(sc2_env.Race.terran),
-                sc2_env.Bot(sc2_env.Race.terran, sc2_env.Difficulty.hard)
+                sc2_env.Bot(sc2_env.Race.terran,
+                            sc2_env.Difficulty.medium_hard)
             ],
             # players=[
             #   sc2_env.Agent(sc2_env.Race.terran),
@@ -45,7 +44,7 @@ def main(unused_argv):
             step_mul=48,
             disable_fog=True,
     ) as env:
-        run_loop.run_loop([agentSmart1], env, max_episodes=10000)
+        run_loop.run_loop([agentSmart1], env, max_episodes=5000)
         # run_loop.run_loop([agentSmart1, agentRandom], env, max_episodes=10000)
         # run_loop.run_loop([agentSmart1, agentSmart2], env, max_episodes=1000)
     try:

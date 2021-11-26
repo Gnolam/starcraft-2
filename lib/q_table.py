@@ -2,18 +2,28 @@ import logging
 import pandas as pd
 import numpy as np
 
-# This class should be able to store history within itself
-# then when save DQN (another function) it should load it again / save it
-# Load again at the beginning of each round after init
-# think about another game using it. All f()s should be contained here
+# ToDo:
+#   This class should be able to store history within itself
+#   then when save DQN (another function) it should load it again / save it
+#   Load again at the beginning of each round after init
+#   think about another game using it. All f()s should be contained here
 
 
 class QLearningTable:
+
+    logger = None
+
     def __init__(self,
                  actions,
+                 log_suffix=None,
                  learning_rate=0.01,
                  reward_decay=0.9,
                  e_greedy=0.9):
+
+        if log_suffix is not None:
+            self.logger = logging.getLogger(f"DQN_{log_suffix}")
+            self.logger.info("DQN init")
+
         self.actions = actions
         self.learning_rate = learning_rate
         self.reward_decay = reward_decay
@@ -24,8 +34,6 @@ class QLearningTable:
         self.force_state_existence(state)
         state_action = self.q_table.loc[state, :]
         if np.random.uniform() < self.e_greedy:
-            # if global_log_action:
-            #     fh_decisions.write("<=>")
             best_score = np.max(state_action)
             action = np.random.choice(
                 state_action[state_action == np.max(state_action)].index)
@@ -34,11 +42,9 @@ class QLearningTable:
         else:
             action = np.random.choice(self.actions)
             best_score = 'random'
-            # if global_log_action:
-            #     fh_decisions.write("<~>")
         return action, best_score
 
-    def learn(self, s, a, r, s_, fn):
+    def learn(self, s, a, r, s_):
         self.force_state_existence(s_)
         q_predict = self.q_table.loc[s, a]
 
@@ -50,12 +56,17 @@ class QLearningTable:
         error = q_target - q_predict
         self.q_table.loc[s, a] += self.learning_rate * error
 
-        fh = open(fn, "a+")
-        fh.write(
-            f'Learning:\n  q_table.loc[{s}, {a}] = {q_predict}\n' +
-            f'  self.q_table.loc[{s_}, :].max() = {q_target}\n' +
-            f'   (new) self.q_table.loc[s, a] = {self.q_table.loc[s, a]}\n\n')
-        fh.close()
+        rnd_r = round(r, 3)
+        rnd_q_predict = round(q_predict, 5)
+        rnd_q_target = round(q_target, 5)
+        rnd_q_new = round(self.q_table.loc[s, a], 5)
+
+        if self.logger is not None:
+            self.logger.debug(
+                f'Learning: (reward = {rnd_r})\n' +
+                f' (pred) q_table.loc[s = {s}, a = {a}] = {rnd_q_predict}\n' +
+                f' (targ) q_table.loc[s_ = {s_}, :].max() = {rnd_q_target}\n' +
+                f' (new)  q_table.loc[s, a] = {rnd_q_new}\n\n')
 
     def declare_action_invalid(self, state, action):
         self.force_state_existence(state)
