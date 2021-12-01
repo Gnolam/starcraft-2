@@ -151,11 +151,16 @@ class poBuildBarracks(BasePipelineBuildTicket):
     def generate_sc2_order(self, obs):
         # ToDo: should be loaded via map config
         xy_options = {
-            0: (20 + 7, 20 + 0),
-            1: (20 + 9, 27 + 4),
-            2: (20 + 7, 27 + 4),
-            3: (20 + 9, 27 + 0),
-            4: (20 + 1, 27 + 0)
+            0: (27 + 4, 20 + 0),
+            1: (27 + 2, 20 + 0),
+            2: (27 + 0, 20 + 0),
+            3: (27 + 2, 20 + 7),
+            4: (27 + 0, 20 + 7)
+            # 0: (20 + 7, 20 + 0),
+            # 1: (20 + 9, 27 + 4),
+            # 2: (20 + 7, 27 + 4),
+            # 3: (20 + 11, 27 + 2),
+            # 4: (20 + 11, 27 + 0)
         } if self.base_top_left else {
             0: (69 - 7, 77 - 0),
             1: (69 - 9, 77 - 2),

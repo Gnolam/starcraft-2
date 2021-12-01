@@ -112,7 +112,7 @@ rerun the loop above from `[CP1]:` checkpoint
 
 - remove commented `__init__()` and other unused L2 functions, which were moved to L1
 
-# Later (long run) DoDo
+# Later (long run) ToDo
 
 ### Major
 
