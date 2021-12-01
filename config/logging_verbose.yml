@@ -122,33 +122,33 @@ loggers:
     propagate: yes
 
   aiBuilder:
-    level: WARN # level: DEBUG
+    level: DEBUG
     handlers: [file_bob, file_main, file_dbg]
     propagate: false
 
   aSgt:
-    level: WARN # level: DEBUG
+    level: DEBUG
     handlers: [file_main, file_WarInfo, file_WarDebug]
     propagate: false
 
   aiWarPlanner:
     level: DEBUG
-    handlers: [] # [file_main, file_WarInfo, file_WarDebug, file_dbg]
+    handlers: [file_main, file_WarInfo, file_WarDebug, file_dbg]
     propagate: false
 
   dbg:
     level: DEBUG
-    handlers: [] #[file_dbg]
+    handlers: [file_dbg]
     propagate: false
 
   DQN_Econ:
     level: DEBUG
-    handlers: [] #  [file_DQN_Econ]
+    handlers: [file_DQN_Econ]
     propagate: false
 
   DQN_War:
     level: DEBUG
-    handlers: [] # [file_DQN_War]
+    handlers: [file_DQN_War]
     propagate: false
 
   res:
@@ -158,30 +158,30 @@ loggers:
 
   Pipeline:
     level: DEBUG
-    handlers: [] # [file_pipeline, file_pipeline_orders, file_pipeline_orders_debug]
+    handlers: [file_pipeline, file_pipeline_orders, file_pipeline_orders_debug]
     propagate: false
 
   poBuildSupplyDepot:
     level: DEBUG
-    handlers: [] # [file_pipeline_orders,file_pipeline_orders_debug,file_poBuildSupplyDepot]
+    handlers: [file_pipeline_orders,file_pipeline_orders_debug,file_poBuildSupplyDepot]
     propagate: false
 
   poBuildBarracks:
     level: DEBUG
-    handlers: [] # [file_pipeline_orders, file_pipeline_orders_debug, file_poBuildBarracks]
+    handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poBuildBarracks]
     propagate: false
 
   poTrainMarine:
     level: DEBUG
-    handlers: [] # [file_pipeline_orders, file_pipeline_orders_debug, file_poTrainMarine]
+    handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poTrainMarine]
     propagate: false
 
   poAccumulateReserve:
     level: DEBUG
-    handlers: [] # [file_pipeline_orders,file_pipeline_orders_debug,file_WarInfo,file_WarDebug]
+    handlers: [file_pipeline_orders,file_pipeline_orders_debug,file_WarInfo,file_WarDebug]
     propagate: false
 
   poGenTransferReserve:
     level: DEBUG
-    handlers: [] # [file_pipeline_orders,file_pipeline_orders_debug,file_WarInfo,file_WarDebug]
+    handlers: [file_pipeline_orders,file_pipeline_orders_debug,file_WarInfo,file_WarDebug]
     propagate: false

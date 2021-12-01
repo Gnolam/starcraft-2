@@ -2,28 +2,31 @@ import yaml
 import os
 import logging
 import absl.logging
+from configparser import ConfigParser, ExtendedInterpolation
 
 
 class Config:
     # global_debug = False
 
-    cfg = None
+    config = None
     project_path = None
     fname_DQN_econ = None
     fname_DQN_war = None
     fname_decisions_econ = None
     fname_decisions_war = None
 
-    def init_project(self, run_config_path):
-        # read the config file
-        self.run_cfg = self.read_yaml_file(run_config_path)
-        self.run_id = self.run_cfg.get("run_id")
-        if not self.run_id:
-            raise Exception(
-                "!!! Config file corrupted: 'run_id' is not present !!!")
+    def __init__(self, config_file_name):
+        self.config = ConfigParser(interpolation=ExtendedInterpolation())
+        self.config.read(config_file_name)
+        print(self.config.sections())
 
-        # init variables
-        self.project_path = f'runs/{self.run_id}'
+        self.run_id = self.config.get('Paths', 'run_id')
+        config_log_file = self.config.get('Paths', 'log_definition')
+        self.project_path = self.config.get('Paths', 'project')
+
+        self.fix_ADSL_logging()
+        self.init_logging(config_log_file)
+
         print("Set project path to:", self.project_path)
         if not os.path.exists(self.project_path):
             os.makedirs(self.project_path)

@@ -148,10 +148,16 @@ class aiGeneral(aiBase, BuildTicketsWar):
     agent_name = "aiWarPlanner"
     DQN_log_suffix = "War"
 
+    # Switcher between different state functions
+    define_state = None
+
     def __init__(self, cfg):
         super().__init__(cfg)
         self.logger.debug("aiGeneral::init()")
         self.peps = Sergant(cfg)
+
+        self.define_state = cfg.config.get('AI-General', 'define_state')
+        # ToDo: validate `define_state` to be in accaptable range ('simple_1' or 'split_3')
 
         # It is used by BuildTicketsWar::pt_Gen_transfer_reserve()
         self.fn_transfer_to_TF1 = self.peps.transfer_reserves_to_TF1
@@ -168,34 +174,68 @@ class aiGeneral(aiBase, BuildTicketsWar):
         # enemy_factories = self.get_enemy_units_by_type(obs, units.Terran.Factory)
         # enemy_starport = self.get_enemy_units_by_type(obs, units.Terran.Starport)
 
-        enemy_foot = \
-            + 1 * len(self.get_enemy_units_by_type(obs, units.Terran.Marine)) \
-            + 2 * len(self.get_enemy_units_by_type(obs, units.Terran.Marauder)) \
+        if self.define_state == 'simple_1':
+            enemy_marines = self.get_enemy_units_by_type(
+                obs, units.Terran.Marine)
+            enemy_marauders = self.get_enemy_units_by_type(
+                obs, units.Terran.Marauder)
+            enemy_Tanks1 = self.get_enemy_units_by_type(
+                obs, units.Terran.SiegeTank)
+            enemy_Tanks2 = self.get_enemy_units_by_type(
+                obs, units.Terran.SiegeTankSieged)
+            enemy_Hells = self.get_enemy_units_by_type(obs,
+                                                       units.Terran.Hellion)
+            enemy_mines1 = self.get_enemy_units_by_type(
+                obs, units.Terran.WidowMine)
+            enemy_mines2 = self.get_enemy_units_by_type(
+                obs, units.Terran.WidowMineBurrowed)
 
-        enemy_heavy = \
-            + len(self.get_enemy_units_by_type(obs, units.Terran.SiegeTank)) \
-            + len(self.get_enemy_units_by_type(obs, units.Terran.SiegeTankSieged)) \
-            + len(self.get_enemy_units_by_type(obs, units.Terran.Hellion)) \
-            + len(self.get_enemy_units_by_type(obs, units.Terran.Hellbat)) \
-            + len(self.get_enemy_units_by_type(obs, units.Terran.WidowMine)) \
-            + len(self.get_enemy_units_by_type(obs, units.Terran.WidowMineBurrowed))
+            enemy_army = \
+                len(enemy_marines) * 1 + \
+                len(enemy_marauders) * 2 + \
+                len(enemy_Tanks1) * 4 + \
+                len(enemy_Tanks2) * 4 + \
+                len(enemy_mines1) * 3 + \
+                len(enemy_mines2) * 3 + \
+                len(enemy_Hells) * 3
 
-        enemy_flying = \
-            + len(self.get_enemy_units_by_type(obs, units.Terran.Medivac)) \
-            + len(self.get_enemy_units_by_type(obs, units.Terran.Raven))
+            if enemy_army < 10:
+                enemy_army_band = enemy_army
+            elif enemy_army < 30:
+                enemy_army_band = int((enemy_army - 10) / 3) * 3 + 10
+            else:
+                enemy_army_band = int((enemy_army - 30) / 5) * 5 + 30
 
-        if enemy_foot < 4:
-            enemy_foot_band = 4
-        elif enemy_foot < 10:
-            enemy_foot_band = int((enemy_foot - 4) / 2) * 2 + 4
-        else:
-            enemy_foot_band = int((enemy_foot - 10) / 4) * 4 + 10
+            return (len(my_marines), enemy_army_band)
 
-        # if enemy_army < 10:
-        #     enemy_army_band = enemy_army
-        # elif enemy_army < 30:
-        #     enemy_army_band = int((enemy_army - 10) / 3) * 3 + 10
-        # else:
-        #     enemy_army_band = int((enemy_army - 30) / 5) * 5 + 30
+        if self.define_state == 'split_3':
 
-        return (len(my_marines), enemy_foot_band, enemy_heavy, enemy_flying)
+            enemy_foot = \
+                + 1 * len(self.get_enemy_units_by_type(obs, units.Terran.Marine)) \
+                + 2 * len(self.get_enemy_units_by_type(obs, units.Terran.Marauder)) \
+
+            enemy_heavy = \
+                + len(self.get_enemy_units_by_type(obs, units.Terran.SiegeTank)) \
+                + len(self.get_enemy_units_by_type(obs, units.Terran.SiegeTankSieged)) \
+                + len(self.get_enemy_units_by_type(obs, units.Terran.Hellion)) \
+                + len(self.get_enemy_units_by_type(obs, units.Terran.Hellbat)) \
+                + len(self.get_enemy_units_by_type(obs, units.Terran.WidowMine)) \
+                + len(self.get_enemy_units_by_type(obs, units.Terran.WidowMineBurrowed))
+
+            enemy_flying = \
+                + len(self.get_enemy_units_by_type(obs, units.Terran.Medivac)) \
+                + len(self.get_enemy_units_by_type(obs, units.Terran.Raven))
+
+            if enemy_foot < 4:
+                enemy_foot_band = 4
+            elif enemy_foot < 10:
+                enemy_foot_band = int((enemy_foot - 4) / 2) * 2 + 4
+            else:
+                enemy_foot_band = int((enemy_foot - 10) / 4) * 4 + 10
+
+            return (len(my_marines), enemy_foot_band, enemy_heavy,
+                    enemy_flying)
+
+        raise Exception(
+            f"'{self.define_state}' is not an allowed value for 'define_state' variable"
+        )
