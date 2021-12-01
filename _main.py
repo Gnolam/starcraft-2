@@ -8,10 +8,7 @@ from lib.agentG3 import SmartAgentG3
 
 
 def main(unused_argv):
-    cfg = Config()
-    cfg.fix_ADSL_logging()
-    cfg.init_project('config/agents.yml')
-    cfg.init_logging('config/logging.yml')
+    cfg = Config('config.ini')
 
     logging.getLogger("main").info("main() called")
     agentSmart1 = SmartAgentG3(cfg)

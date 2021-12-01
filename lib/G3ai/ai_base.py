@@ -43,7 +43,6 @@ class aiBase(ObsAPI):
             self.fn_global_state =\
             cfg.get_filenames(self.agent_name)
 
-        self.agent_cfg = cfg.run_cfg.get(self.agent_name)
         self.read_global_state()
         self.new_game()
 
