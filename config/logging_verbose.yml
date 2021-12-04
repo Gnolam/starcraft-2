@@ -31,84 +31,84 @@ handlers:
     class: logging.FileHandler # logging.handlers.TimedRotatingFileHandler
     level: INFO
     formatter: reduced
-    filename: logs/main.log
+    filename: runs/$RUN-ID$/main.log
 
   file_bob:
     class: logging.FileHandler
     level: DEBUG
     formatter: complex
-    filename: logs/bob.log
+    filename: runs/$RUN-ID$/logs/bob.log
 
   file_result:
     class: logging.FileHandler
     formatter: raw
-    filename: logs/result.log
+    filename: runs/results $RUN-ID$.log
 
   file_dbg:
     class: logging.FileHandler
     level: DEBUG
     formatter: complex
-    filename: logs/z_debug_all.log
+    filename: runs/$RUN-ID$/logs/z_debug_all.log
 
   file_pipeline_orders:
     class: logging.FileHandler
     formatter: complex2
     level: INFO
-    filename: logs/pipeline_orders.log
+    filename: runs/$RUN-ID$/logs/pipeline_orders.log
 
   file_pipeline_orders_debug:
     class: logging.FileHandler
     formatter: complex
     level: DEBUG
-    filename: logs/pipeline_orders_debug.log
+    filename: runs/$RUN-ID$/logs/pipeline_orders_debug.log
 
   file_pipeline:
     class: logging.FileHandler
     formatter: raw
     level: INFO
-    filename: logs/pipeline.log
+    filename: runs/$RUN-ID$/logs/pipeline.log
 
   file_poBuildSupplyDepot:
     class: logging.FileHandler
     formatter: reduced
     level: DEBUG
-    filename: logs/poBuildSupplyDepot.log
+    filename: runs/$RUN-ID$/logs/poBuildSupplyDepot.log
 
   file_poBuildBarracks:
     class: logging.FileHandler
     formatter: reduced
     level: DEBUG
-    filename: logs/poBuildBarracks.log
+    filename: runs/$RUN-ID$/logs/poBuildBarracks.log
 
   file_poTrainMarine:
     class: logging.FileHandler
     formatter: reduced
     level: DEBUG
-    filename: logs/poTrainMarine.log
+    filename: runs/$RUN-ID$/logs/poTrainMarine.log
 
   file_WarInfo:
     class: logging.FileHandler
     formatter: raw
     level: INFO
-    filename: logs/WarInfo.log
+    filename: runs/$RUN-ID$/logs/WarInfo.log
 
   file_WarDebug:
     class: logging.FileHandler
     formatter: complex
     level: DEBUG
-    filename: logs/WarDebug.log
+    filename: runs/$RUN-ID$/logs/WarDebug.log
 
   file_DQN_Econ:
     class: logging.FileHandler
     formatter: raw
     level: DEBUG
-    filename: logs/DQN_econ.log
+    filename: runs/$RUN-ID$/logs/DQN_econ.log
 
   file_DQN_War:
     class: logging.FileHandler
     formatter: raw
     level: DEBUG
-    filename: logs/DQN_war.log
+    filename: runs/$RUN-ID$/logs/DQN_war.log
 
 loggers:
   main:

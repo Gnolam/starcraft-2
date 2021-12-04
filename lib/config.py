@@ -20,11 +20,18 @@ class Config:
         self.config.read(config_file_name)
         print(self.config.sections())
 
+        # Read config params from the .ini file
         self.run_id = self.config.get('Paths', 'run_id')
         config_log_file = self.config.get('Paths', 'log_definition')
         self.project_path = self.config.get('Paths', 'project')
 
+        os.makedirs(os.path.dirname(f"runs/{self.run_id}/logs/"),
+                    exist_ok=True)
+
+        # Remove excessive console logging
         self.fix_ADSL_logging()
+
+        # Finally init logging system
         self.init_logging(config_log_file)
 
         print("Set project path to:", self.project_path)
@@ -57,7 +64,8 @@ class Config:
         if not os.path.exists(fname):
             raise Exception(f".yaml file '{fname}' does not exist")
         with open(fname) as f:
-            cfg = yaml.safe_load(f.read())
+            # Apply logging location customisation
+            cfg = yaml.safe_load(f.read().replace("$RUN-ID$", self.run_id))
             f.close()
         return cfg
 
