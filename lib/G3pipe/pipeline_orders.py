@@ -165,7 +165,7 @@ class poBuildBarracks(BasePipelineBuildTicket):
             0: (69 - 7, 77 - 0),
             1: (69 - 9, 77 - 2),
             2: (69 - 11, 77 - 4),
-            3: (69 - 13, 77 - 2),
+            3: (69 - 13, 77 - 6),
             4: (69 - 7, 77 - 6)
         }
         self.logger.info("SC2: Build 'Barracks'")
