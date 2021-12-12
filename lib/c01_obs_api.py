@@ -1,7 +1,7 @@
 import numpy as np
 import random
-from pysc2.lib import features, actions
-from pysc2.lib import units
+from pysc2.lib import features, actions, units
+import collections
 
 
 class ObsAPI(object):
@@ -30,6 +30,27 @@ class ObsAPI(object):
             unit for unit in obs.observation.raw_units
             if unit.alliance == features.PlayerRelative.ENEMY
         ]
+
+    def get_unit_type_counts(self, obs):
+        """[Get data for later analysis]
+
+        Returns a dictionary of unit counts by type
+        """
+
+        my_unit_types = [
+            str(units.Terran(unit.unit_type))
+            for unit in obs.observation.raw_units
+            if unit.alliance == features.PlayerRelative.SELF
+        ]
+
+        enemy_unit_types = [
+            str(units.Terran(unit.unit_type))
+            for unit in obs.observation.raw_units
+            if unit.alliance == features.PlayerRelative.ENEMY
+        ]
+
+        return collections.Counter(my_unit_types), collections.Counter(
+            enemy_unit_types)
 
     def get_enemy_units_by_type(self, obs, unit_type):
         return [

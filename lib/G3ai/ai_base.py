@@ -1,5 +1,6 @@
 import os
 import logging
+import uuid
 
 import pandas as pd
 from pysc2.lib import units
@@ -22,6 +23,7 @@ class aiBase(ObsAPI):
     decisions_hist = {}
     step_counter = 0
     game_num = None
+    game_uuid = None
     current_action = None
     DQN_log_suffix = None
 
@@ -42,6 +44,11 @@ class aiBase(ObsAPI):
             self.fn_global_debug,\
             self.fn_global_state =\
             cfg.get_filenames(self.agent_name)
+
+        os.makedirs(os.path.dirname("db/"), exist_ok=True)
+
+        self.fn_db_results = "db/results.csv"
+        self.fn_db_decisions = "db/decisions.csv"
 
         self.read_global_state()
         self.new_game()
@@ -72,6 +79,9 @@ class aiBase(ObsAPI):
         self.previous_state = None
         self.previous_action = None
 
+        # Assign unique ID to the game run
+        self.game_uuid = uuid.uuid4()
+
         # Creating generic pipeline
         self.pipeline = Pipeline()
 
@@ -81,7 +91,7 @@ class aiBase(ObsAPI):
         self.game_num += 1
 
     def save_DQN(self):
-        self.logger.debug(f"save_DQN()")
+        self.logger.debug("save_DQN()")
         self.logger.debug('Record current learnings (%s): %s' %
                           (self.agent_name, self.DQN_filename))
         self.qtable.q_table.to_pickle(self.DQN_filename, 'gzip')
@@ -170,9 +180,55 @@ class aiBase(ObsAPI):
         # Returns None if still waiting or SC2 order
         return self.pipeline.run(obs), got_new_order
 
+    def write_tidy_vector_to_file(self,
+                                  file_name: str,
+                                  data_record: dict,
+                                  prefix: str = "") -> None:
+        """Record data in tidy .csv format
+        - Game number (game_num)
+        - UUID of the game
+        - Label
+        - Value
+
+
+        Args:
+            - file_name ([str]): File name to be updated
+            - record ([dict]): Dictionary of values to be added
+            - prefix ([str]): Data label prefix. E.g. "enemy_"
+
+        Note:            
+            Try-catch-retry is applied to allow for parallel runs
+        """
+
+        # Prepare the text to output
+        out_text = ""
+
+        # with open(file_name, "a+") as output_file:
+        #     output_file.write("write_tidy_vector_to_file(" +
+        #                       f"data_record = '{data_record}'," +
+        #                       f"prefix = '{prefix}'' )")
+
+        for data_key, data_value in data_record.items():
+            label = prefix + data_key.replace("Terran.", "")
+            out_text += f"{self.game_num},{self.step_counter},{self.game_uuid},{label},{data_value}\n"
+
+        for attempt in range(10):
+            try:
+                with open(file_name, "a+") as output_file:
+                    output_file.write(out_text)
+            except:
+                pass
+            else:
+                break
+        else:
+            raise Exception(f"Failed to save data into {file_name}")
+
     def finalise_game(self, reward):
         # self.dump_decisions_hist()
-        self.logger.debug(f"finalise_game")
+        self.logger.debug(f"finalise_game ID = {self.game_uuid}")
+
+        self.write_tidy_vector_to_file(self.fn_db_results, {"outcome": reward})
+
         self.learn_from_game(reward)
         self.save_DQN()
 

@@ -159,6 +159,9 @@ class aiGeneral(aiBase, BuildTicketsWar):
         self.define_state = cfg.config.get('AI-General', 'define_state')
         # ToDo: validate `define_state` to be in accaptable range ('simple_1' or 'split_3')
 
+        self.fn_db_results = "db/war_results.csv"
+        self.fn_db_decisions = "db/war_decisions.csv"
+
         # It is used by BuildTicketsWar::pt_Gen_transfer_reserve()
         self.fn_transfer_to_TF1 = self.peps.transfer_reserves_to_TF1
         if self.fn_transfer_to_TF1 is None:
@@ -173,6 +176,13 @@ class aiGeneral(aiBase, BuildTicketsWar):
         # enemy_barrackses = self.get_enemy_units_by_type(obs, units.Terran.Barracks)
         # enemy_factories = self.get_enemy_units_by_type(obs, units.Terran.Factory)
         # enemy_starport = self.get_enemy_units_by_type(obs, units.Terran.Starport)
+
+        own_count, enemy_count = self.get_unit_type_counts(obs)
+
+        self.write_tidy_vector_to_file(self.fn_db_decisions, dict(own_count),
+                                       "own_")
+        self.write_tidy_vector_to_file(self.fn_db_decisions, dict(enemy_count),
+                                       "enemy_")
 
         if self.define_state == 'simple_1':
             enemy_marines = self.get_enemy_units_by_type(
