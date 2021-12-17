@@ -31,26 +31,22 @@ class ObsAPI(object):
             if unit.alliance == features.PlayerRelative.ENEMY
         ]
 
-    def get_unit_type_counts(self, obs):
-        """[Get data for later analysis]
-
-        Returns a dictionary of unit counts by type
-        """
-
-        my_unit_types = [
+    def get_unit_type_counts(self, obs, unit_list: list) -> dict:
+        """ Returns a dictionary of unit counts by type """
+        unit_type_count = [
             str(units.Terran(unit.unit_type))
-            for unit in obs.observation.raw_units
-            if unit.alliance == features.PlayerRelative.SELF
+            for unit in obs.observation.raw_units if unit.tag in set(unit_list)
         ]
 
-        enemy_unit_types = [
-            str(units.Terran(unit.unit_type))
-            for unit in obs.observation.raw_units
+        return dict(collections.Counter(unit_type_count))
+
+    def get_enemy_unit_type_counts(self, obs) -> dict:
+        """ Returns a collection of enemy unit counts by type """
+
+        return self.get_unit_type_counts(obs, [
+            unit.tag for unit in obs.observation.raw_units
             if unit.alliance == features.PlayerRelative.ENEMY
-        ]
-
-        return collections.Counter(my_unit_types), collections.Counter(
-            enemy_unit_types)
+        ])
 
     def get_enemy_units_by_type(self, obs, unit_type):
         return [
@@ -108,7 +104,7 @@ class ObsAPI(object):
 
     def get_best_barrack(self, obs):
         if self.len_barracks_100 < 1:
-            raise Exception(f"No barracks to choose from")
+            raise Exception("No barracks to choose from")
         return self.get_shortest_queue(
             self.get_my_completed_units_by_type(obs, units.Terran.Barracks))
 

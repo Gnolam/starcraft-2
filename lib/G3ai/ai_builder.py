@@ -11,7 +11,7 @@ class aiBuilder(aiBase, BuildTicketsEcon):
 
     def __init__(self, cfg):
         super().__init__(cfg)
-        self.logger.debug("aiBuilder::init()")
+        self.log.debug("aiBuilder::init()")
         self.fn_db_results = "db/bob_results.csv"
         self.fn_db_decisions = "db/bob_decisions.csv"
 

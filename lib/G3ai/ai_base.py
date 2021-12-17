@@ -19,7 +19,7 @@ class aiBase(ObsAPI):
     fh_state_csv = None
     fn_global_debug = None
     consistent_decision_agent = None
-    logger = None
+    log = None
     decisions_hist = {}
     step_counter = 0
     game_num = None
@@ -31,8 +31,8 @@ class aiBase(ObsAPI):
 
     def __init__(self, cfg):
         super().__init__()
-        self.logger = logging.getLogger(self.agent_name)
-        self.logger.info(f"L1.init({self.agent_name})")
+        self.log = logging.getLogger(self.agent_name)
+        self.log.info(f"L1.init({self.agent_name})")
 
         self.cfg = cfg
         self.qtable = QLearningTable(actions=self.action_list,
@@ -53,10 +53,10 @@ class aiBase(ObsAPI):
         self.read_global_state()
         self.new_game()
 
-        self.logger.debug(f"Run number: {self.game_num}")
+        self.log.debug(f"Run number: {self.game_num}")
 
     def reset(self):
-        self.logger.debug("reset()")
+        self.log.debug("reset()")
         self.new_game()
 
     def read_global_state(self):
@@ -70,12 +70,11 @@ class aiBase(ObsAPI):
     def get_state(self, dummy):
         # This function is a place holder
         if 1 >= 1:
-            self.logger.critical(
-                'Incorrect function was called: L1::get_state()')
+            self.log.critical('Incorrect function was called: L1::get_state()')
             raise Exception('Incorrect function was called: L1::get_state()')
 
     def new_game(self):
-        self.logger.debug(f"new_game()")
+        self.log.debug(f"new_game()")
         self.previous_state = None
         self.previous_action = None
 
@@ -91,19 +90,19 @@ class aiBase(ObsAPI):
         self.game_num += 1
 
     def save_DQN(self):
-        self.logger.debug("save_DQN()")
-        self.logger.debug('Record current learnings (%s): %s' %
-                          (self.agent_name, self.DQN_filename))
+        self.log.debug("save_DQN()")
+        self.log.debug('Record current learnings (%s): %s' %
+                       (self.agent_name, self.DQN_filename))
         self.qtable.q_table.to_pickle(self.DQN_filename, 'gzip')
 
     def load_DQN(self):
         if os.path.isfile(self.DQN_filename):
-            self.logger.info('Load previous learnings (%s)' % self.agent_name)
+            self.log.info('Load previous learnings (%s)' % self.agent_name)
             self.qtable.q_table = pd.read_pickle(self.DQN_filename,
                                                  compression='gzip')
         else:
-            self.logger.info('NO previous learnings located (%s)' %
-                             self.agent_name)
+            self.log.info('NO previous learnings located (%s)' %
+                          self.agent_name)
 
     def log_state(self, s_message, should_print=True):
         if should_print and self.fh_state_csv is not None:
@@ -115,8 +114,8 @@ class aiBase(ObsAPI):
 
         # Original 'best known' action based on Q-Table
         action, best_score = self.qtable.choose_action(state)
-        self.logger.debug(f"Q-Action: '{action.upper()}'" +
-                          f", score = '{best_score}'")
+        self.log.debug(f"Q-Action: '{action.upper()}'" +
+                       f", score = '{best_score}'")
 
         next_state = 'terminal' if obs.last() else state
 
@@ -134,7 +133,7 @@ class aiBase(ObsAPI):
         self.previous_state = state
         self.previous_action = action
 
-        self.logger.debug(
+        self.log.debug(
             f"step counter: {self.step_counter}, size of history: {len(self.decisions_hist)}"
         )
 
@@ -154,10 +153,10 @@ class aiBase(ObsAPI):
             * None: if still waiting
         """
 
-        self.logger.debug(f"{self.agent_name}: step()")
+        self.log.debug(f"{self.agent_name}: step()")
 
         if obs.first():
-            self.logger.debug(f"SCP100: first observation")
+            self.log.debug(f"SCP100: first observation")
             command_centres = self.get_my_units_by_type(
                 obs, units.Terran.CommandCenter)
             self.pipeline.base_top_left = (command_centres[0].x < 32)
@@ -165,15 +164,15 @@ class aiBase(ObsAPI):
         # Pipeline is still _not_ finished, not a good time for the new action
         got_new_order = False
         if self.pipeline.is_empty():
-            self.logger.debug(f"SCP101: pipeline IS empty")
+            self.log.debug(f"SCP101: pipeline IS empty")
             # Great, pipeline _is_ empty. What would be the next step?
             self.choose_next_action(obs)
             got_new_order = True
         else:
-            self.logger.debug(f"SCP102: pipeline is NOT empty")
+            self.log.debug(f"SCP102: pipeline is NOT empty")
 
         if obs.last():  # and self.agent_name == 'bob':
-            self.logger.debug(f"SCP103: last observation detected")
+            self.log.debug(f"SCP103: last observation detected")
             logging.getLogger("res").info(
                 f"Game: {self.game_num}. Outcome: {obs.reward}")
 
@@ -225,7 +224,7 @@ class aiBase(ObsAPI):
 
     def finalise_game(self, reward):
         # self.dump_decisions_hist()
-        self.logger.debug(f"finalise_game ID = {self.game_uuid}")
+        self.log.debug(f"finalise_game ID = {self.game_uuid}")
 
         self.write_tidy_vector_to_file(self.fn_db_results, {"outcome": reward})
 
@@ -235,7 +234,7 @@ class aiBase(ObsAPI):
     def learn_from_game(self, reward):
         reward_decay = .9
 
-        self.logger.debug(
+        self.log.debug(
             f"{self.agent_name}: learn_from_game({self.decisions_hist})")
 
         for i in sorted(self.decisions_hist.keys(), reverse=True):
