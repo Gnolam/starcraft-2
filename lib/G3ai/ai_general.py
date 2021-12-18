@@ -21,17 +21,13 @@ class Sergant(aiBase):
             for marine in self.get_my_units_by_type(obs, units.Terran.Marine)
         ]
 
-    def update_tf1_tags(self, obs):
-        """ Update the tf1_tag_list. Drops dead units """
+    def update_tf1_and_reserve_tags(self, obs):
+        """ Update the `tf1_tag_list` and `reserve_tag_list`. Drops dead units """
         self.update_my_army(obs)
 
         self.tf1_tag_list = list(
             set(self.my_all_army_tag_list).intersection(set(
                 self.tf1_tag_list)))
-
-    def update_reserve_tags(self, obs):
-        """ Update the reserve_tag_list """
-        self.update_my_army(obs)
 
         self.reserve_tag_list = list(
             set(self.my_all_army_tag_list).difference(set(self.tf1_tag_list)))
@@ -123,9 +119,9 @@ class Sergant(aiBase):
             (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
         # "now", marine.tag, (attack_xy[0] + x_offset, attack_xy[1] + y_offset))
 
-    def transfer_reserves_to_TF1(self, obs):
-        self.update_tf1_tags(obs)
-        self.update_reserve_tags(obs)
+    def transfer_reserves_to_tf1(self, obs):
+        """Transfers ALL reserve units into TF1"""
+        self.update_tf1_and_reserve_tags(obs)
 
         if len(self.reserve_tag_list) == 0:
             self.log.error("No marines to transfer")
@@ -158,7 +154,7 @@ class aiGeneral(aiBase, BuildTicketsWar):
         self.fn_db_decisions = "db/war_decisions.csv"
 
         # It is used by BuildTicketsWar::pt_Gen_transfer_reserve()
-        self.fn_transfer_to_TF1 = self.peps.transfer_reserves_to_TF1
+        self.fn_transfer_to_TF1 = self.peps.transfer_reserves_to_tf1
         if self.fn_transfer_to_TF1 is None:
             raise Exception(
                 "fn_transfer_to_TF1 callable pointer is still None")
@@ -167,8 +163,7 @@ class aiGeneral(aiBase, BuildTicketsWar):
         # State vector should be revised to take into account both ours
         #   and enemy military potential
 
-        self.peps.update_tf1_tags(obs)
-        self.peps.update_reserve_tags(obs)
+        self.peps.update_tf1_and_reserve_tags(obs)
 
         tf1_size = len(self.peps.tf1_tag_list)
         res_size = len(self.peps.reserve_tag_list)
