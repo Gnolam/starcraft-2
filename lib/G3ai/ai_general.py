@@ -168,7 +168,7 @@ class aiGeneral(aiBase, BuildTicketsWar):
         #   and enemy military potential
 
         self.peps.update_tf1_tags(obs)
-        self.peps.update_tf1_tags(obs)
+        self.peps.update_reserve_tags(obs)
 
         tf1_size = len(self.peps.tf1_tag_list)
         res_size = len(self.peps.reserve_tag_list)
