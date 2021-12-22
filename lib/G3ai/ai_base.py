@@ -129,6 +129,10 @@ class aiBase(ObsAPI):
                 'next_state': next_state
             }
 
+        # Record action taken for the current state
+        self.write_tidy_vector_to_file(self.fn_db_decisions,
+                                       {"action": str(action)})
+
         self.step_counter += 1
         self.previous_state = state
         self.previous_action = action
