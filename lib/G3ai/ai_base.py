@@ -5,7 +5,8 @@ import uuid
 import pandas as pd
 from pysc2.lib import units
 
-from lib.q_table import QLearningTable
+from lib.AICore.q_table import QLearningTable
+from lib.AICore.predictor_drf import DRFPredictor
 from lib.c01_obs_api import ObsAPI
 from lib.G3pipe.pipeline import Pipeline
 
@@ -14,7 +15,7 @@ class aiBase(ObsAPI):
     agent_name = "L1"
     action_list = []
     action_container_class = None
-    DQN_filename = None
+    dqn_filename = None
     fh_decisions = None
     fh_state_csv = None
     fn_global_debug = None
@@ -27,6 +28,14 @@ class aiBase(ObsAPI):
     current_action = None
     DQN_log_suffix = None
 
+    previous_state = None
+    previous_action = None
+    qtable: QLearningTable = None
+    AI_drf: DRFPredictor = None
+
+    AI_prediction_method_name = None
+    AI_prediction_method_min_run = None
+
     pipeline: Pipeline = None
 
     def __init__(self, cfg):
@@ -38,7 +47,7 @@ class aiBase(ObsAPI):
         self.qtable = QLearningTable(actions=self.action_list,
                                      log_suffix=self.DQN_log_suffix)
 
-        self.DQN_filename,\
+        self.dqn_filename,\
             self.fh_decisions,\
             self.fh_state_csv,\
             self.fn_global_debug,\
@@ -48,6 +57,7 @@ class aiBase(ObsAPI):
         os.makedirs(os.path.dirname("db/"), exist_ok=True)
 
         self.fn_db_results = "db/results.csv"
+        self.fn_db_states = "db/states.csv"
         self.fn_db_decisions = "db/decisions.csv"
 
         self.read_global_state()
@@ -92,30 +102,32 @@ class aiBase(ObsAPI):
     def save_DQN(self):
         self.log.debug("save_DQN()")
         self.log.debug('Record current learnings (%s): %s' %
-                       (self.agent_name, self.DQN_filename))
-        self.qtable.q_table.to_pickle(self.DQN_filename, 'gzip')
+                       (self.agent_name, self.dqn_filename))
+        self.qtable.q_table.to_pickle(self.dqn_filename, 'gzip')
 
     def load_DQN(self):
-        if os.path.isfile(self.DQN_filename):
+        if os.path.isfile(self.dqn_filename):
             self.log.info('Load previous learnings (%s)' % self.agent_name)
-            self.qtable.q_table = pd.read_pickle(self.DQN_filename,
+            self.qtable.q_table = pd.read_pickle(self.dqn_filename,
                                                  compression='gzip')
         else:
             self.log.info('NO previous learnings located (%s)' %
                           self.agent_name)
-
-    def log_state(self, s_message, should_print=True):
-        if should_print and self.fh_state_csv is not None:
-            self.fh_state_csv.write(s_message)
 
     def choose_next_action(self, obs) -> None:
         """ Picks the next action and updates the pipeline """
         state = str(self.get_state(obs))
 
         # Original 'best known' action based on Q-Table
-        action, best_score = self.qtable.choose_action(state)
-        self.log.debug(f"Q-Action: '{action.upper()}'" +
-                       f", score = '{best_score}'")
+        if self.game_num < 20000:
+            action, best_score = self.qtable.choose_action(state)
+            self.log.debug(f"Q-Action: '{action.upper()}'" +
+                           f", score = '{best_score}'")
+        else:
+            # Once some info is collected, we can try the alternative prediction methods
+            action, best_prob = self.drf.choose_action(obs)
+            self.log.debug(f"DRF-Action: '{action.upper()}'" +
+                           f", best_prob = '{best_prob}'")
 
         next_state = 'terminal' if obs.last() else state
 
