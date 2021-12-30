@@ -63,9 +63,67 @@ class DRFPredictor:
 
         self.log.debug("DRF: Update")
 
-        df = pd.read_csv(self.fn_db_decisions,
-                         names=[
-                             'run_num', 'step_num', 'run_hash_id', 'to_delete',
-                             'chosen_action'
-                         ],
-                         header=None)
+        self.log.debug("Load .csv")
+        #  col_integer(),
+        # col_integer(),
+        # col_character(),
+        # col_character(),
+        # col_character()
+        decision_db = pd.read_csv(self.fn_db_decisions,
+                                  names=[
+                                      'run_num', 'step_num', 'run_hash_id',
+                                      'to_delete', 'chosen_action'
+                                  ],
+                                  dtype={
+                                      'run_num': np.int32,
+                                      'step_num': np.int32,
+                                      'run_hash_id': str,
+                                      'to_delete': str,
+                                      'chosen_action': str
+                                  },
+                                  header=None)
+
+        state_db = pd.read_csv(self.fn_db_states,
+                               names=[
+                                   'run_num', 'step_num', 'run_hash_id',
+                                   'feature_name', 'feature_value'
+                               ],
+                               dtype={
+                                   'run_num': np.int32,
+                                   'step_num': np.int32,
+                                   'run_hash_id': str,
+                                   'feature_name': str,
+                                   'feature_value': np.int32
+                               },
+                               header=None)
+
+        results_db = pd.read_csv(self.fn_db_results,
+                                 names=[
+                                     'run_num', 'step_num', 'run_hash_id',
+                                     'to_delete', 'outcome'
+                                 ],
+                                 dtype={
+                                     'run_num': np.int32,
+                                     'step_num': np.int32,
+                                     'run_hash_id': str,
+                                     'to_delete': str,
+                                     'outcome': np.int32
+                                 },
+                                 header=None)
+
+        self.log.debug("Adjust result value")
+        # mutate(outcome_adj = if_else(outcome >= 0, "win", "loss")) %>%
+        # results_db.loc[results_db['outcome'] >= 0, 'outcome'] = 1
+        # results_db.loc[results_db['outcome'] < 0, 'outcome'] = 0
+        results_db['outcome_adj'] = np.where(results_db['outcome'] == -1,
+                                             'loss', 'win')
+
+        self.log.debug("Delete columns")
+        # del results_db['outcome']
+        del results_db['to_delete']
+        del decision_db['to_delete']
+
+        # summary = str(
+        #     results_db[["run_num", "step_num", "outcome",
+        #                 "outcome_adj"]].describe())
+        self.log.debug(f"Resulting results_db\n{results_db.head()}")

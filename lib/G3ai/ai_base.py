@@ -64,14 +64,12 @@ class aiBase(ObsAPI):
 
         self.log.debug(f"Run number: {self.game_num}")
 
-
     def init2(self):
         self.ai_drf = DRFPredictor(actions=self.action_list,
                                    log_suffix=self.ai_log_suffix,
                                    fn_db_results=self.fn_db_results,
                                    fn_db_states=self.fn_db_states,
                                    fn_db_decisions=self.fn_db_decisions)
-
 
     def reset(self):
         self.log.debug("reset()")
