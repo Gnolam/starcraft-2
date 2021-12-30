@@ -98,17 +98,18 @@ handlers:
     level: DEBUG
     filename: runs/$RUN-ID$/logs/WarDebug.log
 
-  file_DQN_Econ:
+  file_AI_Econ:
     class: logging.FileHandler
     formatter: raw
     level: DEBUG
-    filename: runs/$RUN-ID$/logs/DQN_econ.log
+    filename: runs/$RUN-ID$/logs/AI_econ.log
 
-  file_DQN_War:
+  file_AI_War:
     class: logging.FileHandler
     formatter: raw
     level: DEBUG
-    filename: runs/$RUN-ID$/logs/DQN_war.log
+    filename: runs/$RUN-ID$/logs/AI_war.log
+
 
 loggers:
   main:
@@ -143,12 +144,22 @@ loggers:
 
   DQN_Econ:
     level: DEBUG
-    handlers: [file_DQN_Econ]
+    handlers: [file_AI_Econ]
     propagate: false
 
   DQN_War:
     level: DEBUG
-    handlers: [file_DQN_War]
+    handlers: [file_AI_War]
+    propagate: false
+
+  DRF_Econ:
+    level: DEBUG
+    handlers: [file_AI_Econ]
+    propagate: false
+
+  DRF_War:
+    level: DEBUG
+    handlers: [file_AI_War]
     propagate: false
 
   res:

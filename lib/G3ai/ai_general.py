@@ -3,6 +3,7 @@ import numpy as np
 from pysc2.lib import units, features, actions
 from lib.G3ai.ai_base import aiBase
 from lib.G3ai.action_list import BuildTicketsWar
+from lib.c01_obs_api import get_enemy_unit_type_counts
 
 
 class Sergant(aiBase):
@@ -137,7 +138,7 @@ class aiGeneral(aiBase, BuildTicketsWar):
     peps: Sergant = None
     fn_transfer_to_TF1 = None
     agent_name = "aiWarPlanner"
-    DQN_log_suffix = "War"
+    ai_log_suffix = "War"
 
     # Switcher between different state functions
     define_state = None
@@ -152,12 +153,16 @@ class aiGeneral(aiBase, BuildTicketsWar):
 
         self.fn_db_results = "db/war_results.csv"
         self.fn_db_decisions = "db/war_decisions.csv"
+        self.fn_db_states = "db/war_states.csv"
 
         # It is used by BuildTicketsWar::pt_Gen_transfer_reserve()
         self.fn_transfer_to_TF1 = self.peps.transfer_reserves_to_tf1
         if self.fn_transfer_to_TF1 is None:
             raise Exception(
                 "fn_transfer_to_TF1 callable pointer is still None")
+
+        self.init2()
+        self.ai_drf.update()
 
     def get_state(self, obs):
         # State vector should be revised to take into account both ours
@@ -168,13 +173,13 @@ class aiGeneral(aiBase, BuildTicketsWar):
         tf1_size = len(self.peps.tf1_tag_list)
         res_size = len(self.peps.reserve_tag_list)
 
-        enemy_count_dict = self.get_enemy_unit_type_counts(obs)
+        enemy_count_dict = get_enemy_unit_type_counts(obs)
 
-        self.write_tidy_vector_to_file(self.fn_db_decisions, {
+        self.write_tidy_vector_to_file(self.fn_db_states, {
             "tf1_size": tf1_size,
             "reserve_size": res_size
         }, "own_")
-        self.write_tidy_vector_to_file(self.fn_db_decisions, enemy_count_dict,
+        self.write_tidy_vector_to_file(self.fn_db_states, enemy_count_dict,
                                        "enemy_")
 
         if self.define_state == 'simple_1':

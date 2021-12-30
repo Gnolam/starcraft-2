@@ -7,13 +7,14 @@ from pysc2.lib import units
 class aiBuilder(aiBase, BuildTicketsEcon):
 
     agent_name = "aiBuilder"
-    DQN_log_suffix = "Econ"
+    ai_log_suffix = "Econ"
 
     def __init__(self, cfg):
         super().__init__(cfg)
         self.log.debug("aiBuilder::init()")
         self.fn_db_results = "db/bob_results.csv"
         self.fn_db_decisions = "db/bob_decisions.csv"
+        self.fn_db_states = "db/bob_states.csv"
 
     def get_state(self, obs):
         # State vector should be revised to take into account both ours

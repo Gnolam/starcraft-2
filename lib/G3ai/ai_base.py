@@ -26,15 +26,15 @@ class aiBase(ObsAPI):
     game_num = None
     game_uuid = None
     current_action = None
-    DQN_log_suffix = None
+    ai_log_suffix = None
 
     previous_state = None
     previous_action = None
-    qtable: QLearningTable = None
-    AI_drf: DRFPredictor = None
+    ai_dqn: QLearningTable = None
+    ai_drf: DRFPredictor = None
 
-    AI_prediction_method_name = None
-    AI_prediction_method_min_run = None
+    ai_prediction_method_name = None
+    ai_prediction_method_min_run = None
 
     pipeline: Pipeline = None
 
@@ -43,9 +43,14 @@ class aiBase(ObsAPI):
         self.log = logging.getLogger(self.agent_name)
         self.log.info(f"L1.init({self.agent_name})")
 
+        os.makedirs(os.path.dirname("db/"), exist_ok=True)
+        self.fn_db_results = "db/results.csv"
+        self.fn_db_states = "db/states.csv"
+        self.fn_db_decisions = "db/decisions.csv"
+
         self.cfg = cfg
-        self.qtable = QLearningTable(actions=self.action_list,
-                                     log_suffix=self.DQN_log_suffix)
+        self.ai_dqn = QLearningTable(actions=self.action_list,
+                                     log_suffix=self.ai_log_suffix)
 
         self.dqn_filename,\
             self.fh_decisions,\
@@ -54,16 +59,19 @@ class aiBase(ObsAPI):
             self.fn_global_state =\
             cfg.get_filenames(self.agent_name)
 
-        os.makedirs(os.path.dirname("db/"), exist_ok=True)
-
-        self.fn_db_results = "db/results.csv"
-        self.fn_db_states = "db/states.csv"
-        self.fn_db_decisions = "db/decisions.csv"
-
         self.read_global_state()
         self.new_game()
 
         self.log.debug(f"Run number: {self.game_num}")
+
+
+    def init2(self):
+        self.ai_drf = DRFPredictor(actions=self.action_list,
+                                   log_suffix=self.ai_log_suffix,
+                                   fn_db_results=self.fn_db_results,
+                                   fn_db_states=self.fn_db_states,
+                                   fn_db_decisions=self.fn_db_decisions)
+
 
     def reset(self):
         self.log.debug("reset()")
@@ -103,12 +111,12 @@ class aiBase(ObsAPI):
         self.log.debug("save_DQN()")
         self.log.debug('Record current learnings (%s): %s' %
                        (self.agent_name, self.dqn_filename))
-        self.qtable.q_table.to_pickle(self.dqn_filename, 'gzip')
+        self.ai_dqn.q_table.to_pickle(self.dqn_filename, 'gzip')
 
     def load_DQN(self):
         if os.path.isfile(self.dqn_filename):
             self.log.info('Load previous learnings (%s)' % self.agent_name)
-            self.qtable.q_table = pd.read_pickle(self.dqn_filename,
+            self.ai_dqn.q_table = pd.read_pickle(self.dqn_filename,
                                                  compression='gzip')
         else:
             self.log.info('NO previous learnings located (%s)' %
@@ -120,7 +128,7 @@ class aiBase(ObsAPI):
 
         # Original 'best known' action based on Q-Table
         if self.game_num < 20000:
-            action, best_score = self.qtable.choose_action(state)
+            action, best_score = self.ai_dqn.choose_action(state)
             self.log.debug(f"Q-Action: '{action.upper()}'" +
                            f", score = '{best_score}'")
         else:
@@ -259,7 +267,7 @@ class aiBase(ObsAPI):
 
             next_state = self.decisions_hist[i]['next_state']
 
-            self.qtable.learn(previous_state, previous_action, reward,
+            self.ai_dqn.learn(previous_state, previous_action, reward,
                               next_state)
 
             reward *= reward_decay
