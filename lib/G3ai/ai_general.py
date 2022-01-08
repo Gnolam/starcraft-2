@@ -139,6 +139,10 @@ class aiGeneral(aiBase, BuildTicketsWar):
     fn_transfer_to_TF1 = None
     agent_name = "aiWarPlanner"
     ai_log_suffix = "War"
+    use_dqn_only = False
+
+    tf1_size = None
+    res_size = None
 
     # Switcher between different state functions
     define_state = None
@@ -164,23 +168,37 @@ class aiGeneral(aiBase, BuildTicketsWar):
         self.init2()
         self.ai_drf.update()
 
+    def get_full_state(self, obs):
+        """
+        Returns a dict of full state (ours and enemy units) for DRF
+        """
+        self.peps.update_tf1_and_reserve_tags(obs)
+
+        self.tf1_size = len(self.peps.tf1_tag_list)
+        self.res_size = len(self.peps.reserve_tag_list)
+
+        enemy_count_dict = get_enemy_unit_type_counts(obs)
+
+        full_state_dict_formatted = {
+            'own_tf1_size': self.tf1_size,
+            'own_reserve_size': self.res_size
+        }
+
+        for data_key, data_value in enemy_count_dict.items():
+            label = "enemy_" + data_key.replace("Terran.", "")
+            full_state_dict_formatted = {
+                **full_state_dict_formatted, label: data_value
+            }
+
+        self.full_state = full_state_dict_formatted
+
     def get_state(self, obs):
         # State vector should be revised to take into account both ours
         #   and enemy military potential
 
-        self.peps.update_tf1_and_reserve_tags(obs)
+        self.get_full_state(obs)
 
-        tf1_size = len(self.peps.tf1_tag_list)
-        res_size = len(self.peps.reserve_tag_list)
-
-        enemy_count_dict = get_enemy_unit_type_counts(obs)
-
-        self.write_tidy_vector_to_file(self.fn_db_states, {
-            "tf1_size": tf1_size,
-            "reserve_size": res_size
-        }, "own_")
-        self.write_tidy_vector_to_file(self.fn_db_states, enemy_count_dict,
-                                       "enemy_")
+        self.write_tidy_vector_to_file(self.fn_db_states, self.full_state, "")
 
         if self.define_state == 'simple_1':
             enemy_marines = self.get_enemy_units_by_type(
@@ -214,7 +232,7 @@ class aiGeneral(aiBase, BuildTicketsWar):
             else:
                 enemy_army_band = int((enemy_army - 30) / 5) * 5 + 30
 
-            return (tf1_size, res_size, enemy_army_band)
+            return (self.tf1_size, self.res_size, enemy_army_band)
 
         if self.define_state == 'split_3':
 
@@ -241,7 +259,7 @@ class aiGeneral(aiBase, BuildTicketsWar):
             else:
                 enemy_foot_band = int((enemy_foot - 10) / 4) * 4 + 10
 
-            return (tf1_size, res_size, enemy_foot_band, enemy_heavy,
+            return (self.tf1_size, self.res_size, enemy_foot_band, enemy_heavy,
                     enemy_flying)
 
         raise Exception(

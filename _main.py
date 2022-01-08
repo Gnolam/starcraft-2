@@ -1,5 +1,6 @@
 import logging
 import logging.config
+import h2o
 from pysc2.env import sc2_env, run_loop
 from pysc2.lib import actions, features
 from absl import app
@@ -8,6 +9,7 @@ from lib.agentG3 import SmartAgentG3
 
 
 def main(unused_argv):
+
     cfg = Config('config.ini')
 
     logging.getLogger("main").info("main() called")

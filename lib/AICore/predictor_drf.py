@@ -1,6 +1,8 @@
 import logging
 import pandas as pd
 import numpy as np
+import h2o
+from h2o.estimators import H2ORandomForestEstimator
 
 # from lib.c01_obs_api import get_enemy_unit_type_counts
 
@@ -12,6 +14,7 @@ class DRFPredictor:
     log = None
     actions = None
     model = None
+    predictors = None
 
     fn_db_results = None
     fn_db_states = None
@@ -38,92 +41,71 @@ class DRFPredictor:
         self.fn_db_states = fn_db_states
         self.fn_db_decisions = fn_db_decisions
 
-    def choose_action(self, full_state: dict):
+    def choose_action(self, full_state):
         """
-        ToDo:
-         1. get the state vector, compatible with H2O DRF. Which function to call to make it compatible with Save?
-         2. iterate through all the possible actions to get the highest probability
+        Chose action based on the current h2o model
+        
+        Currently DRF but could be any
         """
 
-        if np.random.uniform() < self.e_greedy:
-            best_score = np.max(state_action)
-            action = np.random.choice(
-                state_action[state_action == np.max(state_action)].index)
-            best_score = f"best = {action}:{best_score} of\n{str(state_action)}"
-
-        else:
+        if np.random.uniform() >= self.e_greedy:
             action = np.random.choice(self.actions)
             best_score = 'random'
-        return action, best_score
+            return action, best_score
+
+        # Create the set of states, with all set of possible action
+        df_state = pd.DataFrame([full_state], index=range(len(self.actions)))
+
+        # Match the state vector columns with the set of columns of the 'full model'
+        df_state_ext = df_state.reindex(columns=self.predictors, fill_value=0)
+
+        # The 'missing' column chosen_action is filled with zeroes, but it should be a string
+        df_state_ext[['chosen_action']] = df_state_ext[['chosen_action'
+                                                        ]].astype(str)
+
+        # Create the permutation of current state and possible future actions
+        for i in range(len(self.actions)):
+            df_state_ext.at[i, "chosen_action"] = self.actions[i]
+
+        # Convert the state-action vector into H2O format
+        hex_state = h2o.H2OFrame(df_state_ext)
+
+        # Predict the expected outcomes for each action
+        hex_pred = self.model.predict(hex_state)
+
+        # Take only the probability to win column
+        df_pred = hex_pred.as_data_frame()["win"]
+
+        # Define the best change to win
+        best_prob = np.max(df_pred)
+
+        # Identify an action, which is corresponds to the highest
+        # estimated probability to win
+        best_action = self.actions[np.random.choice(
+            df_pred[df_pred == best_prob].index)]
+
+        comment = f"probability = {np.round(best_prob,3)*100}%"
+        return best_action, comment
 
     def update(self):
         """
-        ToDo: load data from stored files, train DRF object       
+        POC
+        - Static knowledge base
+        - Requires pre-preprocessed .csv files (currently in `R/dplyr`)
         """
+        self.log.info("Train the model")
 
-        self.log.debug("DRF: Update")
+        hex_final = h2o.import_file(path="db/dat_final.csv",
+                                    header=1,
+                                    destination_frame="hex_final")
 
-        self.log.debug("Load .csv")
-        #  col_integer(),
-        # col_integer(),
-        # col_character(),
-        # col_character(),
-        # col_character()
-        decision_db = pd.read_csv(self.fn_db_decisions,
-                                  names=[
-                                      'run_num', 'step_num', 'run_hash_id',
-                                      'to_delete', 'chosen_action'
-                                  ],
-                                  dtype={
-                                      'run_num': np.int32,
-                                      'step_num': np.int32,
-                                      'run_hash_id': str,
-                                      'to_delete': str,
-                                      'chosen_action': str
-                                  },
-                                  header=None)
+        hex_final["outcome_adj"] = hex_final["outcome_adj"].asfactor()
+        self.predictors = hex_final.names
+        self.predictors.remove('outcome_adj')
 
-        state_db = pd.read_csv(self.fn_db_states,
-                               names=[
-                                   'run_num', 'step_num', 'run_hash_id',
-                                   'feature_name', 'feature_value'
-                               ],
-                               dtype={
-                                   'run_num': np.int32,
-                                   'step_num': np.int32,
-                                   'run_hash_id': str,
-                                   'feature_name': str,
-                                   'feature_value': np.int32
-                               },
-                               header=None)
+        self.model = H2ORandomForestEstimator()
 
-        results_db = pd.read_csv(self.fn_db_results,
-                                 names=[
-                                     'run_num', 'step_num', 'run_hash_id',
-                                     'to_delete', 'outcome'
-                                 ],
-                                 dtype={
-                                     'run_num': np.int32,
-                                     'step_num': np.int32,
-                                     'run_hash_id': str,
-                                     'to_delete': str,
-                                     'outcome': np.int32
-                                 },
-                                 header=None)
-
-        self.log.debug("Adjust result value")
-        # mutate(outcome_adj = if_else(outcome >= 0, "win", "loss")) %>%
-        # results_db.loc[results_db['outcome'] >= 0, 'outcome'] = 1
-        # results_db.loc[results_db['outcome'] < 0, 'outcome'] = 0
-        results_db['outcome_adj'] = np.where(results_db['outcome'] == -1,
-                                             'loss', 'win')
-
-        self.log.debug("Delete columns")
-        # del results_db['outcome']
-        del results_db['to_delete']
-        del decision_db['to_delete']
-
-        # summary = str(
-        #     results_db[["run_num", "step_num", "outcome",
-        #                 "outcome_adj"]].describe())
-        self.log.debug(f"Resulting results_db\n{results_db.head()}")
+        self.model.train(x=self.predictors,
+                         y="outcome_adj",
+                         training_frame=hex_final)
+        self.log.debug(f"performance: {str(self.model.confusion_matrix())}")

@@ -1,6 +1,7 @@
 import os
 import logging
 import uuid
+import h2o
 
 import pandas as pd
 from pysc2.lib import units
@@ -30,6 +31,9 @@ class aiBase(ObsAPI):
 
     previous_state = None
     previous_action = None
+    full_state = None
+
+    use_dqn_only = True
     ai_dqn: QLearningTable = None
     ai_drf: DRFPredictor = None
 
@@ -65,6 +69,7 @@ class aiBase(ObsAPI):
         self.log.debug(f"Run number: {self.game_num}")
 
     def init2(self):
+        h2o.init()
         self.ai_drf = DRFPredictor(actions=self.action_list,
                                    log_suffix=self.ai_log_suffix,
                                    fn_db_results=self.fn_db_results,
@@ -125,13 +130,13 @@ class aiBase(ObsAPI):
         state = str(self.get_state(obs))
 
         # Original 'best known' action based on Q-Table
-        if self.game_num < 20000:
+        if self.game_num < 20 or self.use_dqn_only:
             action, best_score = self.ai_dqn.choose_action(state)
             self.log.debug(f"Q-Action: '{action.upper()}'" +
                            f", score = '{best_score}'")
         else:
             # Once some info is collected, we can try the alternative prediction methods
-            action, best_prob = self.drf.choose_action(obs)
+            action, best_prob = self.ai_drf.choose_action(self.full_state)
             self.log.debug(f"DRF-Action: '{action.upper()}'" +
                            f", best_prob = '{best_prob}'")
 
@@ -265,8 +270,8 @@ class aiBase(ObsAPI):
 
             next_state = self.decisions_hist[i]['next_state']
 
-            self.ai_dqn.learn(previous_state, previous_action, reward,
-                              next_state)
+            # self.ai_dqn.learn(previous_state, previous_action, reward,
+            #                   next_state)
 
             reward *= reward_decay
 
