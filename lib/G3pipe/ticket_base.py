@@ -20,14 +20,21 @@ class BasePipelineTicket(TicketStatus):
     base_top_left: bool = None
     is_order_issued: bool = False
 
+    # To be used by Bob Build orders only
+    sc2_building_ID = None
+    assigned_scv_tag = None
+    building_xy = None
+    should_be_checked_for_retry = None
+    retry_counter = None
+
     def __init__(self):
         super().__init__()
-        # self.logger.debug(f"Creating '{self.__class__.__name__}'")
+        self.logger.debug("Creating '" + self.__class__.__name__ + "'")
 
     def __str__(self):
         extra_info = ""
         if self.depends_on_list is not None:
-            if (len(self.depends_on_list)):
+            if len(self.depends_on_list) > 0:
                 deps = [
                     self.pipelene.who_is(depends_on)
                     for depends_on in self.depends_on_list
@@ -38,15 +45,15 @@ class BasePipelineTicket(TicketStatus):
             extra_info += (", blocks " +
                            f"'{self.pipelene.who_is(self.blocks_whom_id)}'")
         return (
-            f"{self.ID}_{self.__class__.__name__}, status: {self.str_status()}"
+            f"{self.id}_{self.__class__.__name__}, status: {self.str_status()}"
             + extra_info)
 
     def link_to_pipeline(self, parent_pipeline: PipelineBase,
                          ticket_id: int) -> None:
         """ Secondary action, performed by Pipeline::add_order() """
         self.pipelene = parent_pipeline
-        self.ID = ticket_id
-        self.logger.debug(f"Assgining ID:{ticket_id}")
+        self.id = ticket_id
+        self.logger.debug("Assgining ID:" + str(ticket_id))
 
     # def is_complete(self) -> bool:
     #     return True if self.status == self.status_complete else False
@@ -60,9 +67,10 @@ class BasePipelineTicket(TicketStatus):
         self.depends_on_list.append(ticket_id)
         self.set_status(TicketStatus.BLOCKED)
         self.logger.debug("new status: " + str(self))
-        self.pipelene.book[ticket_id].assign_as_blocker(self.ID)
+        self.pipelene.book[ticket_id].assign_as_blocker(self.id)
 
     def remove_dependency(self, ticket_id: int) -> None:
+        """ This ticket will no longer be dependant on `ticket_id`"""
         self.logger.debug(
             f"remove_dependency('{self.pipelene.who_is(ticket_id)}')")
         if self.depends_on_list is None:
@@ -76,8 +84,9 @@ class BasePipelineTicket(TicketStatus):
             self.set_status(TicketStatus.ACTIVE)
 
     def assign_as_blocker(self, ticket_id: int) -> None:
+        """Mark this ticket as a blocker for `ticket_id`"""
         self.logger.debug(
-            f"{self.pipelene.who_is(self.ID)}.assign_as_blocker({ticket_id}:" +
+            f"{self.pipelene.who_is(self.id)}.assign_as_blocker({ticket_id}:" +
             f"'{self.pipelene.who_is(ticket_id)}')")
         if self.blocks_whom_id is not None:
             raise Exception(
@@ -86,18 +95,20 @@ class BasePipelineTicket(TicketStatus):
         self.blocks_whom_id = ticket_id
 
     def mark_complete(self):
+        """Mark order as complete"""
         if self.blocks_whom_id is not None:
             self.resign_as_blocker()
         self.set_status(TicketStatus.COMPLETE)
 
     def resign_as_blocker(self) -> None:
+        """Not a blocker anymore"""
         if self.blocks_whom_id is None:
             raise Exception("resign_as_blocker(): No blocked ID is specified")
         self.logger.debug(
-            f"{self.pipelene.who_is(self.ID)}.resign_as_blocker(" +
+            f"{self.pipelene.who_is(self.id)}.resign_as_blocker(" +
             f"'{self.pipelene.who_is(self.blocks_whom_id)}')")
 
-        self.pipelene.book[self.blocks_whom_id].remove_dependency(self.ID)
+        self.pipelene.book[self.blocks_whom_id].remove_dependency(self.id)
 
         # Note: Is implemented in remove_dependency()
         # # Check if this item was the last blocker
@@ -108,6 +119,8 @@ class BasePipelineTicket(TicketStatus):
         self.blocks_whom_id = None
 
     def report_invalid_method(self):
+        """Helper function to report a call to invalid method"""
+        # ToDO: detect caller's name
         err_msg = 'This method should not be called directly. It is a placeholder only'
         self.logger.error(err_msg)
         raise Exception(f"{self.__class__.__name__}::run(): {err_msg}")
@@ -126,6 +139,7 @@ class BasePipelineTicket(TicketStatus):
         """ Checks the preconditions and creates downstream tickets.
         Can be left empty if no action is required
         """
+        pass
 
     def run(self, obs):
         ''' Executes an order
@@ -166,5 +180,57 @@ class BasePipelineTicket(TicketStatus):
 
                 ``asx``: __ghghg__
         '''
-
         self.report_invalid_method()
+
+    def implement_build_action(self):
+        """
+        To be called if SCV fails to build for some reason
+
+        Should return the SC2 order for a given `self.assigned_scv_tag` SCV
+
+        Should be implemented separately for each class
+        """
+        self.report_invalid_method()
+
+    def retry_action_if_needed(self, obs):
+        """ Check if SCV is idle, when it is supposed to work """
+        if not self.validate_building_inputs():
+            return None
+
+        # Check if SCV is idle, if no - OK
+        assigned_scv_order_length = [
+            unit.order_length for unit in obs.observation.raw_units
+            if unit.tag == self.assigned_scv_tag
+        ]
+
+        if len(assigned_scv_order_length) == 0:
+            self.logger.warning("  Assigned SCV is dead?")
+            return None
+
+        if assigned_scv_order_length == 0:
+            self.logger.debug("  Assigned SCV is still working")
+            return None
+
+        self.retry_counter += 1
+
+        if self.retry_counter % 20 == 0:
+            self.logger.warning("  Failed to retry the build after " +
+                                str(self.retry_counter) + " attempts")
+
+        return self.implement_build_action()
+
+    def validate_building_inputs(self):
+        """ Confirm that SCV and building info is present"""
+        is_valid = True
+
+        if self.assigned_scv_tag is None:
+            # raise Exception('SCV tag is not assigned')
+            self.logger.warning(str(self) + "SCV tag is not assigned")
+            is_valid = False
+
+        if self.building_xy is None:
+            #raise Exception('Building XY is not assigned')
+            self.logger.warning(str(self) + 'Building XY is not assigned')
+            is_valid = False
+
+        return is_valid

@@ -7,8 +7,6 @@ class BasePipelineBuildTicket(BasePipelineTicket):
     def __init__(self):
         super().__init__()
 
-    sc2_building_ID = None
-
     new_building_metadata = {
         "Barrack": {
             "class_name": "poBuildBarracks",
@@ -21,6 +19,10 @@ class BasePipelineBuildTicket(BasePipelineTicket):
             "max_building": 4
         },
     }
+
+    def __init__(self):
+        super().__init__()
+        self.retry_counter = 0
 
     def should_build_barrack(self, obs) -> bool:
         self.get_len(obs)
@@ -96,9 +98,18 @@ class poBuildSupplyDepot(BasePipelineBuildTicket):
     """ Requests and waits till the Supply Depot is constructed """
 
     sc2_building_ID = units.Terran.SupplyDepot
+    should_be_checked_for_retry = True
 
     def __init__(self):
         super().__init__()
+
+    def implement_build_action(self):
+        if not self.validate_building_inputs():
+            return None
+
+        self.logger.info("SC2: Build 'Supply Depot'")
+        return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
+            "now", self.assigned_scv_tag, self.building_xy)
 
     def generate_sc2_order(self, obs):
         # ToDo: should be loaded via map config
@@ -113,11 +124,11 @@ class poBuildSupplyDepot(BasePipelineBuildTicket):
             2: (69 - 5, 77 - 5),
             3: (69 - 5, 77 - 7)
         }
-        self.logger.info("SC2: Build 'Supply Depot'")
-        scv_tag, building_xy = self.build_with_scv_xy(
+
+        self.assigned_scv_tag, self.building_xy = self.build_with_scv_xy(
             obs, xy_options, self.len_supply_depots_100)
-        return actions.RAW_FUNCTIONS.Build_SupplyDepot_pt(
-            "now", scv_tag, building_xy)
+
+        return self.implement_build_action()
 
     def run(self, obs):
         # This class does not have any downstream dependencies
@@ -144,9 +155,19 @@ class poBuildBarracks(BasePipelineBuildTicket):
     """ Requests and waits till the Barracks is constructed """
 
     sc2_building_ID = units.Terran.Barracks
+    should_be_checked_for_retry = True
 
     def __init__(self):
         super().__init__()
+
+    def implement_build_action(self):
+        if not self.validate_building_inputs():
+            return None
+
+        self.logger.info("SC2: Build 'Barracks'")
+        return actions.RAW_FUNCTIONS.Build_Barracks_pt("now",
+                                                       self.assigned_scv_tag,
+                                                       self.building_xy)
 
     def generate_sc2_order(self, obs):
         # ToDo: should be loaded via map config
@@ -168,11 +189,11 @@ class poBuildBarracks(BasePipelineBuildTicket):
             3: (69 - 13, 77 - 6),
             4: (69 - 7, 77 - 6)
         }
-        self.logger.info("SC2: Build 'Barracks'")
-        scv_tag, building_xy = self.build_with_scv_xy(obs, xy_options,
-                                                      self.len_barracks)
-        return actions.RAW_FUNCTIONS.Build_Barracks_pt("now", scv_tag,
-                                                       building_xy)
+
+        self.assigned_scv_tag, self.building_xy = self.build_with_scv_xy(
+            obs, xy_options, self.len_barracks)
+
+        return self.implement_build_action()
 
     def run(self, obs):
         self.get_len(obs)
@@ -198,6 +219,8 @@ class poTrainMarine(BasePipelineBuildTicket):
     number_of_mariners_to_build: int = None
     number_of_mariners_to_build_remaining: int = None
     number_of_barracks_requested: int = None
+
+    should_be_checked_for_retry = False
 
     def __init__(self, number_of_mariners_to_build: int):
         super().__init__()
@@ -252,6 +275,9 @@ class poTrainMarine(BasePipelineBuildTicket):
 
 class poAccumulateReserve(BasePipelineBuildTicket):
     """ Add the new units to reserve """
+
+    should_be_checked_for_retry = False
+
     def __init__(self):
         super().__init__()
 
@@ -270,8 +296,10 @@ class poAccumulateReserve(BasePipelineBuildTicket):
 
 
 class poGenTransferReserve(BasePipelineBuildTicket):
-    # Belongs to Sgt Peps
+    """ Assign all reserve units to TF1 """
+
     fn_transfer_to_TF1 = None
+    should_be_checked_for_retry = False
 
     def __init__(self, fn_transfer_to_TF1):
         super().__init__()

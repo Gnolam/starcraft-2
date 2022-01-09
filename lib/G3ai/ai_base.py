@@ -110,13 +110,13 @@ class aiBase(ObsAPI):
         self.step_counter = 0
         self.game_num += 1
 
-    def save_DQN(self):
+    def save_dqn(self):
         self.log.debug("save_DQN()")
         self.log.debug('Record current learnings (%s): %s' %
                        (self.agent_name, self.dqn_filename))
         self.ai_dqn.q_table.to_pickle(self.dqn_filename, 'gzip')
 
-    def load_DQN(self):
+    def load_dqn(self):
         if os.path.isfile(self.dqn_filename):
             self.log.info('Load previous learnings (%s)' % self.agent_name)
             self.ai_dqn.q_table = pd.read_pickle(self.dqn_filename,
@@ -183,7 +183,7 @@ class aiBase(ObsAPI):
         self.log.debug(f"{self.agent_name}: step()")
 
         if obs.first():
-            self.log.debug(f"SCP100: first observation")
+            self.log.debug("SCP100: first observation")
             command_centres = self.get_my_units_by_type(
                 obs, units.Terran.CommandCenter)
             self.pipeline.base_top_left = (command_centres[0].x < 32)
@@ -196,7 +196,8 @@ class aiBase(ObsAPI):
             self.choose_next_action(obs)
             got_new_order = True
         else:
-            self.log.debug(f"SCP102: pipeline is NOT empty")
+            self.log.debug("SCP102: pipeline is NOT empty")
+            self.log.debug(str(self.pipeline))
 
         if obs.last():  # and self.agent_name == 'bob':
             self.log.debug(f"SCP103: last observation detected")
@@ -256,7 +257,7 @@ class aiBase(ObsAPI):
         self.write_tidy_vector_to_file(self.fn_db_results, {"outcome": reward})
 
         self.learn_from_game(reward)
-        self.save_DQN()
+        self.save_dqn()
 
     def learn_from_game(self, reward):
         reward_decay = .9

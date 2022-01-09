@@ -164,27 +164,27 @@ loggers:
 
   res:
     level: INFO
-    handlers: [file_result, file_main, console] #, file_dbg]
+    handlers: [file_result, file_main, console, file_dbg]
     propagate: false
 
   Pipeline:
     level: DEBUG
-    handlers: [file_pipeline, file_pipeline_orders, file_pipeline_orders_debug]
+    handlers: [file_pipeline, file_pipeline_orders, file_pipeline_orders_debug, file_dbg]
     propagate: false
 
   poBuildSupplyDepot:
     level: DEBUG
-    handlers: [file_pipeline_orders,file_pipeline_orders_debug,file_poBuildSupplyDepot]
+    handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poBuildSupplyDepot, file_dbg]
     propagate: false
 
   poBuildBarracks:
     level: DEBUG
-    handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poBuildBarracks]
+    handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poBuildBarracks, file_dbg]
     propagate: false
 
   poTrainMarine:
     level: DEBUG
-    handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poTrainMarine]
+    handlers: [file_pipeline_orders, file_pipeline_orders_debug, file_poTrainMarine, file_dbg]
     propagate: false
 
   poAccumulateReserve:

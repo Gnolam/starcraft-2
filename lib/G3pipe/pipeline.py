@@ -32,7 +32,7 @@ class Pipeline(PipelineBase):
     def is_empty(self) -> bool:
         """ Returns True if current pipeline has no active orders """
         pipeline_is_empty = len([
-            ticket.ID for ticket in self.book
+            ticket.id for ticket in self.book
             if ticket.get_status() == TicketStatus.ACTIVE
         ]) == 0
         self.logger.debug(str(pipeline_is_empty) + str(self))
@@ -59,8 +59,8 @@ class Pipeline(PipelineBase):
         #       2. confim $, clean marine ticket
         #       3. Marine ticket generate order
 
-        active_ticket_IDs = [
-            ticket.ID for ticket in self.book
+        active_ticket_ids = [
+            ticket.id for ticket in self.book
             if ticket.get_status() == TicketStatus.ACTIVE
         ]
 
@@ -69,7 +69,7 @@ class Pipeline(PipelineBase):
             if self.new_building_done_promises[promise_var] is True
         ]
         if len(fulfilled_list) > 0:
-            self.logger.debug(f"Fulfilled promises:")
+            self.logger.debug("Fulfilled promises:")
             for promise_var in fulfilled_list:
                 self.new_building_made_promises[promise_var] = False
                 self.new_building_done_promises[promise_var] = False
@@ -77,8 +77,8 @@ class Pipeline(PipelineBase):
 
         # Debug display status
         self.logger.debug("List of active tickets:")
-        for ticket_ID in active_ticket_IDs:
-            self.logger.debug(" " * 4 + self.who_is(ticket_ID))
+        for ticket_id in active_ticket_ids:
+            self.logger.debug(" " * 4 + self.who_is(ticket_id))
 
         self.get_len(obs)
         self.logger.debug("Stat: ")
@@ -95,8 +95,8 @@ class Pipeline(PipelineBase):
         # Verify that list of active did not change between runs
         # init with ACTIVE list so run does not scan twice throught them
         # if nothing happens
-        last_iteration_ticket_IDs = current_ticket_IDs = [
-            ticket.ID for ticket in self.book
+        last_iteration_ticket_ids = current_ticket_ids = [
+            ticket.id for ticket in self.book
             if ticket.get_status() in [TicketStatus.ACTIVE]
         ]
 
@@ -106,7 +106,7 @@ class Pipeline(PipelineBase):
                     ticket for ticket in self.book
                     if ticket.get_status() == TicketStatus.ACTIVE
             ]:
-                self.logger.debug(f"~> {self.who_is(ticket.ID)}")
+                self.logger.debug("~> " + self.who_is(ticket.id))
                 is_valid, sc2_order = ticket.run(obs)
                 if not is_valid:
                     ticket.set_status(TicketStatus.INVALID)
@@ -117,23 +117,23 @@ class Pipeline(PipelineBase):
                     return sc2_order
 
             # Current list of tickets
-            current_ticket_IDs = [
-                ticket.ID for ticket in self.book
+            current_ticket_ids = [
+                ticket.id for ticket in self.book
                 if ticket.get_status() == TicketStatus.ACTIVE
             ]
 
             # Should iterate if the list of tickets have changed.
             # Reduction in the list should be checked as well
-            count_new_IDs = len(
-                set(current_ticket_IDs) - set(last_iteration_ticket_IDs))
-            count_gone_IDs = len(
-                set(last_iteration_ticket_IDs) - set(current_ticket_IDs))
-            should_iterate = count_new_IDs + count_gone_IDs > 0
+            count_new_ids = len(
+                set(current_ticket_ids) - set(last_iteration_ticket_ids))
+            count_gone_ids = len(
+                set(last_iteration_ticket_ids) - set(current_ticket_ids))
+            should_iterate = count_new_ids + count_gone_ids > 0
             self.logger.debug("End of loop results:")
 
-            self.logger.debug(f"  new:  {count_new_IDs}")
-            self.logger.debug(f"  gone: {count_gone_IDs}")
-            last_iteration_ticket_IDs = current_ticket_IDs
+            self.logger.debug("  new:  " + str(count_new_ids))
+            self.logger.debug("  gone: " + str(count_gone_ids))
+            last_iteration_ticket_ids = current_ticket_ids
 
         return None  # or SC2 order, if inything was resolved
 
@@ -147,3 +147,32 @@ class Pipeline(PipelineBase):
         ret += f"\n  * Promises current  = {str(self.new_building_made_promises)}"
         ret += f"\n  * Promises resolved = {str(self.new_building_done_promises)}"
         return ret
+
+    def retry_orders_if_needed(self, obs):
+        """Returns SC2 order is any of the active tickets should be resumed"""
+
+        self.logger.debug("Check if retries are required")
+        ill_designed_tickets = [
+            str(ticket) for ticket in self.book
+            if ticket.should_be_checked_for_retry is None
+        ]
+
+        if len(ill_designed_tickets) > 0:
+            raise Exception("The following tickets have non-defined " +
+                            "`should_be_checked_for_retry` property:" +
+                            str(ill_designed_tickets))
+
+        # Scan through all pipeline tickets, select only active onces
+        active_eligible_tickets = [
+            ticket for ticket in self.book
+            if ticket.get_status() == TicketStatus.ACTIVE
+            and ticket.should_be_checked_for_retry is True
+        ]
+
+        for active_ticket in active_eligible_tickets:
+            sc2_order = active_ticket.retry_action_if_needed(obs)
+            if sc2_order is not None:
+                self.logger.warning("!!! Retry was required for " +
+                                    str(active_ticket) + "!!!")
+                return sc2_order
+        return None

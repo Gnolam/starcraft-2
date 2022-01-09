@@ -17,7 +17,7 @@ class TicketStatus(PipelineConventions):
     }
 
     # Variables
-    ID: int = None
+    id: int = None
     current_status: int = None
 
     def __init__(self):
@@ -41,7 +41,7 @@ class TicketStatus(PipelineConventions):
         ]:
             raise Exception(f"Unknown new status: {new_status}")
         self.logger.debug(
-            f"  Status for '{self.ID}_{self.__class__.__name__}': " +
+            f"  Status for '{self.id}_{self.__class__.__name__}': " +
             f"'{self.status_dict[self.current_status]}' -> " +
             f"'{self.status_dict[new_status]}'")
         self.current_status = new_status
