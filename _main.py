@@ -43,7 +43,7 @@ def main(unused_argv):
             step_mul=48,
             disable_fog=True,
     ) as env:
-        run_loop.run_loop([my_sc2_agent], env, max_episodes=2222)
+        run_loop.run_loop([my_sc2_agent], env, max_episodes=1)
         # run_loop.run_loop([agentSmart1, agentRandom], env, max_episodes=10000)
         # run_loop.run_loop([agentSmart1, agentSmart2], env, max_episodes=1000)
     try:
