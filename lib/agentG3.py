@@ -44,12 +44,12 @@ class SmartAgentG3(base_agent.BaseAgent):
         # just decides on reserve -> task force reallocation
         if builder_got_new_orders:
             logging.getLogger("dbg").debug(
-                "CP02a: builder got new orders, asking General to make a decision"
+                "CP02a: builder got new ticket, asking General to make a decision"
             )
             _, _ = self.ai_war.step(obs)
         else:
             logging.getLogger("dbg").debug(
-                "CP02b: builder got NO new orders, no need to disturb the general"
+                "CP02b: builder got NO new tickets, no need to disturb the general"
             )
 
         if sc2_order is None:

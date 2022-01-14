@@ -2,11 +2,10 @@ import numpy as np
 import random
 from pysc2.lib import features, actions, units
 import collections
-
-
 """
 Module for basic functionality with SC2 'obs' object
 """
+
 
 class ObsAPI(object):
     """ Main class for API wrappers """
@@ -63,8 +62,17 @@ class ObsAPI(object):
     def get_nearest_unit(self, obs, units, xy):
         return units[np.argmax(self.get_distances(obs, units, xy))]
 
-    def build_with_scv_xy(self, obs, xy_options, ith_count):
+    def select_scv_to_build(self, obs, xy_options, ith_count):
         scvs = self.get_my_units_by_type(obs, units.Terran.SCV)
+
+        if len(xy_options) <= ith_count:
+            self.logger.error("array is smaller than index: index = " +
+                              str(ith_count) + ", while array = " +
+                              str(xy_options))
+
+        self.logger.debug("index = " + str(ith_count) + ", array = " +
+                          str(xy_options))
+
         building_xy = xy_options[ith_count]
         scv = self.get_nearest_unit(obs, scvs, building_xy)
         return scv.tag, building_xy
@@ -135,6 +143,13 @@ class ObsAPI(object):
                 "now", random_idle_worker, closest_mineral_patch.tag)
         # Allows to take another action
         return None
+
+    def report_invalid_method(self):
+        """Helper function to report a call to invalid method"""
+        # ToDO: detect caller's name
+        err_msg = 'This method should not be called directly. It is a placeholder only'
+        self.logger.error(err_msg)
+        raise Exception(f"{self.__class__.__name__}::run(): {err_msg}")
 
 
 def get_unit_type_counts(obs, unit_list: list) -> dict:

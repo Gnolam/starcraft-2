@@ -95,7 +95,7 @@ class DRFPredictor:
         """
         self.log.info("Train the model")
 
-        hex_final = h2o.import_file(path="db/dat_final.csv",
+        hex_final = h2o.import_file(path="dat_final.csv",
                                     header=1,
                                     destination_frame="hex_final")
 

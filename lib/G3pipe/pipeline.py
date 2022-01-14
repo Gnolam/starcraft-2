@@ -20,7 +20,7 @@ class Pipeline(PipelineBase):
         self.book.append(new_ticket)
         new_ticket.link_to_pipeline(parent_pipeline=self,
                                     ticket_id=self.order_counter)
-        new_ticket.set_status(TicketStatus.ACTIVE)
+        new_ticket.mark_opened()
         new_ticket.base_top_left = self.base_top_left
 
         if blocks_whom_id is not None:
@@ -31,10 +31,8 @@ class Pipeline(PipelineBase):
 
     def is_empty(self) -> bool:
         """ Returns True if current pipeline has no active orders """
-        pipeline_is_empty = len([
-            ticket.id for ticket in self.book
-            if ticket.get_status() == TicketStatus.ACTIVE
-        ]) == 0
+        pipeline_is_empty = len(
+            [ticket.id for ticket in self.book if ticket.is_opened()]) == 0
         self.logger.debug(str(pipeline_is_empty) + str(self))
         return pipeline_is_empty
 
@@ -52,16 +50,16 @@ class Pipeline(PipelineBase):
 
     def run(self, obs):
         """ Scans: through all the orders in the book and tries to run those, which are active """
-        # ToDo:
         #    Check only tickets IDs, which were used during the last run:
         #    This it will be possible to
         #       1. Marine: add $ req.
         #       2. confim $, clean marine ticket
         #       3. Marine ticket generate order
 
+        self.logger.debug("CP21: ~> run()")
+
         active_ticket_ids = [
-            ticket.id for ticket in self.book
-            if ticket.get_status() == TicketStatus.ACTIVE
+            ticket.id for ticket in self.book if ticket.is_opened()
         ]
 
         fulfilled_list = [
@@ -69,11 +67,12 @@ class Pipeline(PipelineBase):
             if self.new_building_done_promises[promise_var] is True
         ]
         if len(fulfilled_list) > 0:
-            self.logger.debug("Fulfilled promises:")
+            self.logger.debug("Clearing fulfilled promises:")
             for promise_var in fulfilled_list:
+                self.logger.debug(
+                    f"  Clearing promise records for '{promise_var}'")
                 self.new_building_made_promises[promise_var] = False
                 self.new_building_done_promises[promise_var] = False
-                self.logger.debug(f"  Invalidating promise: '{promise_var}'")
 
         # Debug display status
         self.logger.debug("List of active tickets:")
@@ -96,30 +95,28 @@ class Pipeline(PipelineBase):
         # init with ACTIVE list so run does not scan twice throught them
         # if nothing happens
         last_iteration_ticket_ids = current_ticket_ids = [
-            ticket.id for ticket in self.book
-            if ticket.get_status() in [TicketStatus.ACTIVE]
+            ticket.id for ticket in self.book if ticket.is_opened()
         ]
 
         while should_iterate:
             # Run all tickets with ACTIVE status
             for ticket in [
-                    ticket for ticket in self.book
-                    if ticket.get_status() == TicketStatus.ACTIVE
+                    ticket for ticket in self.book if ticket.is_opened()
             ]:
-                self.logger.debug("~> " + self.who_is(ticket.id))
+                self.logger.debug("looking into " + self.who_is(ticket.id))
                 is_valid, sc2_order = ticket.run(obs)
                 if not is_valid:
-                    ticket.set_status(TicketStatus.INVALID)
+                    ticket.mark_invalid()
                 elif sc2_order is not None:
                     # The SC2 was issued, ignore the rest of the tickets
-                    # ToDo: should INFO order was issued
-                    # ToDo: should mark tiket complete
+                    # should mark tiket complete - no, e.g poTrainMarine has it conditional
+                    self.logger.debug("ticket '" + str(ticket) +
+                                      "' has generated an order")
                     return sc2_order
 
             # Current list of tickets
             current_ticket_ids = [
-                ticket.id for ticket in self.book
-                if ticket.get_status() == TicketStatus.ACTIVE
+                ticket.id for ticket in self.book if ticket.is_opened()
             ]
 
             # Should iterate if the list of tickets have changed.
@@ -141,7 +138,7 @@ class Pipeline(PipelineBase):
         ret = "\n  Current content of the pipeline gross book:\n    " + "-" * 40
         for ticket in self.book:
             ticket_str = str(ticket)
-            if ticket.get_status() != TicketStatus.ACTIVE:
+            if not ticket.is_opened():
                 ticket_str = ticket_str.replace("'", " ")
             ret += f"\n     {ticket_str}"
         ret += f"\n  * Promises current  = {str(self.new_building_made_promises)}"
@@ -165,8 +162,8 @@ class Pipeline(PipelineBase):
         # Scan through all pipeline tickets, select only active onces
         active_eligible_tickets = [
             ticket for ticket in self.book
-            if ticket.get_status() == TicketStatus.ACTIVE
-            and ticket.should_be_checked_for_retry is True
+            if ticket.is_opened() and ticket.should_be_checked_for_retry is
+            True and ticket.is_alredy_issued()
         ]
 
         for active_ticket in active_eligible_tickets:
@@ -175,4 +172,7 @@ class Pipeline(PipelineBase):
                 self.logger.warning("!!! Retry was required for " +
                                     str(active_ticket) + "!!!")
                 return sc2_order
+            else:
+                self.logger.debug("CP444: " + str(active_ticket) +
+                                  " is under execution")
         return None

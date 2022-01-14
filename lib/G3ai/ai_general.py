@@ -139,7 +139,7 @@ class aiGeneral(aiBase, BuildTicketsWar):
     fn_transfer_to_TF1 = None
     agent_name = "aiWarPlanner"
     ai_log_suffix = "War"
-    use_dqn_only = False
+    use_dqn_only = True  # False
 
     tf1_size = None
     res_size = None
