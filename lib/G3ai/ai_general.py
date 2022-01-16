@@ -165,8 +165,9 @@ class aiGeneral(aiBase, BuildTicketsWar):
             raise Exception(
                 "fn_transfer_to_TF1 callable pointer is still None")
 
-        self.init2()
-        self.ai_drf.update()
+        #### Disable for speed up
+        # self.init2()
+        # self.ai_drf.update()
 
     def get_full_state(self, obs):
         """

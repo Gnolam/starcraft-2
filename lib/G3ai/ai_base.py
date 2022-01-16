@@ -271,8 +271,8 @@ class aiBase(ObsAPI):
 
             next_state = self.decisions_hist[i]['next_state']
 
-            # self.ai_dqn.learn(previous_state, previous_action, reward,
-            #                   next_state)
+            self.ai_dqn.learn(previous_state, previous_action, reward,
+                              next_state)
 
             reward *= reward_decay
 
