@@ -56,6 +56,11 @@ class SmartAgentG3(base_agent.BaseAgent):
             # Check if any currently active orders have their SCVs idle
             sc2_order = self.ai_bob.pipeline.retry_orders_if_needed(obs)
 
+        # Only a temporary mean
+        if sc2_order is None:
+            # Check if any currently active orders have their SCVs idle
+            sc2_order = self.ai_bob.pipeline.resume_harvesting(obs)
+
         if sc2_order is None:
             logging.getLogger("dbg").debug(f"CP03: assigned sc2_order is None")
             if self.ai_war.peps is None:
