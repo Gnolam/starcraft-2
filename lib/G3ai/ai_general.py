@@ -3,7 +3,7 @@ import numpy as np
 from pysc2.lib import units, features, actions
 from lib.G3ai.ai_base import aiBase
 from lib.G3ai.action_list import BuildTicketsWar
-from lib.c01_obs_api import get_enemy_unit_type_counts
+from lib.c01_obs_api import *
 
 
 class Sergant(aiBase):
@@ -19,7 +19,7 @@ class Sergant(aiBase):
     def update_my_army(self, obs):
         self.my_all_army_tag_list = [
             marine.tag
-            for marine in self.get_my_units_by_type(obs, units.Terran.Marine)
+            for marine in get_my_units_by_type(obs, units.Terran.Marine)
         ]
 
     def update_tf1_and_reserve_tags(self, obs):
@@ -50,8 +50,7 @@ class Sergant(aiBase):
             return actions.RAW_FUNCTIONS.no_op()
 
         tf1_units = [
-            marine
-            for marine in self.get_my_units_by_type(obs, units.Terran.Marine)
+            marine for marine in get_my_units_by_type(obs, units.Terran.Marine)
             if marine.tag in set(self.tf1_tag_list)
         ]
 
@@ -72,30 +71,31 @@ class Sergant(aiBase):
         my_base_xy = (19, 27) if self.pipeline.base_top_left else (69,
                                                                    77)  # 96
 
-        enemy_marines = self.get_enemy_units_by_type(obs, units.Terran.Marine)
-        enemy_scvs = self.get_enemy_units_by_type(obs, units.Terran.SCV)
+        enemy_marines = get_enemy_units_by_type(obs, units.Terran.Marine)
+        enemy_scvs = get_enemy_units_by_type(obs, units.Terran.SCV)
         enemy_base = self.get_enemy_completed_units_by_type(
             obs, units.Terran.CommandCenter)
-        any_enemy_targets = self.get_all_enemy_units(obs)
+
+        any_enemy_targets = get_all_enemy_units(obs)
 
         attack_target = None
         selected_target = "N/A"
 
         if len(enemy_base) > 0:
             attack_target = enemy_base[np.argmin(
-                self.get_distances(obs, enemy_base, my_base_xy))]
+                get_distances(enemy_base, my_base_xy))]
             selected_target = "Base"
         elif len(enemy_scvs) > 0:
             attack_target = enemy_scvs[np.argmin(
-                self.get_distances(obs, enemy_scvs, my_base_xy))]
+                get_distances(enemy_scvs, my_base_xy))]
             selected_target = "SCV"
         elif len(enemy_marines) > 0:
             attack_target = enemy_marines[np.argmin(
-                self.get_distances(obs, enemy_marines, my_base_xy))]
+                get_distances(enemy_marines, my_base_xy))]
             selected_target = "Mariner"
         elif len(any_enemy_targets) > 0:
             attack_target = any_enemy_targets[np.argmin(
-                self.get_distances(obs, any_enemy_targets, my_base_xy))]
+                get_distances(any_enemy_targets, my_base_xy))]
             selected_target = "ANY"
         else:
             self.log.warning("No target found, Victory?")
@@ -202,19 +202,15 @@ class aiGeneral(aiBase, BuildTicketsWar):
         self.write_tidy_vector_to_file(self.fn_db_states, self.full_state, "")
 
         if self.define_state == 'simple_1':
-            enemy_marines = self.get_enemy_units_by_type(
-                obs, units.Terran.Marine)
-            enemy_marauders = self.get_enemy_units_by_type(
-                obs, units.Terran.Marauder)
-            enemy_Tanks1 = self.get_enemy_units_by_type(
-                obs, units.Terran.SiegeTank)
-            enemy_Tanks2 = self.get_enemy_units_by_type(
+            enemy_marines = get_enemy_units_by_type(obs, units.Terran.Marine)
+            enemy_marauders = get_enemy_units_by_type(obs,
+                                                      units.Terran.Marauder)
+            enemy_Tanks1 = get_enemy_units_by_type(obs, units.Terran.SiegeTank)
+            enemy_Tanks2 = get_enemy_units_by_type(
                 obs, units.Terran.SiegeTankSieged)
-            enemy_Hells = self.get_enemy_units_by_type(obs,
-                                                       units.Terran.Hellion)
-            enemy_mines1 = self.get_enemy_units_by_type(
-                obs, units.Terran.WidowMine)
-            enemy_mines2 = self.get_enemy_units_by_type(
+            enemy_Hells = get_enemy_units_by_type(obs, units.Terran.Hellion)
+            enemy_mines1 = get_enemy_units_by_type(obs, units.Terran.WidowMine)
+            enemy_mines2 = get_enemy_units_by_type(
                 obs, units.Terran.WidowMineBurrowed)
 
             enemy_army = \
@@ -238,20 +234,20 @@ class aiGeneral(aiBase, BuildTicketsWar):
         if self.define_state == 'split_3':
 
             enemy_foot = \
-                + 1 * len(self.get_enemy_units_by_type(obs, units.Terran.Marine)) \
-                + 2 * len(self.get_enemy_units_by_type(obs, units.Terran.Marauder)) \
+                + 1 * len(get_enemy_units_by_type(obs, units.Terran.Marine)) \
+                + 2 * len(get_enemy_units_by_type(obs, units.Terran.Marauder)) \
 
             enemy_heavy = \
-                + len(self.get_enemy_units_by_type(obs, units.Terran.SiegeTank)) \
-                + len(self.get_enemy_units_by_type(obs, units.Terran.SiegeTankSieged)) \
-                + len(self.get_enemy_units_by_type(obs, units.Terran.Hellion)) \
-                + len(self.get_enemy_units_by_type(obs, units.Terran.Hellbat)) \
-                + len(self.get_enemy_units_by_type(obs, units.Terran.WidowMine)) \
-                + len(self.get_enemy_units_by_type(obs, units.Terran.WidowMineBurrowed))
+                + len(get_enemy_units_by_type(obs, units.Terran.SiegeTank)) \
+                + len(get_enemy_units_by_type(obs, units.Terran.SiegeTankSieged)) \
+                + len(get_enemy_units_by_type(obs, units.Terran.Hellion)) \
+                + len(get_enemy_units_by_type(obs, units.Terran.Hellbat)) \
+                + len(get_enemy_units_by_type(obs, units.Terran.WidowMine)) \
+                + len(get_enemy_units_by_type(obs, units.Terran.WidowMineBurrowed))
 
             enemy_flying = \
-                + len(self.get_enemy_units_by_type(obs, units.Terran.Medivac)) \
-                + len(self.get_enemy_units_by_type(obs, units.Terran.Raven))
+                + len(get_enemy_units_by_type(obs, units.Terran.Medivac)) \
+                + len(get_enemy_units_by_type(obs, units.Terran.Raven))
 
             if enemy_foot < 4:
                 enemy_foot_band = 4

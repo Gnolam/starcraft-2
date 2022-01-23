@@ -1,6 +1,6 @@
 from lib.G3pipe.ticket_base import BasePipelineTicket
 from pysc2.lib import actions, units
-# ----------------------------------------------------------------------------
+from lib.c01_obs_api import get_my_units_by_type
 
 
 class BasePipelineBuildTicket(BasePipelineTicket):
@@ -60,8 +60,7 @@ class BasePipelineBuildTicket(BasePipelineTicket):
         sc2_building_tag = eval(f"{build_class_name}.sc2_building_tag")
         is_building_promised = self.pipelene.is_promised(metadata_key)
 
-        len_building_all = len(self.get_my_units_by_type(
-            obs, sc2_building_tag))
+        len_building_all = len(get_my_units_by_type(obs, sc2_building_tag))
         len_building_100 = len(
             self.get_my_completed_units_by_type(obs, sc2_building_tag))
         is_building_in_progress = (len_building_all != len_building_100)

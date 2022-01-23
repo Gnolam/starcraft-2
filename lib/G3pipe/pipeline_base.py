@@ -2,17 +2,7 @@ import logging
 from lib.c01_obs_api import ObsAPI
 
 
-class PipelineConventions(ObsAPI):
-    """ Joint class parent for Pipeline and Orders """
-    def __init__(self):
-        super().__init__()
-        self.logger = logging.getLogger(self.__class__.__name__)
-
-
-# ------------------------------------------------------------------------
-
-
-class PipelineBase(PipelineConventions):
+class PipelineBase(ObsAPI):
     """
     Promise class definition. Must not be called directly.
     Parent class for `Pipeline`

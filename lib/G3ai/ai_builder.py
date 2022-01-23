@@ -2,6 +2,7 @@ from lib.G3ai.ai_base import aiBase
 from lib.G3ai.action_list import BuildTicketsEcon
 
 from pysc2.lib import units
+from lib.c01_obs_api import get_my_units_by_type
 
 
 class aiBuilder(aiBase, BuildTicketsEcon):
@@ -23,7 +24,7 @@ class aiBuilder(aiBase, BuildTicketsEcon):
             obs, units.Terran.SupplyDepot)
         completed_barracks = self.get_my_completed_units_by_type(
             obs, units.Terran.Barracks)
-        marines = self.get_my_units_by_type(obs, units.Terran.Marine)
+        marines = get_my_units_by_type(obs, units.Terran.Marine)
 
         return (len(completed_supply_depots), len(completed_barracks),
                 len(marines))

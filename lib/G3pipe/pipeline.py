@@ -1,4 +1,3 @@
-from lib.G3pipe.ticket_status import TicketStatus
 from lib.G3pipe.pipeline_base import PipelineBase
 from lib.G3pipe.ticket_base import BasePipelineTicket
 

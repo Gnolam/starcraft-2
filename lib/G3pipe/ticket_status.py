@@ -1,7 +1,7 @@
-from lib.G3pipe.pipeline_base import PipelineConventions
+from lib.c01_obs_api import ObsAPI
 
 
-class TicketStatus(PipelineConventions):
+class TicketStatus(ObsAPI):
     # Constants
     OPENED = 2
     REQUESTED = 100

@@ -11,6 +11,8 @@ from lib.AICore.predictor_drf import DRFPredictor
 from lib.c01_obs_api import ObsAPI
 from lib.G3pipe.pipeline import Pipeline
 
+from lib.c01_obs_api import get_my_units_by_type
+
 
 class aiBase(ObsAPI):
     agent_name = "L1"
@@ -184,8 +186,8 @@ class aiBase(ObsAPI):
 
         if obs.first():
             self.log.debug("SCP100: first observation")
-            command_centres = self.get_my_units_by_type(
-                obs, units.Terran.CommandCenter)
+            command_centres = get_my_units_by_type(obs,
+                                                   units.Terran.CommandCenter)
             self.pipeline.base_top_left = (command_centres[0].x < 32)
 
         # Pipeline is still _not_ finished, not a good time for the new action
