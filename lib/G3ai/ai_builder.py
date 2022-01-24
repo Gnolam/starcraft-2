@@ -2,7 +2,7 @@ from lib.G3ai.ai_base import aiBase
 from lib.G3ai.action_list import BuildTicketsEcon
 
 from pysc2.lib import units
-from lib.c01_obs_api import get_my_units_by_type
+from lib.c01_obs_api import *
 
 
 class aiBuilder(aiBase, BuildTicketsEcon):
@@ -20,9 +20,9 @@ class aiBuilder(aiBase, BuildTicketsEcon):
     def get_state(self, obs):
         # State vector should be revised to take into account both ours
         #   and enemy military potential
-        completed_supply_depots = self.get_my_completed_units_by_type(
+        completed_supply_depots = get_my_completed_units_by_type(
             obs, units.Terran.SupplyDepot)
-        completed_barracks = self.get_my_completed_units_by_type(
+        completed_barracks = get_my_completed_units_by_type(
             obs, units.Terran.Barracks)
         marines = get_my_units_by_type(obs, units.Terran.Marine)
 

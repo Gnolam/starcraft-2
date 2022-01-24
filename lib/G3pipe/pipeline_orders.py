@@ -1,6 +1,6 @@
 from lib.G3pipe.ticket_base import BasePipelineTicket
 from pysc2.lib import actions, units
-from lib.c01_obs_api import get_my_units_by_type
+from lib.c01_obs_api import *
 
 
 class BasePipelineBuildTicket(BasePipelineTicket):
@@ -62,7 +62,7 @@ class BasePipelineBuildTicket(BasePipelineTicket):
 
         len_building_all = len(get_my_units_by_type(obs, sc2_building_tag))
         len_building_100 = len(
-            self.get_my_completed_units_by_type(obs, sc2_building_tag))
+            get_my_completed_units_by_type(obs, sc2_building_tag))
         is_building_in_progress = (len_building_all != len_building_100)
 
         self.logger.debug("  [CP121]: " + "build_class_name: " +
@@ -135,7 +135,7 @@ class BasePipelineBuildTicket(BasePipelineTicket):
         build_location_xy_options = self.build_location_xy_options_top if self.base_top_left else self.build_location_xy_options_bottom
 
         self.logger.info("Assigning SCV and building coords")
-        self.assigned_scv_tag, self.assigned_building_xy = self.select_scv_to_build(
+        self.assigned_scv_tag, self.assigned_building_xy = select_scv_to_build(
             obs, build_location_xy_options, len_building)
 
         return self.implement_build_action()

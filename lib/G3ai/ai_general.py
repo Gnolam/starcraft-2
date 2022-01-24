@@ -73,7 +73,7 @@ class Sergant(aiBase):
 
         enemy_marines = get_enemy_units_by_type(obs, units.Terran.Marine)
         enemy_scvs = get_enemy_units_by_type(obs, units.Terran.SCV)
-        enemy_base = self.get_enemy_completed_units_by_type(
+        enemy_base = get_enemy_completed_units_by_type(
             obs, units.Terran.CommandCenter)
 
         any_enemy_targets = get_all_enemy_units(obs)
