@@ -1,15 +1,11 @@
 import logging
 
 from pysc2.lib.actions import build_queue
-from lib.G3pipe.ticket_status import TicketStatus
 from lib.G3pipe.pipeline_base import PipelineBase
+from lib.c01_obs_api import ObsAPI
 
 
-class BasePipelineTicket(TicketStatus):
-    '''
-    Class to manage the execution of a single `PipelineTicket`'
-    Contains the place holders for downstream classes
-    '''
+class BasePipelineTicket(ObsAPI):
 
     # status: int = None
     depends_on_list = None
@@ -19,9 +15,106 @@ class BasePipelineTicket(TicketStatus):
     # Should be set
     base_top_left: bool = None
 
+    # Constants
+    OPENED = 2
+    REQUESTED = 100
+    IN_PROGRESS = 120
+    COMPLETED = 150
+    BLOCKED = 200
+    INVALID = 400
+
+    status_dict = {
+        None: "N/A",
+        OPENED: "OPENED",  #           Ticket is NOT blocked
+        REQUESTED: "REQUESTED",  #     Build order was issued
+        IN_PROGRESS: "IN_PROGRESS",  # Ticket is confirmed to start building
+        COMPLETED: "COMPLETED",  #     Ticket was finished (for debug)
+        BLOCKED: "BLOCKED",
+        INVALID: "INVALID"
+    }
+
+    # Variables
+    id: int = None
+    current_status: int = None
+    status_already_issued: bool = None
+
     def __init__(self):
         super().__init__()
         self.logger.debug("Creating '" + self.__class__.__name__ + "'")
+        self.status_already_issued = False
+
+    def check_if_valid(self):
+        if self.current_status is None:
+            raise Exception("Use of unassigned status value")
+        if self.current_status not in self.status_dict:
+            raise Exception(f"Unknown status: {self.current_status}")
+
+    def str_status(self):
+        self.check_if_valid()
+        suffix = ""
+        if self.is_alredy_issued():
+            suffix += " (issued)"
+        return self.status_dict[self.current_status]
+
+    def mark_opened(self):
+        self.set_status(self.OPENED)
+
+    def is_opened(self):
+        return self.get_status() == self.OPENED
+
+    def mark_complete(self):
+        self.set_status(self.COMPLETED)
+
+    def is_completed(self):
+        return self.get_status() == self.COMPLETED
+
+    def mark_in_progress(self):
+        self.set_status(self.IN_PROGRESS)
+
+    def is_in_progress(self):
+        return self.get_status() == self.IN_PROGRESS
+
+    def mark_requested(self):
+        self.set_status(self.REQUESTED)
+
+    def is_requested(self):
+        return self.get_status() == self.REQUESTED
+
+    def mark_blocked(self):
+        self.set_status(self.BLOCKED)
+
+    def is_blocked(self):
+        return self.get_status() == self.BLOCKED
+
+    def mark_invalid(self):
+        self.set_status(self.INVALID)
+
+    def is_invalid(self):
+        return self.get_status() == self.INVALID
+
+    def set_status(self, new_status):
+        if new_status is None:
+            raise Exception(f"Cannot assign None status")
+        if new_status not in [
+                self.OPENED, self.IN_PROGRESS, self.BLOCKED, self.INVALID,
+                self.REQUESTED, self.COMPLETED
+        ]:
+            raise Exception(f"Unknown new status: {new_status}")
+        self.logger.debug(
+            f"  Status for '{self.id}_{self.__class__.__name__}': " +
+            f"'{self.status_dict[self.current_status]}' -> " +
+            f"'{self.status_dict[new_status]}'")
+        self.current_status = new_status
+
+    def get_status(self):
+        self.check_if_valid()
+        return self.current_status
+
+    def mark_as_issued(self) -> None:
+        self.status_already_issued = True
+
+    def is_alredy_issued(self) -> bool:
+        return self.status_already_issued
 
     def __str__(self):
         extra_info = ""
@@ -87,13 +180,13 @@ class BasePipelineTicket(TicketStatus):
         """Mark order as complete"""
         if self.blocks_whom_id is not None:
             self.resign_as_blocker()
-        self.set_status(TicketStatus.COMPLETED)
+        self.set_status(self.COMPLETED)
 
     def mark_in_progress(self):
         """Mark order as in progress"""
         if self.blocks_whom_id is not None:
             self.resign_as_blocker()
-        self.set_status(TicketStatus.IN_PROGRESS)
+        self.set_status(self.IN_PROGRESS)
 
     def resign_as_blocker(self) -> None:
         """Not a blocker anymore"""
@@ -108,7 +201,7 @@ class BasePipelineTicket(TicketStatus):
         # Note: Is implemented in remove_dependency()
         # # Check if this item was the last blocker
         # if len(blocked_order.depends_on_list) == 0:
-        #     blocked_order.set_status(TicketStatus.OPEN)
+        #     blocked_order.set_status(self.OPEN)
 
         # Assume only 1 order can be blocked relationsip
         self.blocks_whom_id = None
