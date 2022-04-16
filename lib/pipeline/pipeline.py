@@ -1,25 +1,28 @@
-from lib.G3pipe.pipeline_base import PipelineBase
-from lib.G3pipe.ticket_base import BasePipelineTicket
+"""
+Implementation of Pipeline class
+
+- to be merged with PipelineBase
+
+"""
+
+from lib.ticket.base import TicketStatus, TicketBase
+from lib.pipeline.base import PipelineBase
 
 
 class Pipeline(PipelineBase):
     '''
     Class to manage the set of current `PipelineTicket`'s
     '''
-    def __init__(self):
-        super().__init__()
-
     def add_order(self,
-                  new_ticket: BasePipelineTicket,
+                  new_ticket: TicketBase,
                   blocks_whom_id: int = None) -> int:
         """ Adds order to the pipeline and assigns it an order ID """
-        self.logger.info(
-            f"Adding '{new_ticket.__class__.__name__ }' to pipeline. ID:{self.order_counter}"
-        )
+        self.logger.info("Adding '%s' to pipeline. ID: %s",
+                         new_ticket.__class__.__name__,
+                         str(self.order_counter))
         self.book.append(new_ticket)
         new_ticket.link_to_pipeline(parent_pipeline=self,
                                     ticket_id=self.order_counter)
-        new_ticket.mark_opened()
         new_ticket.base_top_left = self.base_top_left
 
         if blocks_whom_id is not None:
@@ -29,11 +32,21 @@ class Pipeline(PipelineBase):
         self.order_counter += 1
 
     def is_empty(self) -> bool:
-        """ Returns True if current pipeline has no active orders """
-        pipeline_is_empty = len(
-            [ticket.id for ticket in self.book if ticket.is_opened()]) == 0
-        self.logger.debug(str(pipeline_is_empty) + str(self))
+        "Returns True if current pipeline has no active orders"
+        pipeline_is_empty = len([
+            ticket.id for ticket in self.book if ticket.current_status not in
+            [TicketStatus.COMPLETED, TicketStatus.INVALID]
+        ]) == 0
+        self.logger.debug("is_empty(): %s, %s", str(pipeline_is_empty),
+                          str(self))
         return pipeline_is_empty
+
+    def get_executable_tickets_list(self) -> list:
+        "Provides the list of tickets sutiable for run() loop"
+        return [
+            ticket.id for ticket in self.book if ticket.current_status in
+            [TicketStatus.CREATED, TicketStatus.UNBLOCKED]
+        ]
 
     def who_is(self, ticket_id: int) -> str:
         ''' Get simple representation of the ticket'''
@@ -45,7 +58,7 @@ class Pipeline(PipelineBase):
         if ticket_id < 0 or ticket_id > self.order_counter:
             raise Exception(f"who_is({ticket_id}) is out of range " +
                             f"(0..{self.order_counter})")
-        return str(ticket_id) + "_" + self.book[ticket_id].__class__.__name__
+        return str(self.book[ticket_id])
 
     def run(self, obs):
         """ Scans: through all the orders in the book and tries to run those, which are active """
@@ -56,27 +69,6 @@ class Pipeline(PipelineBase):
         #       3. Marine ticket generate order
 
         self.logger.debug("CP21: ~> run()")
-
-        active_ticket_ids = [
-            ticket.id for ticket in self.book if ticket.is_opened()
-        ]
-
-        fulfilled_list = [
-            promise_var for promise_var in self.new_building_done_promises
-            if self.new_building_done_promises[promise_var] is True
-        ]
-        if len(fulfilled_list) > 0:
-            self.logger.debug("Clearing fulfilled promises:")
-            for promise_var in fulfilled_list:
-                self.logger.debug(
-                    f"  Clearing promise records for '{promise_var}'")
-                self.new_building_made_promises[promise_var] = False
-                self.new_building_done_promises[promise_var] = False
-
-        # Debug display status
-        self.logger.debug("List of active tickets:")
-        for ticket_id in active_ticket_ids:
-            self.logger.debug(" " * 4 + self.who_is(ticket_id))
 
         self.get_len(obs)
         self.logger.debug("Stat: ")
@@ -93,30 +85,32 @@ class Pipeline(PipelineBase):
         # Verify that list of active did not change between runs
         # init with ACTIVE list so run does not scan twice throught them
         # if nothing happens
-        last_iteration_ticket_ids = current_ticket_ids = [
-            ticket.id for ticket in self.book if ticket.is_opened()
-        ]
+        last_iteration_ticket_ids = self.get_executable_tickets_list()
 
         while should_iterate:
-            # Run all tickets with ACTIVE status
-            for ticket in [
-                    ticket for ticket in self.book if ticket.is_opened()
-            ]:
-                self.logger.debug("looking into " + self.who_is(ticket.id))
-                is_valid, sc2_order = ticket.run(obs)
+            # Run all tickets with executable status
+
+            # Debug display status
+            self.logger.debug("List of tickets for the loop:")
+            for ticket_id in last_iteration_ticket_ids:
+                self.logger.debug("    %s", self.who_is(ticket_id))
+
+            for ticket_id in last_iteration_ticket_ids:
+                current_ticket = self.book[ticket_id]
+                self.logger.debug("looking into %s", str(current_ticket))
+                is_valid, sc2_order = current_ticket.run(obs)
                 if not is_valid:
-                    ticket.mark_invalid()
+                    # this will also invalidate all dependencies
+                    current_ticket.mark_invalid()
                 elif sc2_order is not None:
                     # The SC2 was issued, ignore the rest of the tickets
                     # should mark tiket complete - no, e.g poTrainMarine has it conditional
-                    self.logger.debug("ticket '" + str(ticket) +
-                                      "' has generated an order")
+                    self.logger.debug("ticket '%s' has generated an order",
+                                      str(current_ticket))
                     return sc2_order
 
             # Current list of tickets
-            current_ticket_ids = [
-                ticket.id for ticket in self.book if ticket.is_opened()
-            ]
+            current_ticket_ids = self.get_executable_tickets_list()
 
             # Should iterate if the list of tickets have changed.
             # Reduction in the list should be checked as well
@@ -127,8 +121,8 @@ class Pipeline(PipelineBase):
             should_iterate = count_new_ids + count_gone_ids > 0
             self.logger.debug("End of loop results:")
 
-            self.logger.debug("  new:  " + str(count_new_ids))
-            self.logger.debug("  gone: " + str(count_gone_ids))
+            self.logger.debug("  new:  %s", str(count_new_ids))
+            self.logger.debug("  gone: %s", str(count_gone_ids))
             last_iteration_ticket_ids = current_ticket_ids
 
         return None  # or SC2 order, if inything was resolved
@@ -136,12 +130,7 @@ class Pipeline(PipelineBase):
     def __str__(self):
         ret = "\n  Current content of the pipeline gross book:\n    " + "-" * 40
         for ticket in self.book:
-            ticket_str = str(ticket)
-            if not ticket.is_opened():
-                ticket_str = ticket_str.replace("'", " ")
-            ret += f"\n     {ticket_str}"
-        ret += f"\n  * Promises current  = {str(self.new_building_made_promises)}"
-        ret += f"\n  * Promises resolved = {str(self.new_building_done_promises)}"
+            ret += f"\n     {ticket.str_ext()}"
         return ret
 
     def retry_orders_if_needed(self, obs):
@@ -168,10 +157,10 @@ class Pipeline(PipelineBase):
         for active_ticket in active_eligible_tickets:
             sc2_order = active_ticket.retry_action_if_needed(obs)
             if sc2_order is not None:
-                self.logger.warning("!!! Retry was required for " +
-                                    str(active_ticket) + "!!!")
+                self.logger.warning("!!! Retry was required for %s !!!",
+                                    str(active_ticket))
                 return sc2_order
             else:
-                self.logger.debug("CP444: " + str(active_ticket) +
-                                  " is under execution")
+                self.logger.debug("CP444: %s  is under execution",
+                                  str(active_ticket))
         return None

@@ -1,8 +1,8 @@
+"Plain implementation of Deep Q-Network"
 import logging
 import pandas as pd
 import numpy as np
 
-# ToDo:
 #   This class should be able to store history within itself
 #   then when save DQN (another function) it should load it again / save it
 #   Load again at the beginning of each round after init
@@ -21,7 +21,7 @@ class QLearningTable:
                  e_greedy=0.9):
 
         if log_suffix is not None:
-            self.logger = logging.getLogger(f"DQN_{log_suffix}")
+            self.logger = logging.getLogger("DQN_{log_suffix}")
             self.logger.info("DQN init")
 
         self.actions = actions

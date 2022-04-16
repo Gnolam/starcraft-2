@@ -2,8 +2,8 @@ from pysc2.agents import base_agent
 from pysc2.lib import actions
 import logging
 
-from lib.G3ai.ai_general import aiGeneral
-from lib.G3ai.ai_builder import aiBuilder
+from lib.agent.general import aiGeneral
+from lib.agent.builder import aiBuilder
 
 
 class SmartAgentG3(base_agent.BaseAgent):

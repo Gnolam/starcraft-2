@@ -1,4 +1,5 @@
-from lib.G3pipe.pipeline_orders import poTrainMarine, poAccumulateReserve, poGenTransferReserve
+from lib.ticket.train import poTrainMarine
+from lib.ticket.war import poAccumulateReserve, poGenTransferReserve
 
 
 class ActionListBase(object):

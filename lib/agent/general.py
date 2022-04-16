@@ -1,8 +1,8 @@
 import random
 import numpy as np
-from pysc2.lib import units, features, actions
-from lib.G3ai.ai_base import aiBase
-from lib.G3ai.action_list import BuildTicketsWar
+from pysc2.lib import units, actions
+from lib.agent.base import aiBase
+from lib.agent.action_list import BuildTicketsWar
 from lib.c01_obs_api import *
 
 

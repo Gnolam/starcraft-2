@@ -6,10 +6,10 @@ import h2o
 import pandas as pd
 from pysc2.lib import units
 
-from lib.AICore.q_table import QLearningTable
-from lib.AICore.predictor_drf import DRFPredictor
+from lib.ai.q_table import QLearningTable
+from lib.ai.predictor_drf import DRFPredictor
 from lib.c01_obs_api import ObsAPI
-from lib.G3pipe.pipeline import Pipeline
+from lib.pipeline.pipeline import Pipeline
 
 from lib.c01_obs_api import get_my_units_by_type
 
@@ -97,7 +97,7 @@ class aiBase(ObsAPI):
             raise Exception('Incorrect function was called: L1::get_state()')
 
     def new_game(self):
-        self.log.debug(f"new_game()")
+        self.log.debug("new_game()")
         self.previous_state = None
         self.previous_action = None
 
@@ -124,7 +124,7 @@ class aiBase(ObsAPI):
             self.ai_dqn.q_table = pd.read_pickle(self.dqn_filename,
                                                  compression='gzip')
         else:
-            self.log.info('NO previous learnings located (%s)' %
+            self.log.info('NO previous learnings located (%s)',
                           self.agent_name)
 
     def choose_next_action(self, obs) -> None:
@@ -193,16 +193,16 @@ class aiBase(ObsAPI):
         # Pipeline is still _not_ finished, not a good time for the new action
         got_new_order = False
         if self.pipeline.is_empty():
-            self.log.debug(f"SCP101: pipeline IS empty")
+            self.log.debug("SCP102: pipeline is NOT empty")
+            self.log.debug(str(self.pipeline))
+        else:
+            self.log.debug("SCP101: pipeline nas NO executable orders")
             # Great, pipeline _is_ empty. What would be the next step?
             self.choose_next_action(obs)
             got_new_order = True
-        else:
-            self.log.debug("SCP102: pipeline is NOT empty")
-            self.log.debug(str(self.pipeline))
 
         if obs.last():  # and self.agent_name == 'bob':
-            self.log.debug(f"SCP103: last observation detected")
+            self.log.debug("SCP103: last observation detected")
             logging.getLogger("res").info(
                 f"Game: {self.game_num}. Outcome: {obs.reward}")
 

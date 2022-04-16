@@ -1,10 +1,10 @@
+"Implementation of DRF as a selector of the next action"
+
 import logging
 import pandas as pd
 import numpy as np
 import h2o
 from h2o.estimators import H2ORandomForestEstimator
-
-# from lib.c01_obs_api import get_enemy_unit_type_counts
 
 
 class DRFPredictor:
@@ -44,7 +44,7 @@ class DRFPredictor:
     def choose_action(self, full_state):
         """
         Chose action based on the current h2o model
-        
+
         Currently DRF but could be any
         """
 
@@ -108,4 +108,4 @@ class DRFPredictor:
         self.model.train(x=self.predictors,
                          y="outcome_adj",
                          training_frame=hex_final)
-        self.log.debug(f"performance: {str(self.model.confusion_matrix())}")
+        self.log.debug("performance: %s", str(self.model.confusion_matrix()))

@@ -1,12 +1,15 @@
-from lib.G3ai.ai_base import aiBase
-from lib.G3ai.action_list import BuildTicketsEcon
+"Implementation of the Builder AI"
 
 from pysc2.lib import units
-from lib.c01_obs_api import *
+
+from lib.agent.base import aiBase
+from lib.agent.action_list import BuildTicketsEcon
+
+from lib.c01_obs_api import get_my_completed_units_by_type, get_my_units_by_type
 
 
 class aiBuilder(aiBase, BuildTicketsEcon):
-
+    "Implementation of the Builder AI"
     agent_name = "aiBuilder"
     ai_log_suffix = "Econ"
 
